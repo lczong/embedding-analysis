@@ -2,6 +2,7 @@
 from __future__ import annotations
 import copy
 import json
+import re
 from pathlib import Path
 
 
@@ -22,6 +23,15 @@ def load_config(path):
     cfg = merge(json.loads(defaults.read_text()) if defaults.exists() else {}, spec)
     if not cfg.get('system') or not cfg.get('routes'):
         raise ValueError('Config needs system and routes')
+    if not re.fullmatch(r'[A-Za-z0-9_-]+', cfg['system']):
+        raise ValueError('Invalid system name')
+    for route, info in cfg['routes'].items():
+        if not re.fullmatch(r'esm2(?:__l[012]-(?:ft|frozen)-(?:ce|nca))*', route):
+            raise ValueError(f'Invalid route: {route}')
+        if 'train' not in info['datasets']:
+            raise ValueError(f'{route} requires train input')
+    if cfg['preprocessing']['normalize'] != 'l2':
+        raise ValueError('Phase 1 requires L2 normalization')
     if cfg['preprocessing']['fit_on'] != 'train':
         raise ValueError('Phase 1 only supports train-fit PCA')
     if cfg['experiments']['multilabel']['label_level'] != 'class':
