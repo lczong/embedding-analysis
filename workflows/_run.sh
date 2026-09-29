@@ -15,9 +15,9 @@ run_step() {
         pca) "$PYTHON" workflows/pca.py prepare --config "$CONFIG" --route "$ROUTE" --output "$BASE/pca" ;;
         sample) "$PYTHON" workflows/ood.py sample --config "$CONFIG" --output "$BASE/ood/sample" ;;
         metrics|tsne|umap)
-            local extra=()
-            if [[ "$EXPERIMENT" == ood ]]; then extra=(--sampling "$BASE/ood/sample"); fi
-            "$PYTHON" "workflows/$EXPERIMENT.py" "$1" --config "$CONFIG" --route "$ROUTE" --input "$BASE/pca" --output "$BASE/$EXPERIMENT/$1" "${extra[@]}" ;;
+            local command=("$PYTHON" "workflows/$EXPERIMENT.py" "$1" --config "$CONFIG" --route "$ROUTE" --input "$BASE/pca" --output "$BASE/$EXPERIMENT/$1")
+            if [[ "$EXPERIMENT" == ood ]]; then command+=(--sampling "$BASE/ood/sample"); fi
+            "${command[@]}" ;;
         visualization-tsne|visualization-umap)
             local method="${1#visualization-}"
             "$PYTHON" "workflows/$EXPERIMENT.py" visualization --config "$CONFIG" --input "$BASE/$EXPERIMENT/$method" --output "$BASE/$EXPERIMENT/$1" ;;
