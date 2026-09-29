@@ -22,59 +22,14 @@ bash workflows/multilabel.sh configs/cazy.json esm2__l2-frozen-nca metrics
 
 下游步骤不自动运行上游；PCA 可以在实验之间复用。
 
-## 旧组合入口（兼容）
-
-本机已建立本目录 `.venv`，不依赖两个旧项目的 Python 环境。直接从 checkout 运行，无需安装 package：
+## 输入检查
 
 ```bash
-cd /path/to/embedding_analysis
-.venv/bin/python run.py validate --config configs/cazy.json
-.venv/bin/python run.py validate --config configs/peptidase.json
+.venv/bin/python workflows/validate.py --config configs/cazy.json
 ```
 
-`validate` 检查所有配置文件路径、metadata 是否存在和 embedding 维度。`--deep` 进一步读取全量矩阵、验证 ID、有限数值和元数据对齐；大文件会耗时。
-
-先准备某条路线的 PCA：
-
-```bash
-.venv/bin/python run.py prepare --config configs/cazy.json \
-  --route esm2__l2-frozen-nca
-```
-
-运行某个核心实验，或全部实验：
-
-```bash
-.venv/bin/python run.py run --config configs/cazy.json \
-  --route esm2__l2-frozen-nca --experiment multilabel
-
-.venv/bin/python run.py run --config configs/peptidase.json \
-  --route esm2__l2-ft-ce --experiment all
-```
-
-`--experiment` 可选：`overview`、`ood`、`multilabel`、`unseen`、`structure`、`all`。
-
-省略 `--route` 会运行配置中的所有路线；可以重复指定 `--route`。实际数据量较大，完整 t-SNE 与精确 family 距离计算会耗时，本次没有重跑全量实验。
-
-- `--no-plots`：仍计算并保存二维坐标，只跳过图片导出。
-- `--force`：重新计算选定路线的 PCA 及选定实验。
-- `all`：缺输入的实验会明确写入跳过报告；显式请求缺输入的单项实验则报错。
-- peptidase 的 `esm2__l1-ft-ce__l2-frozen-nca` 只有 train，因此仅支持 overview 和 structure。
-
-按当前配置与代码版本汇总已生成结果：
-
-```bash
-.venv/bin/python run.py summarize --config configs/cazy.json
-```
-
-只重新绘图，不读取 embedding、不重新计算指标或降维：
-
-```bash
-.venv/bin/python run.py plot --config configs/cazy.json \
-  --experiment multilabel \
-  --run-dir outputs/cazy/esm2__l2-frozen-nca/multilabel/<run_id>
-```
-
-科学参数取自原运行的 manifest，绘图样式取自当前 config。主要颜色、标签和重点组合由系统配置控制。
+加 `--deep` 读取全量数据验证 ID、有限值和 metadata 对齐。大文件会耗时。
+Peptidase 的 `esm2__l1-ft-ce__l2-frozen-nca` 只有 train，仅支持 overview 和 structure。
 
 ## 配置与数据
 
@@ -95,11 +50,13 @@ NPY 的 ID 来源由 `ids_reference` 显式声明。它只能检查行数和 ID 
 ## 输出
 
 ```text
-outputs/<system>/<route>/preprocess/<run_id>/
-outputs/<system>/<route>/<experiment>/<run_id>/
-outputs/<system>/_sampling/<run_id>/ood.json
-outputs/<system>/_runs/<run_id>/report.json
-outputs/<system>/_comparison/<run_id>/
+outputs/steps/<system>/<route>/pca/
+outputs/steps/<system>/<route>/<experiment>/metrics/
+outputs/steps/<system>/<route>/<experiment>/tsne/
+outputs/steps/<system>/<route>/<experiment>/umap/
+outputs/steps/<system>/<route>/<experiment>/visualization-tsne/
+outputs/steps/<system>/<route>/<experiment>/visualization-umap/
+outputs/steps/<system>/<route>/<experiment>/metric-plots/
 ```
 
 每次运行保存完整配置、输入指纹、代码摘要和成功产物清单。指标 CSV 与二维 coordinates.csv 独立保存。主要指标汇总：
@@ -120,7 +77,7 @@ PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python scripts/smoke_real_data.py
 ```
 
-第一条运行输入完整性、旧指标回归、两个系统的工作流/缓存/跳过测试；其中工作流测试用确定性二维坐标替代耗时降维。第二条读取新目录的数据，建立独立的小样本项目，实际运行 PCA、openTSNE、UMAP、全部核心指标及 PNG 导出，输出在 `outputs/smoke/`，不改动主数据。
+第一条运行输入完整性、旧指标回归、两个系统的分步工作流/缓存/输入校验测试；其中工作流测试用确定性二维坐标替代耗时降维。第二条读取新目录的数据，建立独立的小样本项目，实际运行 PCA、openTSNE、UMAP、全部核心指标及 PNG 导出，输出在 `outputs/smoke/`，不改动主数据。
 
 ## 移动或在其他机器安装
 
@@ -131,4 +88,4 @@ python3.10 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 ```
 
-也可 `pip install -e .`，之后使用 `embedding-analysis` 命令。核心依赖不包含 FAISS、scanpy、Leiden、HDBSCAN、Biopython 或 Plotly。
+核心依赖不包含 FAISS、scanpy、Leiden、HDBSCAN、Biopython 或 Plotly。

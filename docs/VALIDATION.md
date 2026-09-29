@@ -24,13 +24,13 @@
 - 抽样与输入行序无关。
 - NPY ID 来源顺序与行数约束、CSV 分片重复 ID、缺 metadata、外部路径拒绝。
 - 缓存产物缺失和图片重绘的区分。
-- 两个系统、完整与 train-only 路线的全部工作流；manifest 一致、缺输入显式跳过、单项缺输入报错、参数变化缓存失效。
+- 两个系统的独立分步工作流；指标与降维隔离、绘图无需原始数据、缓存复用、错误输入类型与缺上游输入报错。
 
 工作流单元测试使用确定性二维坐标替代降维，以控制测试速度；实际降维由下面的真实数据 smoke 验证。
 
-## 真实数据小样本全流程
+## 初次实现的真实数据验证记录
 
-运行 `scripts/smoke_real_data.py`，两套系统均使用本地 `esm2__l2-frozen-nca` 输入的真实子集：
+初次实现时运行真实数据 smoke，两套系统均使用本地 `esm2__l2-frozen-nca` 输入的真实子集：
 
 - CAZy：CBM、GH；train 24 条、multi 8 条、unseen 16 条，各 OOD 8 条。
 - Peptidase：C、M；train 24 条、multi 8 条、unseen 16 条，各 OOD 8 条。
@@ -40,10 +40,14 @@
 - 检查了 OOD 密度图和 BA 分布图；小样本训练背景显示问题已修正后重跑。
 - 绘图专用命令在配置输入指向不存在的文件时仍可使用已保存结果成功重绘，验证没有重新读取 embedding。
 
-具体 run ID 见 [smoke_results.json](smoke_results.json)。图与中间产物位于未跟踪的 outputs/smoke/，不替代正式实验结果。
+以下 run ID 为初次实现的历史验证记录，不作为当前入口。具体 run ID 见 [smoke_results.json](smoke_results.json)。图与中间产物位于未跟踪的 outputs/smoke/，不替代正式实验结果。
 
 ## 验证边界
 
 没有重跑所有路线的全量实验；没有对全量数据逐行做深校验。所有正式结果应通过完整配置执行后生成。
 
 旧图的随机样本、scanpy UMAP 布局、历史专用绘图不承诺逐像素复现。改动的抽样与统计口径详见 METHODS.md 和 DEFERRED.md。
+
+## 分步入口验证
+
+当前 `scripts/smoke_real_data.py` 逐步调用 PCA、sample、metrics、tsne、umap、visualization、metric-plots，覆盖两套系统的五个实验。所有运行入口位于 workflows/。
