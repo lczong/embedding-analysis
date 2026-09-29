@@ -19,8 +19,8 @@ def save(fig, stem, cfg):
 
 def colors(labels, cfg):
     unique = sorted(set(labels))
-    cmap = plt.get_cmap('tab20')
-    return {v:cfg['class_colors'].get(v, cmap(i % 20)) for i,v in enumerate(unique)}
+    cmap = plt.get_cmap('tab20' if len(unique) <= 20 else 'hsv')
+    return {v:cfg['class_colors'].get(v, cmap(i if len(unique) <= 20 else i / len(unique))) for i,v in enumerate(unique)}
 
 
 def scatter(df, column, stem, cfg, title='', background_train=False):
@@ -42,7 +42,8 @@ def scatter(df, column, stem, cfg, title='', background_train=False):
 def density(df, stem, cfg):
     fig, ax = plt.subplots(figsize=(7,6))
     train = df[df.dataset_role == 'train']
-    ax.hexbin(train.x, train.y, gridsize=65, mincnt=1, cmap='Greys', linewidths=0, rasterized=True)
+    ax.hexbin(train.x, train.y, gridsize=65, mincnt=1, cmap='Greys', vmin=0, linewidths=0, rasterized=True)
+    ax.scatter([], [], marker='h', color='#777777', label=cfg['role_labels']['train'])
     for role in ['ood','shuffled','idr']:
         group = df[df.dataset_role == role]
         ax.scatter(group.x, group.y, s=3, alpha=.4, color=ROLE_COLORS[role], label=cfg['role_labels'][role], rasterized=True)

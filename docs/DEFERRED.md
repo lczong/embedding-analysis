@@ -48,3 +48,5 @@
 - Exp3 全局 joint 指标覆盖 unseen + sampled train，不能将其命名为仅 unseen 的 global score。
 - 元数据缺失/重复 ID、错误维度不再静默 inner join 丢弃；默认报错。
 - 计算、降维和绘图分离；缓存记录配置与输入指纹，改参数后不会只因旧输出存在而跳过。
+- CAZy 有独立 `esm2` 基线，peptidase 目前没有对应原始 embedding；首版不伪造或用 level0 代替这一基线。
+- peptidase 原有 centroid silhouette 和类间/类内距离比已推广到两个系统；CAZy 原来只有 centroid kNN purity，不代表旧 CAZy 结果中已有这些新增表。

@@ -87,6 +87,7 @@ def summarize(cfg,run_id):
                 frame=pd.read_csv(p);frame.insert(0,'route',route);frames.append(frame)
         if not frames: continue
         df=pd.concat(frames,ignore_index=True);df.to_csv(out/f'{experiment}.csv',index=False)
+        if df.empty: continue
         fig,ax=plt.subplots(figsize=(9,4))
         if experiment=='structure':
             for route,g in df[df.metric=='knn_class_purity'].groupby('route'):
