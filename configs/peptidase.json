@@ -1,0 +1,182 @@
+{
+  "defaults": "defaults.json",
+  "system": "peptidase",
+  "metadata": {
+    "id_column": "sequence_id",
+    "class_column": "peptidase_class",
+    "family_column": "peptidase_family",
+    "files": {
+      "train": "data/peptidase/metadata/peptidase_protein_train.metadata.tsv",
+      "multi": "data/peptidase/metadata/peptidase_protein_cross_catalytic_2domain.metadata.tsv",
+      "unseen": "data/peptidase/metadata/peptidase_protein_unseen.metadata.tsv"
+    }
+  },
+  "classes": [
+    "A",
+    "C",
+    "G",
+    "M",
+    "N",
+    "S",
+    "T"
+  ],
+  "class_colors": {
+    "A": "#e6194b",
+    "C": "#3cb44b",
+    "G": "#b8860b",
+    "M": "#4363d8",
+    "N": "#911eb4",
+    "S": "#f58231",
+    "T": "#42d4f4"
+  },
+  "role_labels": {
+    "train": "Peptidase",
+    "ood": "Non-peptidase",
+    "shuffled": "Shuffled",
+    "idr": "IDR"
+  },
+  "routes": {
+    "esm2__l0-ft-ce": {
+      "dimensions": 1280,
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l0-ft-ce/peptidase_protein_train.embeddings.csv"
+        },
+        "multi": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l0-ft-ce/multi_family_source_protein.cross_catalytic_2domain.embeddings.csv"
+        },
+        "unseen": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l0-ft-ce/unseen_protein.embeddings.csv"
+        },
+        "ood": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l0-ft-ce/non-peptidase-test_protein.embeddings.csv"
+        },
+        "shuffled": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l0-ft-ce/peptidase-shuffled_protein.embeddings.csv"
+        },
+        "idr": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l0-ft-ce/disprot_protein.embeddings.csv"
+        }
+      }
+    },
+    "esm2__l1-ft-ce": {
+      "dimensions": 1280,
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l1-ft-ce/peptidase_protein_train.embeddings.csv"
+        },
+        "multi": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l1-ft-ce/multi_family_source_protein.cross_catalytic_2domain.embeddings.csv"
+        },
+        "unseen": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l1-ft-ce/unseen_protein.embeddings.csv"
+        },
+        "ood": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l1-ft-ce/non-peptidase-test_protein.embeddings.csv"
+        },
+        "shuffled": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l1-ft-ce/peptidase-shuffled_protein.embeddings.csv"
+        },
+        "idr": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l1-ft-ce/disprot_protein.embeddings.csv"
+        }
+      }
+    },
+    "esm2__l1-ft-ce__l2-frozen-nca": {
+      "dimensions": 256,
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l1-ft-ce__l2-frozen-nca/peptidase_protein_train.embeddings.csv"
+        }
+      }
+    },
+    "esm2__l2-frozen-nca": {
+      "dimensions": 256,
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l2-frozen-nca/peptidase_protein_train.embeddings.csv"
+        },
+        "multi": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l2-frozen-nca/multi_family_source_protein.cross_catalytic_2domain.embeddings.csv"
+        },
+        "unseen": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l2-frozen-nca/unseen_protein.embeddings.csv"
+        },
+        "ood": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l2-frozen-nca/non-peptidase-test_protein.embeddings.csv"
+        },
+        "shuffled": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l2-frozen-nca/peptidase-shuffled_protein.embeddings.csv"
+        },
+        "idr": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l2-frozen-nca/disprot_protein.embeddings.csv"
+        }
+      }
+    },
+    "esm2__l2-ft-ce": {
+      "dimensions": 1280,
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l2-ft-ce/peptidase_protein_train.embeddings.csv"
+        },
+        "multi": {
+          "format": "npy",
+          "path": "data/peptidase/embeddings/esm2__l2-ft-ce/multi_family_source_protein.cross_catalytic_2domain.embeddings.npy",
+          "ids_reference": "data/peptidase/embeddings/esm2__l0-ft-ce/multi_family_source_protein.cross_catalytic_2domain.embeddings.csv",
+          "id_alignment": "source row order; not independently provable from NPY"
+        },
+        "unseen": {
+          "format": "npy",
+          "path": "data/peptidase/embeddings/esm2__l2-ft-ce/unseen_protein.embeddings.npy",
+          "ids_reference": "data/peptidase/embeddings/esm2__l0-ft-ce/unseen_protein.embeddings.csv",
+          "id_alignment": "source row order; not independently provable from NPY"
+        },
+        "ood": {
+          "format": "npy",
+          "path": "data/peptidase/embeddings/esm2__l2-ft-ce/non-peptidase-test_protein.embeddings.npy",
+          "ids_reference": "data/peptidase/embeddings/esm2__l0-ft-ce/non-peptidase-test_protein.embeddings.csv",
+          "id_alignment": "source row order; not independently provable from NPY"
+        },
+        "shuffled": {
+          "format": "npy",
+          "path": "data/peptidase/embeddings/esm2__l2-ft-ce/peptidase-shuffled_protein.embeddings.npy",
+          "ids_reference": "data/peptidase/embeddings/esm2__l0-ft-ce/peptidase-shuffled_protein.embeddings.csv",
+          "id_alignment": "source row order; not independently provable from NPY"
+        },
+        "idr": {
+          "format": "npy",
+          "path": "data/peptidase/embeddings/esm2__l2-ft-ce/disprot_protein.embeddings.npy",
+          "ids_reference": "data/peptidase/embeddings/esm2__l0-ft-ce/disprot_protein.embeddings.csv",
+          "id_alignment": "source row order; not independently provable from NPY"
+        }
+      }
+    }
+  },
+  "plot": {
+    "highlight_combinations": [
+      "C|M",
+      "C|N",
+      "M|S"
+    ]
+  }
+}

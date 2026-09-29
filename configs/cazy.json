@@ -1,0 +1,225 @@
+{
+  "defaults": "defaults.json",
+  "system": "cazy",
+  "metadata": {
+    "id_column": "sequence_id",
+    "class_column": "cazy_class",
+    "family_column": "cazy_family",
+    "files": {
+      "train": "data/cazy/metadata/cazy_train.metadata.tsv",
+      "multi": "data/cazy/metadata/cazy_multi.metadata.tsv",
+      "unseen": "data/cazy/metadata/cazy_unseen.metadata.tsv"
+    }
+  },
+  "classes": [
+    "AA",
+    "CBM",
+    "CE",
+    "GH",
+    "GT",
+    "PL"
+  ],
+  "class_colors": {
+    "AA": "#e6194b",
+    "CBM": "#b8860b",
+    "CE": "#4363d8",
+    "GH": "#f58231",
+    "GT": "#911eb4",
+    "PL": "#3cb44b"
+  },
+  "role_labels": {
+    "train": "CAZyme",
+    "ood": "Non-CAZyme",
+    "shuffled": "Shuffled",
+    "idr": "IDR"
+  },
+  "routes": {
+    "esm2": {
+      "dimensions": 1280,
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2/cazy_train_esm.embeddings.csv"
+        },
+        "multi": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2/cazy_multi.embeddings.csv"
+        },
+        "unseen": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2/cazy_unseen_esm.embeddings.csv"
+        },
+        "ood": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2/non-cazy_test.embeddings.csv"
+        },
+        "shuffled": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2/cazy_test-shuffled.embeddings.csv"
+        },
+        "idr": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2/DisProt_cluster100_rep_seq_min21.embeddings.csv"
+        }
+      }
+    },
+    "esm2__l0-ft-ce": {
+      "dimensions": 1280,
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l0-ft-ce/cazy_train.embeddings.csv"
+        },
+        "multi": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l0-ft-ce/cazy_multi.embeddings.csv"
+        },
+        "unseen": {
+          "format": "csv",
+          "paths": [
+            "data/cazy/embeddings/esm2__l0-ft-ce/cazy_unseen/AA.embeddings.csv",
+            "data/cazy/embeddings/esm2__l0-ft-ce/cazy_unseen/CBM.embeddings.csv",
+            "data/cazy/embeddings/esm2__l0-ft-ce/cazy_unseen/CE.embeddings.csv",
+            "data/cazy/embeddings/esm2__l0-ft-ce/cazy_unseen/GH.embeddings.csv",
+            "data/cazy/embeddings/esm2__l0-ft-ce/cazy_unseen/GT.embeddings.csv",
+            "data/cazy/embeddings/esm2__l0-ft-ce/cazy_unseen/PL.embeddings.csv"
+          ]
+        },
+        "ood": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l0-ft-ce/non-cazy_test.embeddings.csv"
+        },
+        "shuffled": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l0-ft-ce/cazy_test-shuffled.embeddings.csv"
+        },
+        "idr": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l0-ft-ce/DisProt_cluster100_rep_seq_min21.embeddings.csv"
+        }
+      }
+    },
+    "esm2__l1-ft-ce": {
+      "dimensions": 1280,
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l1-ft-ce/cazy_train.embeddings.csv"
+        },
+        "multi": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l1-ft-ce/cazy_multi.embeddings.csv"
+        },
+        "unseen": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l1-ft-ce/cazy_unseen.embeddings.csv"
+        },
+        "ood": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l1-ft-ce/non-cazy_test.embeddings.csv"
+        },
+        "shuffled": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l1-ft-ce/cazy_test-shuffled.embeddings.csv"
+        },
+        "idr": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l1-ft-ce/DisProt_cluster100_rep_seq_min21.embeddings.csv"
+        }
+      }
+    },
+    "esm2__l1-ft-ce__l2-frozen-nca": {
+      "dimensions": 256,
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l1-ft-ce__l2-frozen-nca/cazy_train.embeddings.csv"
+        },
+        "multi": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l1-ft-ce__l2-frozen-nca/cazy_multi.embeddings.csv"
+        },
+        "unseen": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l1-ft-ce__l2-frozen-nca/cazy_unseen.embeddings.csv"
+        },
+        "ood": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l1-ft-ce__l2-frozen-nca/non-cazy_test.embeddings.csv"
+        },
+        "shuffled": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l1-ft-ce__l2-frozen-nca/cazy_test-shuffled.embeddings.csv"
+        },
+        "idr": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l1-ft-ce__l2-frozen-nca/DisProt_cluster100_rep_seq_min21.embeddings.csv"
+        }
+      }
+    },
+    "esm2__l2-frozen-nca": {
+      "dimensions": 256,
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l2-frozen-nca/cazy_train.embeddings.csv"
+        },
+        "multi": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l2-frozen-nca/cazy_multi.embeddings.csv"
+        },
+        "unseen": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l2-frozen-nca/cazy_unseen.embeddings.csv"
+        },
+        "ood": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l2-frozen-nca/non-cazy_test.embeddings.csv"
+        },
+        "shuffled": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l2-frozen-nca/cazy_test-shuffled.embeddings.csv"
+        },
+        "idr": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l2-frozen-nca/DisProt_cluster100_rep_seq_min21.embeddings.csv"
+        }
+      }
+    },
+    "esm2__l2-ft-ce": {
+      "dimensions": 1280,
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l2-ft-ce/cazy_train.embeddings.csv"
+        },
+        "multi": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l2-ft-ce/cazy_multi.embeddings.csv"
+        },
+        "unseen": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l2-ft-ce/cazy_unseen.embeddings.csv"
+        },
+        "ood": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l2-ft-ce/non-cazy_test.sample-3145.embeddings.csv"
+        },
+        "shuffled": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l2-ft-ce/cazy_test-shuffled.sample-3145.embeddings.csv"
+        },
+        "idr": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l2-ft-ce/DisProt_cluster100_rep_seq_min21.embeddings.csv"
+        }
+      }
+    }
+  },
+  "plot": {
+    "highlight_combinations": [
+      "CBM|GH",
+      "CBM|PL"
+    ]
+  }
+}
