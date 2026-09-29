@@ -9,7 +9,20 @@
 - [计算定义及与旧版的差异](docs/METHODS.md)
 - [验证记录](docs/VALIDATION.md)
 
-## 运行
+## 分步骤运行（推荐）
+
+独立入口和完整命令见 [workflows/README.md](workflows/README.md)。每个实验分别管理流程，指标、t-SNE、UMAP、空间绘图和指标绘图都可以单独执行：
+
+```bash
+bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca pca
+bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca sample
+bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca metrics
+bash workflows/multilabel.sh configs/cazy.json esm2__l2-frozen-nca metrics
+```
+
+下游步骤不自动运行上游；PCA 可以在实验之间复用。
+
+## 旧组合入口（兼容）
 
 本机已建立本目录 `.venv`，不依赖两个旧项目的 Python 环境。直接从 checkout 运行，无需安装 package：
 

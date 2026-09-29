@@ -70,45 +70,60 @@ def distributions(df, value, group, stem, cfg, title):
     save(fig,stem,cfg)
 
 
-def plot_experiment(path, experiment, cfg):
+def plot_experiment(path, experiment, cfg, kind="all", destination=None):
+    if kind == "metrics": return plot_metrics(path, experiment, cfg, destination)
     path = Path(path)
+    dest = Path(destination) if destination is not None else path
     if experiment=='overview':
         df=pd.read_csv(path/'coordinates.csv',dtype={'sequence_id':str})
-        scatter(df,'class_label',path/'figures/classes',cfg,'Training classes')
-        scatter(df,'family_label',path/'figures/families',cfg,'Training families')
+        scatter(df,'class_label',dest/'figures/classes',cfg,'Training classes')
+        scatter(df,'family_label',dest/'figures/families',cfg,'Training families')
     elif experiment=='ood':
-        density(pd.read_csv(path/'coordinates.csv'),path/'figures/density',cfg)
-        distributions(pd.read_csv(path/'samples.csv'),'silhouette','dataset_role',path/'figures/silhouette',cfg,'OOD silhouette')
+        density(pd.read_csv(path/'coordinates.csv'),dest/'figures/density',cfg)
+
     elif experiment=='multilabel':
         df=pd.read_csv(path/'coordinates.csv')
-        scatter(df,'class_label',path/'figures/classes',cfg,'Train + multi-class')
+        scatter(df,'class_label',dest/'figures/classes',cfg,'Train + multi-class')
         for combo in cfg['plot']['highlight_combinations']:
             # Slugs avoid pipes and path separators in artifact names.
             parents=combo.split('|'); subset=df.copy()
             subset['selection']=np.where(subset.class_label.isin(parents+[combo]),subset.class_label,'background')
-            scatter(subset,'selection',path/'figures'/('combo_'+'_'.join(parents)),cfg,combo)
-        scores=pd.read_csv(path/'scores.csv')
-        count=scores.groupby('class_label').size()
-        scores=scores[scores.class_label.isin(count[count>=cfg['experiments']['multilabel']['min_combination_size']].index)]
-        distributions(scores,'ba_score','class_label',path/'figures/ba',cfg,'Class barycentric alignment')
+            scatter(subset,'selection',dest/'figures'/('combo_'+'_'.join(parents)),cfg,combo)
     elif experiment=='unseen':
         for p in sorted(path.glob('*/coordinates.csv')):
-            scatter(pd.read_csv(p),'family_label',p.parent/'figures/families',cfg,p.parent.name,background_train=True)
-        df=pd.read_csv(path/'families.csv')
-        if len(df):
-            for metric in ['silhouette_mean','dunn_cosine','legacy_pairwise_dbi']:
-                distributions(df,metric,'class_label',path/'figures'/metric,cfg,'Unseen families')
+            scatter(pd.read_csv(p),'family_label',dest/p.parent.name/'figures/families',cfg,p.parent.name,background_train=True)
     elif experiment=='structure':
-        df=pd.read_csv(path/'metrics.csv')
-        knn=df[df.metric=='knn_class_purity']
-        fig,ax=plt.subplots(figsize=(6,4));ax.plot(knn.k,knn.value,marker='o')
-        ax.set(xlabel='k',ylabel='Family centroid class purity',ylim=(0,1))
-        save(fig,path/'figures/knn_class_purity',cfg)
         c=pd.read_csv(path/'centroids.csv');pc=[x for x in c if x.startswith('PC')]
         from scipy.spatial.distance import squareform,pdist
         order=c.sort_values(['class_label','family_label']).index
         D=squareform(pdist(c.loc[order,pc].to_numpy()))
         fig,ax=plt.subplots(figsize=(6,5));im=ax.imshow(D,cmap='viridis',rasterized=True);fig.colorbar(im,ax=ax,label='Euclidean distance')
         ax.set(title='Family centroid distances',xlabel='Families ordered by class',ylabel='Families ordered by class')
-        save(fig,path/'figures/centroid_distances',cfg)
+        save(fig,dest/'figures/centroid_distances',cfg)
+    else: raise ValueError(experiment)
+
+    if kind == 'all' and experiment != 'overview': plot_metrics(path, experiment, cfg, destination)
+
+
+def plot_metrics(path, experiment, cfg, destination=None):
+    path=Path(path)
+    dest=Path(destination) if destination is not None else path
+    if experiment=='ood':
+        distributions(pd.read_csv(path/'samples.csv'),'silhouette','dataset_role',dest/'figures/silhouette',cfg,'OOD silhouette')
+    elif experiment=='multilabel':
+        scores=pd.read_csv(path/'scores.csv')
+        count=scores.groupby('class_label').size()
+        scores=scores[scores.class_label.isin(count[count>=cfg['experiments']['multilabel']['min_combination_size']].index)]
+        distributions(scores,'ba_score','class_label',dest/'figures/ba',cfg,'Class barycentric alignment')
+    elif experiment=='unseen':
+        df=pd.read_csv(path/'families.csv')
+        if len(df):
+            for metric in ['silhouette_mean','dunn_cosine','legacy_pairwise_dbi']:
+                distributions(df,metric,'class_label',dest/'figures'/metric,cfg,'Unseen families')
+    elif experiment=='structure':
+        df=pd.read_csv(path/'metrics.csv')
+        knn=df[df.metric=='knn_class_purity']
+        fig,ax=plt.subplots(figsize=(6,4));ax.plot(knn.k,knn.value,marker='o')
+        ax.set(xlabel='k',ylabel='Family centroid class purity',ylim=(0,1))
+        save(fig,dest/'figures/knn_class_purity',cfg)
     else: raise ValueError(experiment)

@@ -14,8 +14,9 @@ from .plotting import plot_experiment
 REQUIRED = {'overview':{'train'},'ood':{'train','ood','shuffled','idr'},'multilabel':{'train','multi'},'unseen':{'train','unseen'},'structure':{'train'}}
 
 
-def prepare(cfg, route, run_id, payload, force=False):
-    path=output_dir(cfg,route,'preprocess',run_id)
+def prepare(cfg, route, run_id, payload, force=False, destination=None):
+    path=Path(destination) if destination is not None else output_dir(cfg,route,'preprocess',run_id)
+    path.mkdir(parents=True,exist_ok=True)
     if not force and ready(path): return path
     (path/'manifest.json').unlink(missing_ok=True)
     datasets=cfg['routes'][route]['datasets']
@@ -58,29 +59,24 @@ def coordinates(cfg,X,meta,method,path):
     out.to_csv(path/'coordinates.csv',index=False)
 
 
-def compute(cfg,route,experiment,prepared,path,run_id):
+def compute_metrics(cfg,route,experiment,prepared,path,run_id,sampling=None):
     settings=cfg['experiments'][experiment]
     train,mt=load_prepared(prepared,'train')
-    if experiment=='overview':
-        coordinates(cfg,train.values,mt,settings['method'],path)
-    elif experiment=='ood':
-        manifest=ood_manifest(cfg,run_id)
+    if experiment=='ood':
+        manifest=sampling if sampling is not None else ood_manifest(cfg,run_id)
         write_json(path/'sampling.json',manifest)
-        matrices=[train.values];metas=[mt[['sequence_id','dataset_role']]];samples=[]
+        samples=[]
         for role in ['ood','shuffled','idr']:
             target,_=load_prepared(prepared,role);target=target.take(manifest[role]['ids'])
             scores=target_silhouette(target.values,train.values,settings['distance'],settings['chunk_size'])
             samples.append(pd.DataFrame({'sequence_id':target.ids,'dataset_role':role,'silhouette':scores}))
-            matrices.append(target.values);metas.append(pd.DataFrame({'sequence_id':target.ids,'dataset_role':role}))
         frame=pd.concat(samples,ignore_index=True);frame.to_csv(path/'samples.csv',index=False)
         frame.groupby('dataset_role').silhouette.agg(['count','mean','median','std','min','max']).reset_index().to_csv(path/'summary.csv',index=False)
-        coordinates(cfg,np.vstack(matrices),pd.concat(metas),settings['method'],path)
     elif experiment=='multilabel':
         multi,mm=load_prepared(prepared,'multi')
         scores=class_ba(train.values,mt.class_label.to_numpy(),multi.values,mm.class_label.to_numpy())
         scores.insert(0,'sequence_id',multi.ids);scores.to_csv(path/'scores.csv',index=False)
         scores.groupby('class_label').ba_score.describe().reset_index().to_csv(path/'summary.csv',index=False)
-        coordinates(cfg,np.vstack([train.values,multi.values]),pd.concat([mt,mm]),settings['method'],path)
     elif experiment=='structure':
         C,meta=family_centroids(train.values,mt,settings['min_family_size'])
         centroid_structure(C,meta.class_label.to_numpy(),settings['ks']).to_csv(path/'metrics.csv',index=False)
@@ -102,8 +98,8 @@ def compute(cfg,route,experiment,prepared,path,run_id):
             meta=pd.concat([mt.loc[ti],mq.loc[qi]],ignore_index=True)
             if set(chosen).intersection(targets): raise ValueError('Unseen family appears in train')
             X=np.vstack([train.values[ti,:pcs],query.values[qi,:pcs]])
-            fam,glob=family_quality(X,meta.family_label.to_numpy(),settings['chunk_size'])
             out=path/cls;out.mkdir(exist_ok=True)
+            fam,glob=family_quality(X,meta.family_label.to_numpy(),settings['chunk_size'])
             fam.to_csv(out/'joint_families.csv',index=False)
             unseen=fam[fam.family_label.isin(targets)].copy();unseen.insert(0,'class_label',cls)
             family_tables.append(unseen);global_rows.append({'class_label':cls,'context':'joint_unseen_and_sampled_train',**glob})
@@ -112,12 +108,58 @@ def compute(cfg,route,experiment,prepared,path,run_id):
                 tf.to_csv(out/'train_sample_families.csv',index=False)
                 global_rows.append({'class_label':cls,'context':'sampled_train_only',**tg})
             selection[cls]={'train_families':chosen,'unseen_families':targets,'train_count':len(ti),'unseen_count':len(qi)}
-            # Visualization uses all class train proteins, matching the legacy background.
-            all_t=t.index.to_numpy()
-            coordinates(cfg,np.vstack([train.values[all_t,:pcs],query.values[qi,:pcs]]),pd.concat([mt.loc[all_t],mq.loc[qi]]),settings['method'],out)
         pd.concat(family_tables,ignore_index=True).to_csv(path/'families.csv',index=False) if family_tables else pd.DataFrame(columns=['class_label','family_label']).to_csv(path/'families.csv',index=False)
         pd.DataFrame(global_rows,columns=None if global_rows else ['class_label','context']).to_csv(path/'global.csv',index=False)
         write_json(path/'reference_families.json',selection);write_json(path/'skipped_classes.json',skipped)
+
+
+def compute_coordinates(cfg, route, experiment, prepared, path, run_id, method, sampling=None):
+    train, mt = load_prepared(prepared, 'train')
+    if experiment == 'overview':
+        coordinates(cfg, train.values, mt, method, path)
+    elif experiment == 'ood':
+        manifest = sampling if sampling is not None else ood_manifest(cfg, run_id)
+        write_json(path/'sampling.json', manifest)
+        matrices = [train.values]
+        metas = [mt[['sequence_id', 'dataset_role']]]
+        for role in ['ood', 'shuffled', 'idr']:
+            target, _ = load_prepared(prepared, role)
+            target = target.take(manifest[role]['ids'])
+            matrices.append(target.values)
+            metas.append(pd.DataFrame({'sequence_id': target.ids, 'dataset_role': role}))
+        coordinates(cfg, np.vstack(matrices), pd.concat(metas), method, path)
+    elif experiment == 'multilabel':
+        multi, mm = load_prepared(prepared, 'multi')
+        coordinates(cfg, np.vstack([train.values, multi.values]), pd.concat([mt, mm]), method, path)
+    elif experiment == 'unseen':
+        query, mq = load_prepared(prepared, 'unseen')
+        settings = cfg['experiments']['unseen']
+        pcs = settings['n_pcs']
+        if pcs > train.values.shape[1]: raise ValueError('Unseen n_pcs exceeds fitted PCA dimensions')
+        skipped = []
+        for cls in cfg['classes']:
+            t = mt[mt.class_label == cls]; q = mq[mq.class_label == cls]
+            counts = q.family_label.value_counts()
+            targets = counts[counts >= settings['min_family_size']].index
+            qi = q[q.family_label.isin(targets)].index.to_numpy()
+            if not len(t) or not len(qi):
+                skipped.append({'class': cls, 'reason': 'no train or eligible unseen families'}); continue
+            if set(t.family_label).intersection(targets): raise ValueError('Unseen family appears in train')
+            out = path/cls; out.mkdir(exist_ok=True)
+            coordinates(cfg, np.vstack([train.values[t.index, :pcs], query.values[qi, :pcs]]),
+                        pd.concat([t, mq.loc[qi]]), method, out)
+        write_json(path/'skipped_visualization_classes.json', skipped)
+    else:
+        raise ValueError(f'{experiment} has no 2D reduction stage')
+
+
+def compute(cfg, route, experiment, prepared, path, run_id, stage='all', method=None, sampling=None):
+    """Compatibility orchestration; standalone stages call only one computation."""
+    if stage in ['all', 'metrics'] and experiment != 'overview':
+        compute_metrics(cfg, route, experiment, prepared, path, run_id, sampling=sampling)
+    if stage in ['all', 'coordinates'] and experiment != 'structure':
+        method = method or cfg['experiments'][experiment]['method']
+        compute_coordinates(cfg, route, experiment, prepared, path, run_id, method, sampling=sampling)
 
 
 def run_experiment(cfg,route,experiment,run_id,payload,force=False,plot=True):
