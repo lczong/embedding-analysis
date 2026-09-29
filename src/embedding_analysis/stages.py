@@ -86,9 +86,9 @@ def main(experiment, argv=None):
             print(f'Cached: {dest}'); return dest
         parser.error(f'Output already contains different or incomplete artifacts; choose a new --output: {dest}')
     dest.mkdir(parents=True, exist_ok=True)
-    from .workflows import prepare, compute
+    from .workflows import prepare, compute_metrics, compute_coordinates
     if args.step == 'prepare':
-        prepare(cfg, route, run_id, payload, destination=dest)
+        prepare(cfg, route, payload, destination=dest)
     elif args.step == 'sample':
         from .sampling import ood_manifest
         write_json(dest/'sampling.json', ood_manifest(cfg, run_id))
@@ -96,13 +96,14 @@ def main(experiment, argv=None):
         from .workflows import REQUIRED
         for role in REQUIRED[experiment]:
             if not (source/f'{role}.npz').exists(): parser.error(f'PCA artifacts lack {role}')
-        compute(cfg, route, experiment, source, dest, run_id,
-                stage='metrics' if args.step == 'metrics' else 'coordinates',
-                method=args.step if args.step != 'metrics' else None, sampling=sampling)
+        if args.step == 'metrics':
+            compute_metrics(cfg, experiment, source, dest, sampling=sampling)
+        else:
+            compute_coordinates(cfg, experiment, source, dest, args.step, sampling=sampling)
     else:
-        from .plotting import plot_experiment
-        plot_experiment(source, experiment, cfg,
-                        kind='metrics' if args.step == 'metric-plots' else 'visualization', destination=dest)
+        from .plotting import plot_metrics, plot_visualization
+        plot = plot_metrics if args.step == 'metric-plots' else plot_visualization
+        plot(source, experiment, cfg, destination=dest)
     complete(dest, {**payload, 'config': public, 'route': route,
                     'experiment': 'preprocess' if args.step == 'prepare' else experiment,
                     'stage': args.step, 'signature': signature_hash,

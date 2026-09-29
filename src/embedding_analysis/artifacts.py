@@ -51,12 +51,6 @@ def run_context(cfg):
     return digest, payload
 
 
-def output_dir(cfg, route, experiment, run_id):
-    p = local_path(cfg, cfg['output_root']) / cfg['system'] / route / experiment / run_id
-    p.mkdir(parents=True, exist_ok=True)
-    return p
-
-
 def complete(path, payload):
     files = {str(p.relative_to(path)):p.stat().st_size for p in path.rglob('*') if p.is_file() and p.name != 'manifest.json' and 'figures' not in p.relative_to(path).parts}
     write_json(path/'manifest.json', {**payload, 'artifacts': files})

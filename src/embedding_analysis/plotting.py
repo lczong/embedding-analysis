@@ -70,10 +70,9 @@ def distributions(df, value, group, stem, cfg, title):
     save(fig,stem,cfg)
 
 
-def plot_experiment(path, experiment, cfg, kind="all", destination=None):
-    if kind == "metrics": return plot_metrics(path, experiment, cfg, destination)
+def plot_visualization(path, experiment, cfg, destination):
     path = Path(path)
-    dest = Path(destination) if destination is not None else path
+    dest = Path(destination)
     if experiment=='overview':
         df=pd.read_csv(path/'coordinates.csv',dtype={'sequence_id':str})
         scatter(df,'class_label',dest/'figures/classes',cfg,'Training classes')
@@ -102,12 +101,11 @@ def plot_experiment(path, experiment, cfg, kind="all", destination=None):
         save(fig,dest/'figures/centroid_distances',cfg)
     else: raise ValueError(experiment)
 
-    if kind == 'all' and experiment != 'overview': plot_metrics(path, experiment, cfg, destination)
 
 
-def plot_metrics(path, experiment, cfg, destination=None):
+def plot_metrics(path, experiment, cfg, destination):
     path=Path(path)
-    dest=Path(destination) if destination is not None else path
+    dest=Path(destination)
     if experiment=='ood':
         distributions(pd.read_csv(path/'samples.csv'),'silhouette','dataset_role',dest/'figures/silhouette',cfg,'OOD silhouette')
     elif experiment=='multilabel':

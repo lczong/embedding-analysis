@@ -15,7 +15,9 @@ import numpy as np
 import pandas as pd
 from embedding_analysis.config import load_config,local_path,spec_files
 from embedding_analysis.data import read_ids,load_embedding,read_metadata
-from embedding_analysis.cli import main
+from embedding_analysis.stages import main
+from embedding_analysis.artifacts import code_hash
+from embedding_analysis.data import inspect_inputs
 
 
 def extract_csv(cfg,spec,wanted,dest):
@@ -75,9 +77,25 @@ def main_smoke():
                 print(f'Smoke subset: {system}/{role}: {len(wanted)} rows',flush=True)
             cfg['routes'][route]={'dimensions':256,'datasets':datasets}
             config_path=smoke/'configs'/f'{system}.json';config_path.write_text(json.dumps(cfg,indent=2)+'\n')
-        main(['validate','--config',str(config_path),'--deep'])
-        main(['run','--config',str(config_path)])
-        main(['summarize','--config',str(config_path)])
+        inspect_inputs(load_config(config_path), deep=True)
+        base=Path('outputs/stages')/code_hash()[:16]
+        common=['--config',str(config_path)]
+        pca=base/'pca'; sample=base/'ood/sample'
+        main('pca',['prepare',*common,'--route','esm2__l2-frozen-nca','--output',str(pca)])
+        main('ood',['sample',*common,'--output',str(sample)])
+        for experiment in ['overview','ood','multilabel','unseen','structure']:
+            extra=['--sampling',str(sample)] if experiment=='ood' else []
+            metrics=base/experiment/'metrics'
+            if experiment!='overview':
+                main(experiment,['metrics',*common,'--input',str(pca),'--output',str(metrics),*extra])
+                main(experiment,['metric-plots',*common,'--input',str(metrics),'--output',str(base/experiment/'metric-plots')])
+            if experiment=='structure':
+                main(experiment,['visualization',*common,'--input',str(metrics),'--output',str(base/experiment/'visualization')])
+            else:
+                for method in ['tsne','umap']:
+                    coords=base/experiment/method
+                    main(experiment,[method,*common,'--input',str(pca),'--output',str(coords),*extra])
+                    main(experiment,['visualization',*common,'--input',str(coords),'--output',str(base/experiment/('visualization-'+method))])
 
 
 if __name__=='__main__':main_smoke()

@@ -1,15 +1,7 @@
-import copy
 import json
-import tempfile
-import unittest
 from pathlib import Path
-from unittest.mock import patch
 import numpy as np
 import pandas as pd
-from embedding_analysis.config import load_config
-from embedding_analysis.artifacts import run_context, ready
-from embedding_analysis.cli import main
-from embedding_analysis.workflows import run_experiment
 
 PROJECT=Path(__file__).resolve().parents[1]
 
@@ -56,32 +48,3 @@ def build_fixture(root,system='cazy',full_routes=2):
         cfg['routes'][route]={'dimensions':6,'datasets':datasets}
     (root/'configs/defaults.json').write_text(json.dumps(defaults))
     p=root/'configs'/f'{system}.json';p.write_text(json.dumps(cfg));return p
-
-
-class SharedWorkflows(unittest.TestCase):
-    def test_both_systems_all_workflows_and_skip_report(self):
-        for system in ['cazy','peptidase']:
-            with self.subTest(system=system),tempfile.TemporaryDirectory() as td:
-                p=build_fixture(Path(td),system)
-                with patch('embedding_analysis.workflows.reduce_2d',side_effect=lambda X,*a:X[:,:2]):
-                    main(['run','--config',str(p),'--no-plots'])
-                cfg=load_config(p);runid,payload=run_context(cfg)
-                report=json.loads((Path(td)/'outputs'/system/'_runs'/runid/'report.json').read_text())
-                self.assertEqual(sum(r['status']=='complete' for r in report['experiments']),12)
-                self.assertEqual(sum(r['status']=='skipped' for r in report['experiments']),3)
-                routes=list(cfg['routes'])
-                m=[]
-                for route in routes[:2]:
-                    path=Path(td)/'outputs'/system/route/'ood'/runid
-                    m.append(json.loads((path/'sampling.json').read_text()))
-                    self.assertTrue(ready(path))
-                self.assertEqual(m[0],m[1])
-                with patch('embedding_analysis.workflows.compute',side_effect=AssertionError('cache not used')):
-                    run_experiment(cfg,routes[0],'ood',runid,payload,plot=False)
-                cfg['experiments']['ood']['target_size']=4
-                self.assertNotEqual(runid,run_context(cfg)[0])
-                with self.assertRaises(SystemExit):
-                    main(['run','--config',str(p),'--route',routes[-1],'--experiment','ood','--no-plots'])
-
-
-if __name__=='__main__':unittest.main()

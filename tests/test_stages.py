@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
-from test_workflows import build_fixture
+from fixtures_builder import build_fixture
 from embedding_analysis.stages import main
 
 
@@ -35,7 +35,7 @@ class IndependentStages(unittest.TestCase):
                             self.assertEqual(reduce.call_args.args[1],method)
                 # Saved artifacts suffice after all raw inputs disappear.
                 (root/'data').rename(root/'data-hidden')
-                with patch('embedding_analysis.workflows.compute',side_effect=AssertionError('plot ran compute')):
+                with patch('embedding_analysis.workflows.compute_metrics',side_effect=AssertionError('plot ran metrics')), patch('embedding_analysis.workflows.compute_coordinates',side_effect=AssertionError('plot ran reduction')):
                     for exp,source in metrics.items():
                         dest=run(exp,'metric-plots',source)
                         self.assertTrue(list(dest.rglob('*.png')))
@@ -47,5 +47,5 @@ class IndependentStages(unittest.TestCase):
                 with self.assertRaises(SystemExit):
                     main('multilabel',['visualization',*common,'--input',str(metrics['multilabel']),'--output',str(root/'outputs/wrong')])
                 # Stage cache survives absent raw inputs and never invokes upstream work.
-                with patch('embedding_analysis.workflows.compute',side_effect=AssertionError('cache recomputed')):
+                with patch('embedding_analysis.workflows.compute_metrics',side_effect=AssertionError('cache recomputed')):
                     run('multilabel','metrics',pca)

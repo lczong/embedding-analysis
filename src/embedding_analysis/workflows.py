@@ -1,23 +1,20 @@
 """Shared workflows, parameterized exclusively by config and dataset roles."""
 from pathlib import Path
-import json
 import joblib
 import numpy as np
 import pandas as pd
-from .artifacts import output_dir, ready, complete, write_json
+from .artifacts import complete, write_json
 from .data import Embedding, load_embedding, read_metadata
 from .reduction import fit_pca, reduce_2d
-from .sampling import ood_manifest, select_families
+from .sampling import select_families
 from .metrics import target_silhouette, class_ba, family_centroids, centroid_structure, family_quality
-from .plotting import plot_experiment
 
 REQUIRED = {'overview':{'train'},'ood':{'train','ood','shuffled','idr'},'multilabel':{'train','multi'},'unseen':{'train','unseen'},'structure':{'train'}}
 
 
-def prepare(cfg, route, run_id, payload, force=False, destination=None):
-    path=Path(destination) if destination is not None else output_dir(cfg,route,'preprocess',run_id)
+def prepare(cfg, route, payload, destination):
+    path=Path(destination)
     path.mkdir(parents=True,exist_ok=True)
-    if not force and ready(path): return path
     (path/'manifest.json').unlink(missing_ok=True)
     datasets=cfg['routes'][route]['datasets']
     train=load_embedding(cfg,datasets['train'])
@@ -59,11 +56,11 @@ def coordinates(cfg,X,meta,method,path):
     out.to_csv(path/'coordinates.csv',index=False)
 
 
-def compute_metrics(cfg,route,experiment,prepared,path,run_id,sampling=None):
+def compute_metrics(cfg,experiment,prepared,path,sampling):
     settings=cfg['experiments'][experiment]
     train,mt=load_prepared(prepared,'train')
     if experiment=='ood':
-        manifest=sampling if sampling is not None else ood_manifest(cfg,run_id)
+        manifest=sampling
         write_json(path/'sampling.json',manifest)
         samples=[]
         for role in ['ood','shuffled','idr']:
@@ -113,12 +110,12 @@ def compute_metrics(cfg,route,experiment,prepared,path,run_id,sampling=None):
         write_json(path/'reference_families.json',selection);write_json(path/'skipped_classes.json',skipped)
 
 
-def compute_coordinates(cfg, route, experiment, prepared, path, run_id, method, sampling=None):
+def compute_coordinates(cfg, experiment, prepared, path, method, sampling):
     train, mt = load_prepared(prepared, 'train')
     if experiment == 'overview':
         coordinates(cfg, train.values, mt, method, path)
     elif experiment == 'ood':
-        manifest = sampling if sampling is not None else ood_manifest(cfg, run_id)
+        manifest = sampling
         write_json(path/'sampling.json', manifest)
         matrices = [train.values]
         metas = [mt[['sequence_id', 'dataset_role']]]
@@ -151,25 +148,3 @@ def compute_coordinates(cfg, route, experiment, prepared, path, run_id, method, 
         write_json(path/'skipped_visualization_classes.json', skipped)
     else:
         raise ValueError(f'{experiment} has no 2D reduction stage')
-
-
-def compute(cfg, route, experiment, prepared, path, run_id, stage='all', method=None, sampling=None):
-    """Compatibility orchestration; standalone stages call only one computation."""
-    if stage in ['all', 'metrics'] and experiment != 'overview':
-        compute_metrics(cfg, route, experiment, prepared, path, run_id, sampling=sampling)
-    if stage in ['all', 'coordinates'] and experiment != 'structure':
-        method = method or cfg['experiments'][experiment]['method']
-        compute_coordinates(cfg, route, experiment, prepared, path, run_id, method, sampling=sampling)
-
-
-def run_experiment(cfg,route,experiment,run_id,payload,force=False,plot=True):
-    missing=REQUIRED[experiment]-cfg['routes'][route]['datasets'].keys()
-    if missing: raise ValueError(f'{route}/{experiment} missing inputs: {sorted(missing)}')
-    prepared=prepare(cfg,route,run_id,payload,force=False)
-    path=output_dir(cfg,route,experiment,run_id)
-    if force or not ready(path):
-        (path/'manifest.json').unlink(missing_ok=True)
-        compute(cfg,route,experiment,prepared,path,run_id)
-        complete(path,{**payload,'route':route,'experiment':experiment})
-    if plot: plot_experiment(path,experiment,cfg)
-    return path
