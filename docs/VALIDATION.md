@@ -11,7 +11,7 @@
 
 ## 自动化测试
 
-`PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -v`：12 项测试全部通过。
+`PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -v`：13 项测试全部通过。
 
 覆盖：
 
@@ -51,3 +51,7 @@
 ## 分步入口验证
 
 当前 `scripts/smoke_real_data.py` 逐步调用 PCA、sample、metrics、tsne、umap、visualization、metric-plots，覆盖两套系统的五个实验。所有运行入口位于 workflows/。
+
+## 实验模块隔离 — 2026-10-07
+
+每个实验各自持有流程、指标和绘图代码；新增测试禁止导入其他实验后验证全部本实验模块可加载。两套系统的五个实验已通过新的独立入口完成真实小样本验证，数值定义的回归测试保留。各实验自己的汇总表及汇总图也在分步测试中验证。未运行生产全量数据。
