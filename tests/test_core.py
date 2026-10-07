@@ -5,7 +5,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.metrics import silhouette_samples, silhouette_score, davies_bouldin_score, calinski_harabasz_score
-from embedding_analysis.metrics import target_silhouette, class_ba, family_quality, family_centroids, centroid_structure
+from embedding_analysis.experiments.ood.metrics import target_silhouette
+from embedding_analysis.experiments.multilabel.metrics import class_ba
+from embedding_analysis.experiments.unseen.metrics import family_quality
+from embedding_analysis.experiments.structure.metrics import family_centroids, centroid_structure
 from embedding_analysis.sampling import choose_ids
 from embedding_analysis.reduction import fit_pca
 from embedding_analysis.data import load_embedding, read_metadata

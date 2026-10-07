@@ -59,3 +59,12 @@ def plot_metrics(path, cfg, destination):
     dest = Path(destination)
     distributions(pd.read_csv(path / 'samples.csv'), 'silhouette', 'dataset_role', dest / 'figures/silhouette', cfg, 'OOD silhouette')
 
+
+
+def plot_summary(path, cfg, destination):
+    df=pd.read_csv(Path(path)/"summary.csv")
+    if df.empty: return
+    fig,ax=plt.subplots(figsize=(9,4))
+    df.pivot_table(index='dataset_role',columns='route',values='mean',aggfunc='mean').plot.bar(ax=ax)
+    ax.set_ylabel('mean');ax.legend(fontsize=6)
+    save(fig,Path(destination)/'comparison',cfg)

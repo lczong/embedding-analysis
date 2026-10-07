@@ -37,3 +37,13 @@ def plot_metrics(path, cfg, destination):
     ax.set(xlabel='k', ylabel='Family centroid class purity', ylim=(0, 1))
     save(fig, dest / 'figures/knn_class_purity', cfg)
 
+
+
+def plot_summary(path, cfg, destination):
+    df=pd.read_csv(Path(path)/"summary.csv")
+    if df.empty: return
+    fig,ax=plt.subplots(figsize=(9,4))
+    for route,g in df[df.metric=='knn_class_purity'].groupby('route'):
+        ax.plot(g.k,g.value,marker='o',label=route)
+    ax.set(xlabel='k',ylabel='Centroid class purity');ax.legend(fontsize=7)
+    save(fig,Path(destination)/'comparison',cfg)

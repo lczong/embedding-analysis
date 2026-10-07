@@ -20,8 +20,8 @@ def write_json(path, obj):
 
 def code_hash():
     h = hashlib.sha256()
-    for p in sorted(Path(__file__).parent.glob('*.py')):
-        h.update(p.name.encode()); h.update(p.read_bytes())
+    for p in sorted(Path(__file__).parent.rglob('*.py')):
+        h.update(str(p.relative_to(Path(__file__).parent)).encode()); h.update(p.read_bytes())
     return h.hexdigest()
 
 

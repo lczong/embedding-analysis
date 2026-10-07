@@ -34,8 +34,6 @@ def load_config(path):
         raise ValueError('Phase 1 requires L2 normalization')
     if cfg['preprocessing']['fit_on'] != 'train':
         raise ValueError('Phase 1 only supports train-fit PCA')
-    if cfg['experiments']['multilabel']['label_level'] != 'class':
-        raise ValueError('BA is class-level only')
     cfg['_config_path'] = str(path)
     cfg['_root'] = str(path.parent.parent)
     return cfg

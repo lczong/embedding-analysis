@@ -66,3 +66,12 @@ def plot_metrics(path, cfg, destination):
     scores = scores[scores.class_label.isin(count[count >= cfg['experiments']['multilabel']['min_combination_size']].index)]
     distributions(scores, 'ba_score', 'class_label', dest / 'figures/ba', cfg, 'Class barycentric alignment')
 
+
+
+def plot_summary(path, cfg, destination):
+    df=pd.read_csv(Path(path)/"summary.csv")
+    if df.empty: return
+    fig,ax=plt.subplots(figsize=(9,4))
+    df.pivot_table(index='class_label',columns='route',values='mean',aggfunc='mean').plot.bar(ax=ax)
+    ax.set_ylabel('mean');ax.legend(fontsize=6)
+    save(fig,Path(destination)/'comparison',cfg)

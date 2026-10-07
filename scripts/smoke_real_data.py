@@ -15,7 +15,15 @@ import numpy as np
 import pandas as pd
 from embedding_analysis.config import load_config,local_path,spec_files
 from embedding_analysis.data import read_ids,load_embedding,read_metadata
-from embedding_analysis.stages import main
+from embedding_analysis import pca
+from embedding_analysis.experiments import ood, multilabel, unseen, overview, structure
+from embedding_analysis.experiments.ood import workflow as ood_workflow
+from embedding_analysis.experiments.multilabel import workflow as multilabel_workflow
+from embedding_analysis.experiments.unseen import workflow as unseen_workflow
+from embedding_analysis.experiments.overview import workflow as overview_workflow
+from embedding_analysis.experiments.structure import workflow as structure_workflow
+ENTRYPOINTS={"pca":pca.main,"ood":ood_workflow.main,"multilabel":multilabel_workflow.main,"unseen":unseen_workflow.main,"overview":overview_workflow.main,"structure":structure_workflow.main}
+
 from embedding_analysis.artifacts import code_hash
 from embedding_analysis.data import inspect_inputs
 
@@ -81,21 +89,21 @@ def main_smoke():
         base=Path('outputs/stages')/code_hash()[:16]
         common=['--config',str(config_path)]
         pca=base/'pca'; sample=base/'ood/sample'
-        main('pca',['prepare',*common,'--route','esm2__l2-frozen-nca','--output',str(pca)])
-        main('ood',['sample',*common,'--output',str(sample)])
+        ENTRYPOINTS['pca'](['prepare',*common,'--route','esm2__l2-frozen-nca','--output',str(pca)])
+        ENTRYPOINTS['ood'](['sample',*common,'--output',str(sample)])
         for experiment in ['overview','ood','multilabel','unseen','structure']:
             extra=['--sampling',str(sample)] if experiment=='ood' else []
             metrics=base/experiment/'metrics'
             if experiment!='overview':
-                main(experiment,['metrics',*common,'--input',str(pca),'--output',str(metrics),*extra])
-                main(experiment,['metric-plots',*common,'--input',str(metrics),'--output',str(base/experiment/'metric-plots')])
+                ENTRYPOINTS[experiment](['metrics',*common,'--input',str(pca),'--output',str(metrics),*extra])
+                ENTRYPOINTS[experiment](['metric-plots',*common,'--input',str(metrics),'--output',str(base/experiment/'metric-plots')])
             if experiment=='structure':
-                main(experiment,['visualization',*common,'--input',str(metrics),'--output',str(base/experiment/'visualization')])
+                ENTRYPOINTS[experiment](['visualization',*common,'--input',str(metrics),'--output',str(base/experiment/'visualization')])
             else:
                 for method in ['tsne','umap']:
                     coords=base/experiment/method
-                    main(experiment,[method,*common,'--input',str(pca),'--output',str(coords),*extra])
-                    main(experiment,['visualization',*common,'--input',str(coords),'--output',str(base/experiment/('visualization-'+method))])
+                    ENTRYPOINTS[experiment]([method,*common,'--input',str(pca),'--output',str(coords),*extra])
+                    ENTRYPOINTS[experiment](['visualization',*common,'--input',str(coords),'--output',str(base/experiment/('visualization-'+method))])
 
 
 if __name__=='__main__':main_smoke()

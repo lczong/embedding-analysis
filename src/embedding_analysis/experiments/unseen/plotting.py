@@ -61,3 +61,12 @@ def plot_metrics(path, cfg, destination):
         for metric in ['silhouette_mean', 'dunn_cosine', 'legacy_pairwise_dbi']:
             distributions(df, metric, 'class_label', dest / 'figures' / metric, cfg, 'Unseen families')
 
+
+
+def plot_summary(path, cfg, destination):
+    df=pd.read_csv(Path(path)/"summary.csv")
+    if df.empty: return
+    fig,ax=plt.subplots(figsize=(9,4))
+    df.pivot_table(index='class_label',columns='route',values='silhouette_mean',aggfunc='mean').plot.bar(ax=ax)
+    ax.set_ylabel('silhouette_mean');ax.legend(fontsize=6)
+    save(fig,Path(destination)/'comparison',cfg)
