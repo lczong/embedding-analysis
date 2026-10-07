@@ -11,7 +11,7 @@
 
 ## 分步骤运行（推荐）
 
-独立入口和完整命令见 [workflows/README.md](workflows/README.md)。每个实验分别管理流程，指标、t-SNE、UMAP、空间绘图和指标绘图都可以单独执行：
+完整逐步操作手册见 [workflows/README.md](workflows/README.md)，包含五个实验的输入依赖、完整命令、输出文件及字段、配置参数、跨路线汇总、缓存重跑与报错处理。每个实验分别管理流程，指标、t-SNE、UMAP、空间绘图和指标绘图都可以单独执行：
 
 ```bash
 bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca pca
