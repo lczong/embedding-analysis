@@ -12,9 +12,9 @@
 完整逐步操作手册见 [workflows/README.md](workflows/README.md)，包含五个实验的输入依赖、完整命令、输出文件及字段、配置参数、跨路线汇总、缓存重跑与报错处理。每个实验分别管理流程，指标、t-SNE、UMAP、空间绘图和指标绘图都可以单独执行：
 
 ```bash
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca pca
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca sample
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca metrics
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca pca
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca sample
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca metrics
 bash workflows/multilabel.sh configs/cazy.json esm2__l2-frozen-nca metrics
 ```
 
@@ -27,7 +27,7 @@ bash workflows/multilabel.sh configs/cazy.json esm2__l2-frozen-nca metrics
 ```
 
 加 `--deep` 读取全量数据验证 ID、有限值和 metadata 对齐。大文件会耗时。
-Peptidase 的 `esm2__l1-ft-ce__l2-frozen-nca` 只有 train，仅支持 overview 和 structure。
+Peptidase 的 `esm2__l1-ft-ce__l2-frozen-nca` 只有 train，仅支持 overview 和 centroid。
 
 ## 配置与数据
 
@@ -55,10 +55,10 @@ outputs/steps/<system>/<route>/<experiment>/metric-plots/
 
 | 实验 | 主要表 |
 | --- | --- |
-| OOD | samples.csv、summary.csv |
+| Boundary | samples.csv、summary.csv |
 | Class BA | scores.csv、summary.csv |
 | Unseen | families.csv、global.csv、reference_families.json |
-| Structure | centroids.csv、metrics.csv |
+| Centroid | centroids.csv、metrics.csv |
 
 OOD 抽样按每个系统各路线 ID 交集固定，因 CAZy l2-ft 原有预抽样，实际共同样本可能小于 3145；manifest 会记录实际数。新抽样不承诺复现旧图的随机样本。
 

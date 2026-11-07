@@ -1,4 +1,4 @@
-"""Scientific metrics owned by ood."""
+"""Scientific metrics owned by boundary."""
 import numpy as np
 import pandas as pd
 from sklearn.metrics import pairwise_distances

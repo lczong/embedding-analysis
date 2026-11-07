@@ -1,4 +1,4 @@
-"""ood input assembly and independent computations."""
+"""boundary input assembly and independent computations."""
 import numpy as np
 import pandas as pd
 from ...prepared import load_prepared, coordinates
@@ -6,7 +6,7 @@ from ...artifacts import write_json
 from .metrics import target_silhouette
 
 def compute_metrics(cfg, prepared, path, sampling):
-    settings = cfg['experiments']['ood']
+    settings = cfg['experiments']['boundary']
     (train, mt) = load_prepared(prepared, 'train')
     manifest = sampling
     write_json(path / 'sampling.json', manifest)

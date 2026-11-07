@@ -42,7 +42,7 @@
 - BA 固定 class-level，训练单标签类别质心，multi 的多类别标签用 `|` 解析。
 - OOD 样本先生成独立 manifest，绘图和指标共用；同一系统不同路线使用可用 ID 的交集。CAZy l2-ft 只有预抽样 OOD，交集可能小于 3145；明确记录实际数量，不伪称完整 3145。
 - 不同系统的序列不同，绝不共享 CAZy 与 peptidase 的样本 ID。
-- peptidase l1→l2 只有 train；仅运行 overview / structure；请求缺少输入的实验会报错。
+- peptidase l1→l2 只有 train；仅运行 overview / centroid；请求缺少输入的实验会报错。
 - NPY 本身没有 ID；从显式 ids_reference 导入并检查行数/唯一性。行序一致性仍依赖数据来源约定，不能由行数检查证明。
 - 原 Exp3 的 per-family DBI 使用平均两两距离作为 scatter，与 sklearn 全局 DBI 的 centroid scatter 不同。首版保留这一历史定义并使用明确字段名；不混称标准 DBI。
 - Exp3 全局 joint 指标覆盖 unseen + sampled train，不能将其命名为仅 unseen 的 global score。

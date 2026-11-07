@@ -8,10 +8,10 @@
   },
   "experiments": {
     "overview": {"method": "tsne"},
-    "ood": {"target_size": 3145, "distance": "euclidean", "chunk_size": 512, "method": "tsne"},
+    "boundary": {"target_size": 3145, "distance": "euclidean", "chunk_size": 512, "method": "tsne"},
     "multilabel": {"label_level": "class", "method": "umap", "min_combination_size": 5},
     "unseen": {"n_pcs": 100, "min_family_size": 2, "train_family_count": 10, "method": "tsne", "chunk_size": 256},
-    "structure": {"min_family_size": 5, "ks": [1, 3, 5, 7, 9]}
+    "centroid": {"min_family_size": 5, "ks": [1, 3, 5, 7, 9]}
   },
   "plot": {"dpi": 180, "formats": ["png", "pdf"], "point_size": 3, "highlight_combinations": []}
 }

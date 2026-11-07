@@ -1,4 +1,4 @@
-"""Plots owned by structure; independent of other experiment plots."""
+"""Plots owned by centroid; independent of other experiment plots."""
 from pathlib import Path
 import numpy as np
 import pandas as pd

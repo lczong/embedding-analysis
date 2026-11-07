@@ -1,4 +1,4 @@
-"""Plots owned by ood; independent of other experiment plots."""
+"""Plots owned by boundary; independent of other experiment plots."""
 from pathlib import Path
 import numpy as np
 import pandas as pd

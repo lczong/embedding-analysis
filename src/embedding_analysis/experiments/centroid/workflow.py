@@ -1,17 +1,17 @@
-"""structure owns its CLI, dependencies and step execution."""
+"""centroid owns its CLI, dependencies and step execution."""
 from ...runtime import Artifacts, parser_for
 
 
 def main(argv=None):
-    parser = parser_for('structure independent workflow', ['metrics', 'visualization', 'metric-plots'])
+    parser = parser_for('centroid independent workflow', ['metrics', 'visualization', 'metric-plots'])
     args = parser.parse_args(argv)
-    job = Artifacts(parser, args, 'structure')
+    job = Artifacts(parser, args, 'centroid')
     if args.step in ['metrics']:
         job.input('preprocess', ['prepare'], roles=['train'])
     elif args.step == 'visualization':
-        job.input('structure', ['metrics'], plotting=True)
+        job.input('centroid', ['metrics'], plotting=True)
     elif args.step == 'metric-plots':
-        job.input('structure', ['metrics'], plotting=True)
+        job.input('centroid', ['metrics'], plotting=True)
     if job.cached(): return job.dest
     if args.step == 'metrics':
         from .compute import compute_metrics

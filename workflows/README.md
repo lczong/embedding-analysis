@@ -7,11 +7,11 @@
 1. [准备环境、选择系统和路线](#准备环境选择系统和路线)
 2. [命令形式与步骤依赖](#命令形式与步骤依赖)
 3. [公共 PCA](#公共-pca)
-4. [OOD / Exp1](#ood--exp1)
+4. [Boundary / Exp1](#boundary--exp1)
 5. [Multilabel / Exp2](#multilabel--exp2)
 6. [Overview：训练空间展示](#overview训练空间展示)
 7. [Unseen：未见 family 分析](#unseen未见-family-分析)
-8. [Structure：family 质心结构](#structurefamily-质心结构)
+8. [Centroid：family 质心结构](#centroidfamily-质心结构)
 9. [跨路线汇总](#跨路线汇总)
 10. [配置参数](#配置参数)
 11. [重跑、缓存与成功检查](#重跑缓存与成功检查)
@@ -47,7 +47,7 @@ cd /Users/lczong/Projects/01PER/OOD2/embedding_analysis
 | `esm2__l0-ft-ce` | 五个实验 | 五个实验 |
 | `esm2__l1-ft-ce` | 五个实验 | 五个实验 |
 | `esm2__l2-frozen-nca` | 五个实验 | 五个实验 |
-| `esm2__l1-ft-ce__l2-frozen-nca` | 五个实验 | 只有 train；仅 overview、structure |
+| `esm2__l1-ft-ce__l2-frozen-nca` | 五个实验 | 只有 train；仅 overview、centroid |
 | `esm2__l2-ft-ce` | 五个实验 | 五个实验 |
 
 route 从 `esm2` 起，训练阶段用 `__` 连接；`l0/l1/l2` 为二分类、大类、family，`ft/frozen` 为微调 backbone / 冻结上游表示，`ce/nca` 为训练损失。两个系统的 l1 都直接从 ESM2 训练。Peptidase 的 l0 是二分类微调结果，不是原始 ESM2。
@@ -59,19 +59,19 @@ route 从 `esm2` 起，训练阶段用 `__` 连接；`l0/l1/l2` 为二分类、�
 ### Shell 入口：自动填入常用目录
 
 ```bash
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca metrics
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca metrics
 ```
 
 四个位置参数依次为 `CONFIG ROUTE STEP [OUTPUT_BASE]`。第四个参数可省略；默认根目录是 `outputs/steps/<config文件名去掉.json>/<route>`。标准配置下即 `outputs/steps/cazy/...` 或 `outputs/steps/peptidase/...`。
 
-各实验独立入口：`ood.sh`、`multilabel.sh`、`overview.sh`、`unseen.sh`、`structure.sh`。不传步骤只显示帮助。一次调用只执行一个步骤；显式指定 `all` 才按该实验脚本顺序执行全部步骤。
+各实验独立入口：`boundary.sh`、`multilabel.sh`、`overview.sh`、`unseen.sh`、`centroid.sh`。不传步骤只显示帮助。一次调用只执行一个步骤；显式指定 `all` 才按该实验脚本顺序执行全部步骤。
 
 ```bash
 # 只显示帮助
-bash workflows/ood.sh
+bash workflows/boundary.sh
 
-# 显式运行 OOD 全部步骤，包括 t-SNE 和 UMAP
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca all
+# 显式运行 Boundary 全部步骤，包括 t-SNE 和 UMAP
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca all
 ```
 
 `all` 只覆盖这个实验、这个系统、这条路线；不运行其他实验或所有路线，也不自动跳过失败步骤。完整 t-SNE 和精确距离计算可能耗时较长。
@@ -97,8 +97,8 @@ Python 降维子命令是 `tsne` / `umap`；绘图子命令统一为 `visualizat
                               ├→ tsne    → visualization-tsne
                               └→ umap    → visualization-umap
 
-OOD 另有：原始 ID → sample → metrics / tsne / umap
-Structure：PCA → metrics（含质心）→ visualization / metric-plots
+Boundary 另有：原始 ID → sample → metrics / tsne / umap
+Centroid：PCA → metrics（含质心）→ visualization / metric-plots
 ```
 
 指标、t-SNE 和 UMAP 是并列分支，可以任选先后，不要求先算指标再降维。每步只读指定产物；缺少上游会报错，不会自动补跑。两种二维方法分别拟合、分别存储，不使用彼此的结果。
@@ -116,7 +116,7 @@ Structure：PCA → metrics（含质心）→ visualization / metric-plots
 等价便捷命令：
 
 ```bash
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca pca
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca pca
 ```
 
 输入是该 route 配置中的原始 embedding 和 metadata。处理顺序为：每条序列做 L2 归一化，在 train 上拟合 PCA，再用同一个模型转换本路线配置的其他数据集。默认保留 100 个主成分；没有把 probe 合并到 PCA 拟合中。
@@ -139,7 +139,7 @@ bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca pca
 
 同系统、同路线的这份 PCA 可供全部适用实验读取。若只跑指标，到 PCA 完成后直接运行相应 `metrics` 即可。
 
-## OOD / Exp1
+## Boundary / Exp1
 
 输入要求：PCA 中有 `train`、`ood`、`shuffled`、`idr`。`ood` 是 non-target，`shuffled` 是打乱序列，`idr` 是 IDR。指标只有 target silhouette，不计算 kNN OOD score。
 
@@ -147,19 +147,19 @@ bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca pca
 
 ```bash
 # 1. 准备公共 PCA；已有相同产物可复用
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca pca
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca pca
 # 2. 固定跨路线抽样
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca sample
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca sample
 # 3. 只算 silhouette
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca metrics
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca metrics
 # 4. 分别做二维降维；可以只选一种
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca tsne
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca umap
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca tsne
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca umap
 # 5. 分别读取二维坐标画空间图
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca visualization-tsne
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca visualization-umap
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca visualization-tsne
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca visualization-umap
 # 6. 只读指标表画指标图
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
 ```
 
 `sample` 不依赖 PCA，可先执行。它对每种 OOD 角色分别取系统内各可用路线的 ID 交集，再按 seed 排序抽取至多 3145 条。CAZy l2-ft 的已有预抽样可能使共同样本少于目标数；以清单记录的实际数为准。train 保持全量。Shell 把清单放在当前路线的输出树下，但抽样依据是整个系统，并非仅这条路线。
@@ -172,11 +172,11 @@ bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
 
 | 步骤 | 读取 | 主要产物 |
 | --- | --- | --- |
-| `sample` | 配置内各路线的原始 ID | `ood/sample/sampling.json` |
-| `metrics` | `pca/` 和 `ood/sample/` | `ood/metrics/samples.csv`、`summary.csv`、`sampling.json` |
-| `tsne` / `umap` | 同上 | `ood/<方法>/coordinates.csv`、`sampling.json` |
-| `visualization-<方法>` | `ood/<方法>/` | `ood/visualization-<方法>/figures/density.png`、`.pdf` |
-| `metric-plots` | `ood/metrics/` | `ood/metric-plots/figures/silhouette.png`、`.pdf` |
+| `sample` | 配置内各路线的原始 ID | `boundary/sample/sampling.json` |
+| `metrics` | `pca/` 和 `boundary/sample/` | `boundary/metrics/samples.csv`、`summary.csv`、`sampling.json` |
+| `tsne` / `umap` | 同上 | `boundary/<方法>/coordinates.csv`、`sampling.json` |
+| `visualization-<方法>` | `boundary/<方法>/` | `boundary/visualization-<方法>/figures/density.png`、`.pdf` |
+| `metric-plots` | `boundary/metrics/` | `boundary/metric-plots/figures/silhouette.png`、`.pdf` |
 
 `sampling.json` 每个角色包含 `ids`、`requested`、`actual`、`common_count` 和各路线的 `source_counts`。
 
@@ -187,11 +187,11 @@ bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
 ### 显式复用一份抽样清单
 
 ```bash
-.venv/bin/python workflows/ood.py metrics \
+.venv/bin/python workflows/boundary.py metrics \
   --config configs/cazy.json \
   --input outputs/steps/cazy/esm2__l2-frozen-nca/pca \
-  --sampling outputs/steps/cazy/esm2__l2-frozen-nca/ood/sample \
-  --output outputs/custom/ood-metrics
+  --sampling outputs/steps/cazy/esm2__l2-frozen-nca/boundary/sample \
+  --output outputs/custom/boundary-metrics
 ```
 
 `metrics`、`tsne`、`umap` 都必须传 `--sampling`。跨路线比较时，可让各路线显式读取同一份清单。
@@ -296,20 +296,20 @@ bash workflows/unseen.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
 
 `context=joint_unseen_and_sampled_train` 表示联合空间；`sampled_train_only` 表示单独的 train 参照空间。不能把前者当成 unseen-only 结果。`legacy_pairwise_dbi` 也不能与标准全局 `davies_bouldin_euclidean` 混用。退化距离可能产生 NaN，详见[计算约定](../docs/METHODS.md#unseen-family)。
 
-## Structure：family 质心结构
+## Centroid：family 质心结构
 
 只需 train。默认保留至少 5 条序列的 family，并在 PCA 空间计算家族质心。每个 family 必须属于一个 class。
 
 ```bash
-bash workflows/structure.sh configs/cazy.json esm2__l2-frozen-nca pca
-bash workflows/structure.sh configs/cazy.json esm2__l2-frozen-nca metrics
-bash workflows/structure.sh configs/cazy.json esm2__l2-frozen-nca visualization
-bash workflows/structure.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
+bash workflows/centroid.sh configs/cazy.json esm2__l2-frozen-nca pca
+bash workflows/centroid.sh configs/cazy.json esm2__l2-frozen-nca metrics
+bash workflows/centroid.sh configs/cazy.json esm2__l2-frozen-nca visualization
+bash workflows/centroid.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
 ```
 
 该实验不做 t-SNE/UMAP。`visualization` 直接读取指标步骤保存的质心，画距离热图。
 
-| 产物（相对 `structure/`） | 内容 |
+| 产物（相对 `centroid/`） | 内容 |
 | --- | --- |
 | `metrics/centroids.csv` | `family_label`、`class_label`、`n_sequences`、`PC1...PCn` |
 | `metrics/metrics.csv` | 长表：`metric`、`k`、`value` |
@@ -320,29 +320,29 @@ bash workflows/structure.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
 
 ## 跨路线汇总
 
-每个实验有自己的汇总工具：`ood_summary.py`、`multilabel_summary.py`、`unseen_summary.py`、`structure_summary.py`。先汇总表，再单独绘图。只汇总同一系统、同一个实验；不要混入不同 PCA 设定或不可比较的计算配置，当前工具不会替你验证这些科学参数是否一致。
+每个实验有自己的汇总工具：`boundary_summary.py`、`multilabel_summary.py`、`unseen_summary.py`、`centroid_summary.py`。先汇总表，再单独绘图。只汇总同一系统、同一个实验；不要混入不同 PCA 设定或不可比较的计算配置，当前工具不会替你验证这些科学参数是否一致。
 
-以下例子要求两条路线的 OOD `metrics` 都已经完成：
+以下例子要求两条路线的 Boundary `metrics` 都已经完成：
 
 ```bash
-.venv/bin/python workflows/ood_summary.py tables --config configs/cazy.json \
-  --inputs outputs/steps/cazy/esm2__l0-ft-ce/ood/metrics \
-           outputs/steps/cazy/esm2__l2-frozen-nca/ood/metrics \
-  --output outputs/summary/cazy/ood/tables
+.venv/bin/python workflows/boundary_summary.py tables --config configs/cazy.json \
+  --inputs outputs/steps/cazy/esm2__l0-ft-ce/boundary/metrics \
+           outputs/steps/cazy/esm2__l2-frozen-nca/boundary/metrics \
+  --output outputs/summary/cazy/boundary/tables
 
-.venv/bin/python workflows/ood_summary.py plots --config configs/cazy.json \
-  --input outputs/summary/cazy/ood/tables \
-  --output outputs/summary/cazy/ood/plots
+.venv/bin/python workflows/boundary_summary.py plots --config configs/cazy.json \
+  --input outputs/summary/cazy/boundary/tables \
+  --output outputs/summary/cazy/boundary/plots
 ```
 
 `tables --inputs` 接受多个指标目录，每个目录有有效 manifest；生成加上 `route` 列的 `summary.csv`。不需要所有路线都完成，也不会自动寻找目录。
 
 | 实验 | 汇总来源 | 比较图 |
 | --- | --- | --- |
-| OOD | 各路线 `metrics/summary.csv` | 各角色的平均 silhouette |
+| Boundary | 各路线 `metrics/summary.csv` | 各角色的平均 silhouette |
 | Multilabel | 各路线 `metrics/summary.csv` | 各 class 组合的平均 BA |
 | Unseen | 各路线 `metrics/families.csv` | 各 class 的 family silhouette 均值（按 family 等权） |
-| Structure | 各路线 `metrics/metrics.csv` | 不同 k 的质心同 class 邻居比例 |
+| Centroid | 各路线 `metrics/metrics.csv` | 不同 k 的质心同 class 邻居比例 |
 
 `plots` 输出 `comparison.png/.pdf`（按配置格式），直接放在指定输出目录中。若汇总表为空，可以成功结束但不生成图。每个输入目录只列一次，避免重复汇总。
 
@@ -360,15 +360,15 @@ bash workflows/structure.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
 | `reduction.tsne.n_jobs` | 1 | t-SNE 并行度 |
 | `reduction.umap.n_neighbors` | 30 | UMAP 邻居数，须小于实际参与降维的样本数 |
 | `reduction.umap.min_dist / metric / n_jobs` | `0.5 / euclidean / 1` | UMAP 布局、距离和并行度 |
-| `experiments.ood.target_size` | 3145 | 每种 OOD 的最大抽样数，不保证交集有这么多 |
-| `experiments.ood.distance / chunk_size` | `euclidean / 512` | silhouette 距离及分块大小 |
+| `experiments.boundary.target_size` | 3145 | 每种 OOD 的最大抽样数，不保证交集有这么多 |
+| `experiments.boundary.distance / chunk_size` | `euclidean / 512` | silhouette 距离及分块大小 |
 | `experiments.multilabel.label_level` | `class` | 只支持 class BA |
 | `experiments.multilabel.min_combination_size` | 5 | BA 分布图的组合大小门槛 |
 | `experiments.unseen.n_pcs` | 100 | 取前多少 PC，不能超过已保存的 PCA 维数 |
 | `experiments.unseen.min_family_size` | 2 | 合格 family 的最少序列数 |
 | `experiments.unseen.train_family_count` | 10 | 每类最多选择多少个 train 参照 family |
 | `experiments.unseen.chunk_size` | 256 | family 距离计算分块大小 |
-| `experiments.structure.min_family_size / ks` | `5 / [1,3,5,7,9]` | family 门槛和质心邻居统计 |
+| `experiments.centroid.min_family_size / ks` | `5 / [1,3,5,7,9]` | family 门槛和质心邻居统计 |
 | `plot.dpi / formats / point_size` | `180 / [png,pdf] / 3` | 导出设置及使用此参数的散点大小；OOD 点大小目前在本实验绘图代码中固定 |
 | `plot.highlight_combinations` | 系统配置 | Multilabel 重点组合 |
 | `class_colors` | 系统配置 | class 颜色 |
@@ -398,7 +398,7 @@ bash workflows/structure.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
 第四个 shell 参数指定新的根目录；后续各步骤都传同一个新根目录：
 
 ```bash
-bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca all \
+bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca all \
   outputs/runs/cazy-l2nca-v2
 ```
 
@@ -435,7 +435,7 @@ bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca all \
 | `Path leaves project` / 输出路径限制 | 输入输出不在配置所属项目中，或输出不在 `output_root` 下 |
 | PCA 维数超过矩阵形状 | 样本/特征不足；降低 `n_components`，准备新 PCA，并同步检查 unseen 的 `n_pcs` |
 | t-SNE perplexity / UMAP neighbors 过大 | 对当前降维数据（unseen 是每个 class）降低对应参数；总行数还须至少 4 |
-| `Need >... families` | structure 的合格 family 太少；检查数据，合理降低最大 k 或 family 大小门槛 |
+| `Need >... families` | centroid 的合格 family 太少；检查数据，合理降低最大 k 或 family 大小门槛 |
 | ID 重复、metadata 缺失、维度不一致、train 重叠 | 修正输入和对应配置；不会静默丢弃问题行 |
 | unseen 无图或部分 class 缺失 | 查看两个 skipped JSON；指标与图的纳入规则不同，不一定是失败 |
 | BA 部分分数为空 | 查看 `invalid_reason`，判断是缺质心、单标签还是退化半径 |
@@ -451,7 +451,7 @@ bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca all \
 | 同目录 `metrics.py` | 本实验的指标定义；overview 无此文件 |
 | 同目录 `plotting.py` | 本实验的空间图、指标图和比较图 |
 | 同目录 `summary.py` | 本实验跨路线汇总；overview 无此文件 |
-| OOD / unseen 的 `sampling.py` | 各自的抽样策略 |
+| Boundary / unseen 的 `sampling.py` | 各自的抽样策略 |
 | 公共 `prepared.py`、`reduction.py` | PCA、已处理数据读取、二维降维 |
 | 公共 `runtime.py`、`artifacts.py` | 参数与产物检查、缓存和完成记录；不分派实验 |
 

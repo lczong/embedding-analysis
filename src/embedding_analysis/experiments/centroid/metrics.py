@@ -1,4 +1,4 @@
-"""Scientific metrics owned by structure."""
+"""Scientific metrics owned by centroid."""
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import pdist
@@ -20,7 +20,7 @@ def family_centroids(X, metadata, min_size=5):
         raise ValueError('No family survives minimum size')
     return (np.asarray(values), pd.DataFrame(rows))
 
-def centroid_structure(C, labels, ks):
+def centroid_metrics(C, labels, ks):
     labels = np.asarray(labels)
     if len(C) <= max(ks):
         raise ValueError(f'Need >{max(ks)} families for configured k; found {len(C)}')

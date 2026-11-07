@@ -4,7 +4,7 @@
 
 每条 route 在 train 上独立拟合 L2 Normalizer + PCA(100)，然后转换 multi/unseen/OOD。所有距离都在明确记录的 PCA 空间计算；不使用二维图坐标计算指标。缺少 ID、重复 ID、元数据不匹配、train 与 unseen/multi 重叠都会报错。
 
-## OOD
+## Boundary
 
 每个系统内，分别对 non-target、shuffled、IDR 取各可用 route 的 ID 交集，再按 seed + role + ID 的 SHA256 排序选至多 3145 条。train 全量。固定 manifest 同时用于 silhouette 和 t-SNE，跨 route 共享。小于目标数时记录 actual/common_count/source_counts。
 
@@ -30,7 +30,7 @@ joint 指标的上下文是 unseen + sampled train。Silhouette、Dunn 使用 co
 
 全局字段明确区分 `joint_unseen_and_sampled_train` 与 `sampled_train_only`。距离分块归约，避免旧代码为整个 class 分配 N×N 距离矩阵。
 
-## Family centroid structure
+## Family centroid centroid
 
 保留至少 5 条序列的 train family，计算质心。报告质心的 class silhouette、类间/类内距离中位数之比，以及 k=1,3,5,7,9 的同 class 邻居比例。排除自身按索引判断，避免重合质心时误删邻居。
 

@@ -5,8 +5,8 @@ from ...data import read_ids
 from ...config import local_path
 from ...artifacts import write_json
 
-def ood_manifest(cfg, run_id):
-    path = local_path(cfg, cfg['output_root']) / cfg['system'] / '_sampling' / run_id / 'ood.json'
+def boundary_manifest(cfg, run_id):
+    path = local_path(cfg, cfg['output_root']) / cfg['system'] / '_sampling' / run_id / 'boundary.json'
     if path.exists():
         return json.loads(path.read_text())
     result = {}
@@ -17,8 +17,8 @@ def ood_manifest(cfg, run_id):
         common = set.intersection(*sets.values())
         if len(common) < 2:
             raise ValueError(f'{role} has fewer than 2 common IDs across routes')
-        ids = choose_ids(common, cfg['experiments']['ood']['target_size'], cfg['seed'], role)
-        result[role] = {'ids': ids, 'requested': cfg['experiments']['ood']['target_size'], 'actual': len(ids), 'common_count': len(common), 'source_counts': {r: len(v) for (r, v) in sets.items()}}
+        ids = choose_ids(common, cfg['experiments']['boundary']['target_size'], cfg['seed'], role)
+        result[role] = {'ids': ids, 'requested': cfg['experiments']['boundary']['target_size'], 'actual': len(ids), 'common_count': len(common), 'source_counts': {r: len(v) for (r, v) in sets.items()}}
     write_json(path, result)
     return result
 
