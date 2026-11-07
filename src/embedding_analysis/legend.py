@@ -20,7 +20,7 @@ def top_legend(ax, cfg, handles=None, labels=None):
     fig.canvas.draw()
     renderer=fig.canvas.get_renderer()
     box=ax.get_window_extent(renderer)
-    fontsize=cfg['plot'].get('legend',{}).get('fontsize',10)
+    fontsize=cfg['plot'].get('legend',{}).get('fontsize',14)
     prop=fm.FontProperties(size=fontsize)
     points=fig.dpi/72
     # Reserve handle, handle/text gap and a small rounding margin.

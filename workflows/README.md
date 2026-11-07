@@ -351,7 +351,7 @@ Overview 和 binary 没有指标汇总入口。空数据不一定生成图，应
 | `plot.boundary.silhouette_ylim` | `[-0.2, 1]` | 单路线及跨路线箱线图纵轴范围 |
 | `plot.boundary.role_labels` | 系统配置 | 图例和分面角色名称 |
 | `plot.highlight_combinations` | 系统配置 | Multilabel 重点组合 |
-| `plot.legend.fontsize` | `10` | 所有类别图例字号；图外上方左对齐，按实际宽度自动分列/换行，无边框 |
+| `plot.legend.fontsize` | `14` | 所有类别图例字号；图外上方左对齐，按实际宽度自动分列/换行，无边框 |
 | `class_colors` | 系统配置 | class 颜色 |
 
 配置中仍存在 `experiments.<实验>.method` 字段，但当前独立入口不使用它选择降维：以执行的 `tsne` / `umap` 子命令为准，shell 的 `all` 会执行两种方法。
@@ -410,4 +410,4 @@ Overview 样式来自原 `normpca100/train_plot/src/plot_class.py` 和 `plot_cla
 
 ## 图例位置
 
-所有类别图例放在图外上方、与绘图区左边缘对齐；有标题时图例位于标题上方。根据渲染后的文字宽度安排分列，单条过长时换行，不扩展图片宽度。图例字号默认 10，无边框。Overview 图例包含 class 名称和数量，随主图保存，不再输出独立 legend 文件。Multilabel/Unseen 类别较多时完整保留图例，不再因为超过 25 类而隐藏。Boundary 分面仍使用类别标题；不需要类别图例的单曲线/箱线图维持轴标签，Centroid 热图的 colorbar 仍放右侧。
+所有类别图例放在图外上方、与绘图区左边缘对齐；有标题时图例位于标题上方。根据渲染后的文字宽度安排分列，单条过长时换行，不扩展图片宽度。图例字号默认 14，无边框。Overview 图例包含 class 名称和数量，随主图保存，不再输出独立 legend 文件。Multilabel/Unseen 类别较多时完整保留图例，不再因为超过 25 类而隐藏。Boundary 分面仍使用类别标题；不需要类别图例的单曲线/箱线图维持轴标签，Centroid 热图的 colorbar 仍放右侧。
