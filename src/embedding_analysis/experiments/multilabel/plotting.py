@@ -51,7 +51,7 @@ def plot_metrics(path,cfg,destination):
             ax.axvline(0,color='gray',ls='--',lw=1,alpha=.7,label='BA = 0')
             ax.axvline(1,color='green',ls=':',lw=1,alpha=.7,label='BA = 1')
             ax.axvline(values.mean(),color='red',ls='-.',lw=1.2,alpha=.8,label=f'Mean = {values.mean():.3f}')
-            finish_density(ax,cfg,dest/('ba_combo_'+combo.replace('|','_')),f'{combo} (n = {len(values):,})')
+            finish_density(ax,cfg,dest/'ba_combos'/('ba_combo_'+combo.replace('|','_')),f'{combo} (n = {len(values):,})')
         oa.axvline(0,color='gray',ls='--',lw=1,alpha=.6)
         oa.axvline(1,color='green',ls=':',lw=1,alpha=.6)
         if not len(combos):oa.text(.5,.5,'No eligible combinations',ha='center',transform=oa.transAxes)
@@ -65,6 +65,15 @@ def plot_summary(path,cfg,destination):
     ref=valid[(valid.route==routes[0]) & (valid.class_label.str.count(r'\|')==1)]
     counts=ref.groupby('class_label').size().sort_values(ascending=False)
     combos=list(counts[counts>threshold].index)
+    combos=options.get('combinations',combos)
+    groups=options.get('ba_summary_groups',{'all':routes})
+    for name,selected in groups.items():
+        selected=[r for r in selected if r in routes]
+        if selected:draw_summary(valid,selected,combos,cfg,Path(destination)/('ba_'+name))
+
+
+def draw_summary(valid,routes,combos,cfg,stem):
+    options=cfg['plot']['multilabel']
     colors=['#777777','#59A14F','#4E79A7','#B07AA1','#E15759','#F28E2B']
     fixed={'esm2':'#777777','esm2__l0-ft-ce':'#59A14F','esm2__l1-ft-ce':'#4E79A7',
            'esm2__l2-ft-ce':'#F28E2B','esm2__l1-ft-ce__l2-frozen-nca':'#B07AA1','esm2__l2-frozen-nca':'#E15759'}
@@ -95,4 +104,4 @@ def plot_summary(path,cfg,destination):
         limits=options.get('ba_summary_ylim',[-7,1]);ax.set_ylim(*limits);ax.margins(x=.03)
         if not combos:ax.text(.5,.5,'No eligible two-class combinations',ha='center',transform=ax.transAxes)
         top_legend(ax,cfg,handles=handles)
-        save(fig,Path(destination)/'comparison',cfg)
+        save(fig,stem,cfg)

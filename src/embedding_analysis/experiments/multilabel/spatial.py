@@ -127,7 +127,7 @@ def plot_visualization(path,cfg,destination):
     options=cfg['plot'].get('multilabel',{})
     order=options.get('class_order',cfg['classes'])
     bases=[c for c in order if c in set(df.class_label)]
-    combos=list(dict.fromkeys('|'.join(sorted(c.split('|'))) for c in cfg['plot']['highlight_combinations']))
+    combos=list(dict.fromkeys('|'.join(sorted(c.split('|'))) for c in options.get('combinations',cfg['plot']['highlight_combinations'])))
     combos=[c for c in combos if c in set(df.class_label)]
     palette=dict(cfg['class_colors']);fixed=options.get('combo_colors',{})
     used={palette[c] for c in set(part for combo in combos for part in combo.split('|'))};used.update(fixed.values())
@@ -145,9 +145,10 @@ def plot_visualization(path,cfg,destination):
             if reason:skipped.append({'category':category,'dimension':column,'reason':reason})
     views=[('classes',bases,[])]
     for combo in combos:views.append(('combo_'+'_'.join(combo.split('|')),[c for c in bases if c in combo.split('|')]+[combo],[combo]))
-    if len(combos)>1:
-        parents={part for combo in combos for part in combo.split('|')}
-        views.append(('combos_'+'__'.join(c.replace('|','_') for c in combos),[c for c in bases if c in parents]+combos,combos))
+    joint=[c for c in cfg['plot']['highlight_combinations'] if c in combos]
+    if len(joint)>1:
+        parents={part for combo in joint for part in combo.split('|')}
+        views.append(('combos_'+'__'.join(c.replace('|','_') for c in joint),[c for c in bases if c in parents]+joint,joint))
     with plt.rc_context({'font.family':options.get('font','Arial')}):
         for name,categories,selected in views:draw_view(df,categories,selected,palette,curves,bounds,cfg,destination/'figures'/name,method)
     write_json(destination/'kde_skipped.json',skipped)

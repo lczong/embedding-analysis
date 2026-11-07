@@ -14,7 +14,7 @@ def main(argv=None):
     parser.add_argument('--routes', nargs='+', help='Routes whose metric outputs should be combined')
     parser.add_argument('--inputs', type=Path, nargs='+', help='Metric directories for tables')
     args=parser.parse_args(argv)
-    job=Artifacts(parser,args,'multilabel',table_patterns=['*.csv'] if args.step=='tables' else (),figure_names={'comparison':'ba'})
+    job=Artifacts(parser,args,'multilabel',table_patterns=['*.csv'] if args.step=='tables' else ())
     if args.step=='tables':
         if args.inputs and args.routes: parser.error('Use --routes or --inputs, not both')
         if args.routes:

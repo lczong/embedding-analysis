@@ -281,6 +281,30 @@
       "combo_colors": {
         "CBM|GH": "#4363d8",
         "CBM|PL": "#e6194b"
+      },
+      "combinations": [
+        "CBM|GH",
+        "CBM|PL",
+        "AA|CBM",
+        "CBM|CE",
+        "GH|GT",
+        "CBM|GT",
+        "CE|GH",
+        "CE|PL",
+        "CE|GT"
+      ],
+      "ba_summary_groups": {
+        "ftce": [
+          "esm2",
+          "esm2__l0-ft-ce",
+          "esm2__l1-ft-ce",
+          "esm2__l2-ft-ce"
+        ],
+        "frozen_nca": [
+          "esm2",
+          "esm2__l2-frozen-nca",
+          "esm2__l1-ft-ce__l2-frozen-nca"
+        ]
       }
     }
   }
