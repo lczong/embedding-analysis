@@ -280,7 +280,14 @@
       ],
       "combo_colors": {
         "CBM|GH": "#4363d8",
-        "CBM|PL": "#e6194b"
+        "CBM|PL": "#e6194b",
+        "AA|CBM": "#007F73",
+        "CBM|CE": "#A51C70",
+        "GH|GT": "#006B3C",
+        "CBM|GT": "#007C91",
+        "CE|GH": "#8F163D",
+        "CE|PL": "#B64A00",
+        "CE|GT": "#756000"
       },
       "combinations": [
         "CBM|GH",
