@@ -12,3 +12,5 @@
 需要全量 ID、有限值和标签对齐检查时加 `--deep`。
 
 `import_manifest.json` 仅保留初次复制的来源及校验记录，运行不读取。数据不进入 Git；本目录的 README 由 Git 跟踪。
+
+二分类图另导入五条 CAZy 路线的 `non-cazy_train.embeddings.csv`，配置角色为 `non_target_train`。副本 SHA256 与原文件一致，记录在 `binary_import_manifest.json`；L2 FT-CE 原目录无该输入。

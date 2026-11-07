@@ -479,3 +479,37 @@ bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca all \
 ## 已恢复绘图样式的来源
 
 Overview 参考原 `normpca100/train_plot/src/plot_class.py` 与 `plot_class_label_family.py`；Boundary 参考原 `normpca100/exp1/src/plot_tsne_labels.py`、`plot_per_ood_panels.py` 以及 `exp1/silhouette_balanced/src/plot_silhouette_balanced_box.py`。绘图实现在本项目各实验的 `plotting.py` 内，不运行或导入原目录代码。CAZy 与 peptidase 通过各自配置提供类别颜色、顺序和角色名称。
+
+## Binary：目标 / non-target train 二分类图
+
+此实验独立于 overview 和 Boundary。输入是同一路线的 `train` 与 `non_target_train`，使用两组全部训练序列联合拟合 L2-normalized PCA100，再联合降至二维。它不读取 Boundary 的 non-target test，不采样到 3145 条，也不使用原有 train-only PCA。PCA、t-SNE、UMAP、绘图可以分别执行。
+
+CAZy 当前可用路线：`esm2`、`esm2__l0-ft-ce`、`esm2__l1-ft-ce`、`esm2__l2-frozen-nca`、`esm2__l1-ft-ce__l2-frozen-nca`。原目录没有 L2 FT-CE 的 non-CAZy train embedding，因此该路线不能运行 binary。Peptidase 尚未配置 non-target train。
+
+```bash
+bash workflows/binary.sh configs/cazy.json esm2__l0-ft-ce pca
+bash workflows/binary.sh configs/cazy.json esm2__l0-ft-ce tsne
+bash workflows/binary.sh configs/cazy.json esm2__l0-ft-ce visualization-tsne
+```
+
+默认输出位置为 `outputs/steps/cazy/<route>/binary/`；shell 的第四个参数可以指定路线输出根目录。例如使用已有本次运行目录：
+
+```bash
+bash workflows/binary.sh configs/cazy.json esm2__l0-ft-ce pca outputs/cazy-tsne-20261107/esm2__l0-ft-ce
+```
+
+底层独立 Python 入口：
+
+```bash
+.venv/bin/python workflows/binary.py pca --config configs/cazy.json --route esm2__l0-ft-ce --output outputs/steps/cazy/esm2__l0-ft-ce/binary/pca
+.venv/bin/python workflows/binary.py tsne --config configs/cazy.json --input outputs/steps/cazy/esm2__l0-ft-ce/binary/pca --output outputs/steps/cazy/esm2__l0-ft-ce/binary/tsne
+.venv/bin/python workflows/binary.py visualization --config configs/cazy.json --input outputs/steps/cazy/esm2__l0-ft-ce/binary/tsne --output outputs/steps/cazy/esm2__l0-ft-ce/binary/visualization-tsne
+```
+
+| 步骤 | 输出 |
+| --- | --- |
+| `pca` | `joint.npz`、`metadata.csv`、`pca_model.joblib`、`explained_variance.csv`；manifest 的 `fit_on` 明确记录两组 train |
+| `tsne` / `umap` | `coordinates.csv`：sequence_id、dataset_role、x、y |
+| `visualization` | `figures/cazy_vs_noncazy.png`、`.pdf` |
+
+绘图沿用原 `train_plot/src/plot_binary.py` 的灰色 non-target、红色 target、透明散点、中位数名称标签、带数量图例和左下角箭头。默认 Arial、300 dpi、12×10 英寸。`plot.binary` 配置字体、分辨率和类别显示名称。实现位于本项目 `experiments/binary/`，不调用旧目录代码。shell 的 `all` 会依次执行 PCA、t-SNE、UMAP 以及两套图；只需 t-SNE 时使用上面的三个独立步骤。

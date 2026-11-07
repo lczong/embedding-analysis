@@ -39,3 +39,7 @@ joint 指标的上下文是 unseen + sampled train。Silhouette、Dunn 使用 co
 共用 openTSNE（PCA initialization，250/500 iterations）和 umap-learn。旧 scanpy UMAP 不迁移。新的固定 ID 抽样、严格元数据校验和哈希 family 抽样可能使结果不同于旧脚本；不承诺重现所有旧图坐标。
 
 每个独立步骤使用显式输入、输出目录。签名记录配置、代码摘要和上游 manifest；PCA / sample 另记录原始输入路径、大小、mtime 和首尾摘要（不是全文件校验和）。相同签名可复用完成产物；参数或输入变化时需指定新输出目录，不覆盖既有结果。指标、二维降维和两类绘图分别运行，任何步骤都不自动补跑上游。
+
+## Binary train overview
+
+对目标 train 和 non-target train 的全量 embedding 先逐行 L2 归一化，在二者联合数据上拟合 PCA100，再联合 t-SNE/UMAP。此训练集展示流程沿用原 run_binary 的口径，和其他实验的目标 train-only PCA 分离，不计算 Boundary 指标。两组 ID 不允许重叠。

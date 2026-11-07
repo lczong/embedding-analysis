@@ -25,7 +25,6 @@
 | CAZy exp3/debug_quality | Euclidean、train-only reference、全训练家族等实验口径；没有用普通 Exp3 冒充 |
 | CAZy exp3/knn_family_purity | 蛋白级 family 邻域纯度暂缓；已保留的是 family 质心的 class purity，两者不同 |
 | 两套 exp3 compute_train_integration | 未见家族与训练家族的蛋白级邻域整合分析暂缓 |
-| CAZy train_plot/run_binary | CAZy 与 non-CAZy train 联合拟合/二分类可视化；首版 train overview 用系统内训练集 |
 | CAZy exp1 raw silhouette、cosine/PCA sweep | 首版统一 PCA 空间 Euclidean OOD silhouette；原始空间及额外距离对照暂缓 |
 | CAZy exp1 非 balanced / IDR-only / density-aware / contour-only / log-ratio | 已恢复 balanced density、三类分面以及单路线/跨路线 silhouette 箱线图；其余绘图变体暂缓 |
 | 两套 exp2 debug/marginal/KDE/white-background/per-combination variants | 首版保留统一 class/组合散点与 BA 分布；论文特定边际 KDE、白底布局等暂缓 |
@@ -33,7 +32,7 @@
 | 两套 train_plot 的固定 level1 专用图 | 已恢复 class 名称、高频 family 名称两种 class 着色图及独立图例；固定 level1 专用版式暂缓 |
 | scanpy UMAP 实现 | 首版统一 umap-learn；旧 scanpy UMAP 坐标不会等同于新坐标 |
 | normalized/ 输入路线 | 用户要求不动，首版不导入/使用 |
-| 未使用的 val/test、non-target train、历史采样及压缩包 | 不为首版复制；旧目录保留 |
+| 未使用的 val/test、历史采样及压缩包 | 不为首版复制；旧目录保留 |
 | 跨路线成套论文对比图 | Boundary 已恢复跨路线逐样本 silhouette 箱线图；其他固定路线组合的论文图暂缓 |
 
 ## 已显式统一的差异
@@ -50,3 +49,5 @@
 - 计算、降维和绘图分离；缓存记录配置与输入指纹，改参数后不会只因旧输出存在而跳过。
 - CAZy 有独立 `esm2` 基线，peptidase 目前没有对应原始 embedding；首版不伪造或用 level0 代替这一基线。
 - peptidase 原有 centroid silhouette 和类间/类内距离比已推广到两个系统；CAZy 原来只有 centroid kNN purity，不代表旧 CAZy 结果中已有这些新增表。
+
+- CAZy binary 已补入五条具备 non-target train 的路线，联合拟合两组训练集 PCA；与 overview/Boundary 的 train-only PCA 分开保存。L2 FT-CE 缺少 non-target train，未伪造输入。
