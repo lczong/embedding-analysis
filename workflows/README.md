@@ -226,10 +226,15 @@ bash workflows/multilabel.sh configs/cazy.json esm2__l0-ft-ce metric-plots
 | --- | --- |
 | `tables/<route>/ba_samples.csv` | 逐样本 BA，字段以表头为准，包括 sequence_id、class_label、ba_score |
 | `tables/<route>/ba_summary.csv` | 按 class 组合统计 count、mean、std、min、25%、50%、75%、max |
-| `figures/<route>/tsne_classes.*` | train + multi 的 class 图 |
-| `figures/<route>/tsne_combo_<组合>.*` | 配置指定组合的局部展示 |
+| `figures/<route>/tsne_classes.*` | 单标签 class 着色，multi 灰色背景，上方/右侧 KDE |
+| `figures/<route>/tsne_combo_<组合>.*` | 单个组合高亮，父 class 淡色，其余灰色，上方/右侧 KDE |
+| `figures/<route>/tsne_combos_<组合>__<组合>.*` | 多个重点组合同时高亮（至少两个组合存在时生成） |
 | `figures/<route>/ba.*` | BA 分布图 |
 | `artifacts/<route>/tsne/coordinates.csv` | 二维坐标及标签 |
+
+Multilabel 空间图沿用旧 `exp2/debug/plot_umap_multi_white.py` 的白底风格，并增加上方 KDE：单标签点较小且透明，多标签点为较大、白边圆点；CAZy 的 `CBM|GH` 为蓝色、`CBM|PL` 为红色。所有视图保留同一套完整坐标和范围，不对组合单独降维或裁剪。左下角箭头标明实际降维方法；UMAP 输出将上述 `tsne_` 前缀替换为 `umap_`。
+
+KDE 分别沿二维坐标的 x/y 轴计算，每类独立使用 Scott 带宽、400 点网格；不按样本数量加权，不表示 PCA 空间中的指标。样本不足 10 或坐标无方差时跳过该曲线，记录在对应 visualization 步骤的 `kde_skipped.json` 中。图例包含样本数，放在上方 KDE 之外并左对齐，字号 14，按可用宽度分列。PNG/PDF 默认 300 dpi；`plot.multilabel` 管理画布、字体、KDE 最小样本数、class 顺序和组合颜色。空间图由本实验的 `spatial.py` 管理；BA 指标图维持原有独立实现。
 
 ## Unseen：未见 family 分析
 
