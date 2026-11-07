@@ -39,28 +39,27 @@ Peptidase 的 `esm2__l1-ft-ce__l2-frozen-nca` 只有 train，仅支持 overview 
 
 NPY 的 ID 来源由 `ids_reference` 显式声明。它只能检查行数和 ID 完整性，不能仅凭文件推断行序正确。当前 peptidase 数据沿用原脚本的 level0 CSV 行序约定。
 
-## 输出
+## 输出与找图
+
+系统是第一层，CAZy 与 peptidase 的输出、缓存、索引独立：
 
 ```text
-outputs/steps/<system>/<route>/pca/
-outputs/steps/<system>/<route>/<experiment>/metrics/
-outputs/steps/<system>/<route>/<experiment>/tsne/
-outputs/steps/<system>/<route>/<experiment>/umap/
-outputs/steps/<system>/<route>/<experiment>/visualization-tsne/
-outputs/steps/<system>/<route>/<experiment>/visualization-umap/
-outputs/steps/<system>/<route>/<experiment>/metric-plots/
+outputs/<system>/RESULTS.md
+outputs/<system>/<workflow>/RESULTS.md
+outputs/<system>/<workflow>/figures/index.html
+outputs/<system>/<workflow>/figures/<route>/
+outputs/<system>/<workflow>/figures/summary/
+outputs/<system>/<workflow>/tables/<route>/
+outputs/<system>/<workflow>/tables/summary/
+outputs/<system>/<workflow>/artifacts/<route>/<step>/
+outputs/<system>/_shared/pca/<route>/
 ```
 
-每次运行保存完整配置、输入指纹、代码摘要和成功产物清单。指标 CSV 与二维 coordinates.csv 独立保存。主要指标汇总：
+找图进入 `figures/`，或打开 `figures/index.html` 浏览预览；指标表在 `tables/`。坐标、manifest、采样清单和日志留在 `artifacts/`。没有产物的目录不创建。binary 的联合 PCA 位于 `binary/artifacts/<route>/pca/`。
 
-| 实验 | 主要表 |
-| --- | --- |
-| Boundary | samples.csv、summary.csv |
-| Class BA | scores.csv、summary.csv |
-| Unseen | families.csv、global.csv、reference_families.json |
-| Centroid | centroids.csv、metrics.csv |
+默认原位更新当前步骤，成功后清理本步骤的旧产物；配置和产物校验一致时复用。没有日期运行目录、重画副本目录，也不再传 `--output`。每次完成打印图、表和预览链接。需要保留不同参数实验时，shell 第四个参数或 Python `--version NAME` 将结果放到该系统的 `_versions/NAME/`，版本内独立管理全部依赖。
 
-OOD 抽样按每个系统各路线 ID 交集固定，因 CAZy l2-ft 原有预抽样，实际共同样本可能小于 3145；manifest 会记录实际数。新抽样不承诺复现旧图的随机样本。
+[CAZy 结果索引](outputs/cazy/RESULTS.md)。具体文件、独立步骤、缓存与覆盖行为见 [运行手册](workflows/README.md)。
 
 ## 移动或在其他机器安装
 

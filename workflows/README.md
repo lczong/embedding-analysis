@@ -1,22 +1,6 @@
 # 实验分步操作手册
 
-本文对应当前独立实验实现。每个实验自己管理流程、指标和绘图；公共层提供 PCA、t-SNE/UMAP、数据读写及产物校验。所有指标使用 PCA 特征计算，不使用二维图坐标。
-
-## 目录
-
-1. [准备环境、选择系统和路线](#准备环境选择系统和路线)
-2. [命令形式与步骤依赖](#命令形式与步骤依赖)
-3. [公共 PCA](#公共-pca)
-4. [Boundary / Exp1](#boundary--exp1)
-5. [Multilabel / Exp2](#multilabel--exp2)
-6. [Overview：训练空间展示](#overview训练空间展示)
-7. [Unseen：未见 family 分析](#unseen未见-family-分析)
-8. [Centroid：family 质心结构](#centroidfamily-质心结构)
-9. [跨路线汇总](#跨路线汇总)
-10. [配置参数](#配置参数)
-11. [重跑、缓存与成功检查](#重跑缓存与成功检查)
-12. [常见报错](#常见报错)
-13. [代码归属](#代码归属)
+本文对应当前独立实验实现。每个实验自己管理流程、指标和绘图；公共层提供 PCA、t-SNE/UMAP、数据读写及产物校验。所有指标使用 PCA 特征计算，不使用二维图坐标。输出按系统、workflow、用途和 route 组织。
 
 ## 准备环境、选择系统和路线
 
@@ -43,248 +27,235 @@ cd /Users/lczong/Projects/01PER/OOD2/embedding_analysis
 
 | route | CAZy | Peptidase |
 | --- | --- | --- |
-| `esm2` | 五个实验 | 没有该原始 ESM2 输入 |
-| `esm2__l0-ft-ce` | 五个实验 | 五个实验 |
-| `esm2__l1-ft-ce` | 五个实验 | 五个实验 |
-| `esm2__l2-frozen-nca` | 五个实验 | 五个实验 |
-| `esm2__l1-ft-ce__l2-frozen-nca` | 五个实验 | 只有 train；仅 overview、centroid |
-| `esm2__l2-ft-ce` | 五个实验 | 五个实验 |
+| `esm2` | 五个主实验 | 没有该原始 ESM2 输入 |
+| `esm2__l0-ft-ce` | 五个主实验 | 五个主实验 |
+| `esm2__l1-ft-ce` | 五个主实验 | 五个主实验 |
+| `esm2__l2-frozen-nca` | 五个主实验 | 五个主实验 |
+| `esm2__l1-ft-ce__l2-frozen-nca` | 五个主实验 | 只有 train；仅 overview、centroid |
+| `esm2__l2-ft-ce` | 五个主实验 | 五个主实验 |
 
 route 从 `esm2` 起，训练阶段用 `__` 连接；`l0/l1/l2` 为二分类、大类、family，`ft/frozen` 为微调 backbone / 冻结上游表示，`ce/nca` 为训练损失。两个系统的 l1 都直接从 ESM2 训练。Peptidase 的 l0 是二分类微调结果，不是原始 ESM2。
 
 下文完整示例统一采用 CAZy 的 `esm2__l2-frozen-nca`。换成 `configs/peptidase.json` 即运行另一系统；每条路线的 PCA 需分别准备。
 
-## 命令形式与步骤依赖
+## 输出组织与找图
 
-### Shell 入口：自动填入常用目录
-
-```bash
-bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca metrics
-```
-
-四个位置参数依次为 `CONFIG ROUTE STEP [OUTPUT_BASE]`。第四个参数可省略；默认根目录是 `outputs/steps/<config文件名去掉.json>/<route>`。标准配置下即 `outputs/steps/cazy/...` 或 `outputs/steps/peptidase/...`。
-
-各实验独立入口：`boundary.sh`、`multilabel.sh`、`overview.sh`、`unseen.sh`、`centroid.sh`。不传步骤只显示帮助。一次调用只执行一个步骤；显式指定 `all` 才按该实验脚本顺序执行全部步骤。
-
-```bash
-# 只显示帮助
-bash workflows/boundary.sh
-
-# 显式运行 Boundary 全部步骤，包括 t-SNE 和 UMAP
-bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca all
-```
-
-`all` 只覆盖这个实验、这个系统、这条路线；不运行其他实验或所有路线，也不自动跳过失败步骤。完整 t-SNE 和精确距离计算可能耗时较长。
-
-### Python 入口：显式指定每步输入输出
-
-```bash
-.venv/bin/python workflows/multilabel.py metrics \
-  --config configs/cazy.json \
-  --input outputs/steps/cazy/esm2__l2-frozen-nca/pca \
-  --output outputs/custom/multilabel-metrics
-```
-
-`--input` 指向已经完成的上游产物目录，目录中必须有有效 `manifest.json`。`--output` 必须位于配置的 `output_root` 下，且与输入目录分开，不能互相嵌套。数据和产物的相对路径按配置所属项目根目录解析；`--config` 本身按命令的当前目录解析。将自定义系统配置保存在项目的 `configs/` 下，避免改变项目根目录的解析。
-
-Python 降维子命令是 `tsne` / `umap`；绘图子命令统一为 `visualization`，由 `--input` 选择哪份二维坐标。Shell 则提供 `visualization-tsne` / `visualization-umap` 两个便捷步骤。
-
-### 步骤依赖
+系统是第一层，CAZy 和 peptidase 的结果、缓存、索引完全分开。以下只展示存在产物时才创建的目录：
 
 ```text
-原始 embedding + metadata → PCA
+outputs/
+├── cazy/
+│   ├── RESULTS.md
+│   ├── _shared/pca/<route>/
+│   ├── overview/
+│   │   ├── RESULTS.md
+│   │   ├── figures/index.html
+│   │   ├── figures/<route>/
+│   │   └── artifacts/<route>/<step>/
+│   ├── boundary/
+│   │   ├── figures/<route>/
+│   │   ├── figures/summary/
+│   │   ├── tables/<route>/
+│   │   ├── tables/summary/
+│   │   ├── artifacts/<route>/<step>/
+│   │   ├── artifacts/summary/<step>/
+│   │   └── artifacts/_shared/sample/
+│   ├── binary/
+│   ├── multilabel/
+│   ├── unseen/
+│   └── centroid/
+└── peptidase/
+    └── 同样的布局，按实际产物创建
+```
+
+| 用途 | 内容 | 查看入口 |
+| --- | --- | --- |
+| `figures` | 最终 PNG/PDF；空间图、指标图和独立图例 | `<workflow>/figures/index.html` 提供图片预览和 PDF 链接 |
+| `tables` | 逐样本指标、统计摘要、跨路线汇总表 | `<workflow>/RESULTS.md` 列出表格链接 |
+| `artifacts` | 坐标、抽样清单、执行日志、manifest 等 | 运行检查或继续下游步骤时使用 |
+| `_shared/pca` | 同系统、同路线共享的 train-only PCA | 各主实验自动查找；binary 不使用它 |
+
+例如找 CAZy Boundary 图，直接进入 `outputs/cazy/boundary/figures/`。单路线目录中是 `tsne_balanced.png`、`tsne_per_ood_panels.png`、`silhouette.png` 等，汇总图在 `summary/silhouette.png`。PNG/PDF 同目录。UMAP 文件用 `umap_` 前缀，两种方法不会互相覆盖。
+
+索引在步骤完成后自动更新；程序会打印本步骤的 checkpoint、图片目录、表格目录和预览链接。未运行的实验不创建空目录。`manifest.json` 位于 checkpoint 中，以逻辑文件名记录最终文件的相对位置、大小和 SHA256；不要手工移动单张图或修改 manifest。
+
+## 命令形式与独立步骤
+
+### Shell 入口
+
+```bash
+bash workflows/boundary.sh configs/cazy.json esm2__l0-ft-ce metrics
+```
+
+参数是 `CONFIG ROUTE STEP [VERSION]`。第四个参数是可选版本名称，不是路径。系统名称从配置中的 `system` 读取，不根据配置文件名猜测。
+
+可用入口为 `overview.sh`、`boundary.sh`、`binary.sh`、`multilabel.sh`、`unseen.sh`、`centroid.sh`。不指定步骤时显示帮助。一次只执行一个步骤；显式指定 `all` 才执行该实验的全部步骤，空间实验会包括 t-SNE、UMAP 及两种图。
+
+### Python 入口
+
+```bash
+.venv/bin/python workflows/boundary.py metrics --config configs/cazy.json --route esm2__l0-ft-ce
+.venv/bin/python workflows/overview.py visualization --config configs/cazy.json --route esm2__l0-ft-ce --method tsne
+```
+
+默认按系统、workflow、route 自动寻找上游并决定输出位置，不再接受 `--output` 或任意输出根目录。Python 绘图子命令为 `visualization`，用 `--method tsne|umap` 选择坐标，默认 t-SNE；shell 对应 `visualization-tsne` / `visualization-umap`。
+
+`--input` 仍可显式指定同系统、同版本的上游 checkpoint；其 manifest 必须类型正确、完整有效。例如：
+
+```bash
+.venv/bin/python workflows/overview.py visualization --config configs/cazy.json   --input outputs/cazy/overview/artifacts/esm2__l0-ft-ce/tsne
+```
+
+显式输入可从 manifest 推断 route 和降维方法。跨系统、跨版本的输入均拒绝。路径按配置所在项目根目录解析；配置文件应放在项目的 `configs/` 下。
+
+### 依赖
+
+```text
+原始 embedding + metadata → 共享 train-only PCA
                               ├→ metrics → metric-plots
                               ├→ tsne    → visualization-tsne
                               └→ umap    → visualization-umap
-
-Boundary 另有：原始 ID → sample → metrics / tsne / umap
+Boundary：原始 ID → sample → metrics / tsne / umap
 Centroid：PCA → metrics（含质心）→ visualization / metric-plots
+Binary：两组 train → 独立联合 PCA → tsne / umap → visualization
 ```
 
-指标、t-SNE 和 UMAP 是并列分支，可以任选先后，不要求先算指标再降维。每步只读指定产物；缺少上游会报错，不会自动补跑。两种二维方法分别拟合、分别存储，不使用彼此的结果。
+各步骤独立，不自动补跑上游。指标计算、t-SNE 和 UMAP 是并列分支。缺上游会报错，也不会从另一个系统或默认版本借用结果。
 
 ## 公共 PCA
 
-### 运行
-
 ```bash
-.venv/bin/python workflows/pca.py prepare \
-  --config configs/cazy.json --route esm2__l2-frozen-nca \
-  --output outputs/steps/cazy/esm2__l2-frozen-nca/pca
+.venv/bin/python workflows/pca.py prepare --config configs/cazy.json --route esm2__l0-ft-ce
+# 等价入口
+bash workflows/overview.sh configs/cazy.json esm2__l0-ft-ce pca
 ```
 
-等价便捷命令：
+逐行 L2 归一化，在目标 train 上拟合 PCA，再转换同路线的其他角色，默认 100 维。`non_target_train` 专供 binary 联合 PCA，公共 PCA 跳过该角色。每个 `prepare` 一起执行 fit 和 transform，不提供单独 fit/transform 子命令。
 
-```bash
-bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca pca
-```
-
-输入是该 route 配置中的原始 embedding 和 metadata。处理顺序为：每条序列做 L2 归一化，在 train 上拟合 PCA，再用同一个模型转换本路线配置的其他数据集。默认保留 100 个主成分；没有把 probe 合并到 PCA 拟合中。
-
-当前一个 `prepare` 步骤包含模型拟合及本路线全部已配置数据集的转换，没有单独的 fit / transform CLI。签名检查还会读取配置中其他路线输入文件的指纹，因此配置引用的文件也须存在。
-
-### 输出
-
-输出都位于 `pca/`：
+输出在 `outputs/<system>/_shared/pca/<route>/`：
 
 | 文件 | 内容 |
 | --- | --- |
-| `pca_model.joblib` | L2 Normalizer 与 train-fit PCA 模型 |
-| `<role>.npz` | `ids`：序列 ID；`values`：对应 float32 PCA 特征 |
-| `<role>.metadata.csv` | 有配置 metadata 的角色的对齐标签；通常为 train、multi、unseen |
-| `explained_variance.csv` | `component`：从 1 开始的主成分编号；`explained_variance`：单维解释方差比例；`cumulative`：累计比例 |
-| `manifest.json` | 配置、路线、输入指纹、代码摘要、步骤签名和文件清单 |
+| `pca_model.joblib` | L2 Normalizer 与 PCA 模型 |
+| `<role>.npz` | `ids` 和 float32 `values` |
+| `<role>.metadata.csv` | 对齐的 sequence_id、class_label、family_label、dataset_role |
+| `explained_variance.csv` | component、explained_variance、cumulative |
+| `manifest.json`、`run.log` | 配置、输入指纹、产物校验、执行记录 |
 
-角色名包括 `train`、`multi`、`unseen`、`ood`、`shuffled`、`idr`，实际文件以本路线配置为准。metadata 内部字段统一为 `sequence_id`、`class_label`、`family_label`、`dataset_role`。
-
-同系统、同路线的这份 PCA 可供全部适用实验读取。若只跑指标，到 PCA 完成后直接运行相应 `metrics` 即可。
-
-## Boundary / Exp1
-
-输入要求：PCA 中有 `train`、`ood`、`shuffled`、`idr`。`ood` 是 non-target，`shuffled` 是打乱序列，`idr` 是 IDR。指标只有 target silhouette，不计算 kNN OOD score。
-
-### 逐步运行
-
-```bash
-# 1. 准备公共 PCA；已有相同产物可复用
-bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca pca
-# 2. 固定跨路线抽样
-bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca sample
-# 3. 只算 silhouette
-bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca metrics
-# 4. 分别做二维降维；可以只选一种
-bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca tsne
-bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca umap
-# 5. 分别读取二维坐标画空间图
-bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca visualization-tsne
-bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca visualization-umap
-# 6. 只读指标表画指标图
-bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
-```
-
-`sample` 不依赖 PCA，可先执行。它对每种 OOD 角色分别取系统内各可用路线的 ID 交集，再按 seed 排序抽取至多 3145 条。CAZy l2-ft 的已有预抽样可能使共同样本少于目标数；以清单记录的实际数为准。train 保持全量。Shell 把清单放在当前路线的输出树下，但抽样依据是整个系统，并非仅这条路线。
-
-`metrics` 把每一种 target 与 train 作为两个组计算 silhouette，仅保存 target 分数。t-SNE/UMAP 联合放入 train 和抽中的三种 target。它们与指标读取同一份清单。
-
-### 输入与产物
-
-以下路径相对 `outputs/steps/cazy/esm2__l2-frozen-nca/`：
-
-| 步骤 | 读取 | 主要产物 |
-| --- | --- | --- |
-| `sample` | 配置内各路线的原始 ID | `boundary/sample/sampling.json` |
-| `metrics` | `pca/` 和 `boundary/sample/` | `boundary/metrics/samples.csv`、`summary.csv`、`sampling.json` |
-| `tsne` / `umap` | 同上 | `boundary/<方法>/coordinates.csv`、`sampling.json` |
-| `visualization-<方法>` | `boundary/<方法>/` | `boundary/visualization-<方法>/figures/balanced.*`、`per_ood_panels.*`（PNG/PDF） |
-| `metric-plots` | `boundary/metrics/` | `boundary/metric-plots/figures/silhouette.png`、`.pdf` |
-
-`sampling.json` 每个角色包含 `ids`、`requested`、`actual`、`common_count` 和各路线的 `source_counts`。
-
-`samples.csv` 字段为 `sequence_id`、`dataset_role`、`silhouette`；`summary.csv` 按 `dataset_role` 给出 `count/mean/median/std/min/max`。silhouette 范围通常为 [-1, 1]，越高表示该 target 点在这两个组之间更靠近自身组，不是 OOD 概率。
-
-`coordinates.csv` 包含 `sequence_id`、`dataset_role`、`x`、`y`。balanced 图使用 BuGn 训练集 hexbin 背景和三类 target 散点；三类分面使用同一坐标及范围，每面只叠加一种 target。balanced 的 90% KDE 轮廓取样本密度的第 10 百分位作为阈值，分面的 80% 轮廓取第 20 百分位；这是样本位置的密度阈值，不表示积分概率质量。
-
-`metric-plots` 生成单路线 silhouette 箱线图，组内顺序为 shuffled、IDR、non-target；跨路线图由 `boundary_summary.py` 独立生成。两者使用逐样本分数，保留离群点和零线。默认纵轴为 [-0.2, 1]，范围外的分数仍完整保存在 CSV。
-
-### 显式复用一份抽样清单
-
-```bash
-.venv/bin/python workflows/boundary.py metrics \
-  --config configs/cazy.json \
-  --input outputs/steps/cazy/esm2__l2-frozen-nca/pca \
-  --sampling outputs/steps/cazy/esm2__l2-frozen-nca/boundary/sample \
-  --output outputs/custom/boundary-metrics
-```
-
-`metrics`、`tsne`、`umap` 都必须传 `--sampling`。跨路线比较时，可让各路线显式读取同一份清单。
-
-## Multilabel / Exp2
-
-输入要求：PCA 中有带标签的 `train` 和 `multi`。按单标签 train 的 class 计算质心，再计算 multi 的 class-level BA；不计算 family BA 或 bridge score。
-
-### 逐步运行
-
-```bash
-bash workflows/multilabel.sh configs/cazy.json esm2__l2-frozen-nca pca
-bash workflows/multilabel.sh configs/cazy.json esm2__l2-frozen-nca metrics
-bash workflows/multilabel.sh configs/cazy.json esm2__l2-frozen-nca tsne
-bash workflows/multilabel.sh configs/cazy.json esm2__l2-frozen-nca umap
-bash workflows/multilabel.sh configs/cazy.json esm2__l2-frozen-nca visualization-tsne
-bash workflows/multilabel.sh configs/cazy.json esm2__l2-frozen-nca visualization-umap
-bash workflows/multilabel.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
-```
-
-PCA 已准备时可以跳过第一行；t-SNE 与 UMAP 可以只选一种。二维降维联合使用 train 和 multi 全部样本，不依赖 BA 结果。
-
-### 产物和字段
-
-| 步骤 | 实验目录内的产物 | 说明 |
-| --- | --- | --- |
-| `metrics` | `metrics/scores.csv` | 每条 multi 的 `sequence_id`、`class_label`、`ba_score`、`invalid_reason` |
-| `metrics` | `metrics/summary.csv` | 按 class 组合统计 `count/mean/std/min/25%/50%/75%/max` |
-| `tsne` / `umap` | `<方法>/coordinates.csv` | 标签、角色及 `x/y`；每条样本一行 |
-| `visualization-<方法>` | `visualization-<方法>/figures/classes.*`、`combo_<组合>.*` | 联合空间图、指定 class 组合高亮图 |
-| `metric-plots` | `metric-plots/figures/ba.*` | 按 class 组合绘制 BA 分布 |
-
-BA 越接近 1，样本越接近所属 class 质心的等权重心；分数可以为负，不是概率。定义见[计算约定](../docs/METHODS.md#class-ba)。无效值写为 NaN，原因可能为 `missing_class_centroid`、`not_multilabel`、`degenerate_radius`；CSV 中空分数并不必然是程序失败。
-
-`min_combination_size=5` 只影响 BA 分布图纳入哪些组合，不过滤 BA 计算或二维降维。汇总的 `count` 是有效 BA 数；绘图的组合大小门槛按原始分数组的行数计算。重点组合来自系统配置 `plot.highlight_combinations`。
+角色包括 train、multi、unseen、ood、shuffled、idr，以配置实际输入为准。同系统同路线的主实验复用此结果，binary 单独拟合。
 
 ## Overview：训练空间展示
 
-只读取 train PCA 和标签，不计算指标。
-
 ```bash
-bash workflows/overview.sh configs/cazy.json esm2__l2-frozen-nca pca
-bash workflows/overview.sh configs/cazy.json esm2__l2-frozen-nca tsne
-bash workflows/overview.sh configs/cazy.json esm2__l2-frozen-nca visualization-tsne
-bash workflows/overview.sh configs/cazy.json esm2__l2-frozen-nca umap
-bash workflows/overview.sh configs/cazy.json esm2__l2-frozen-nca visualization-umap
+bash workflows/overview.sh configs/cazy.json esm2__l0-ft-ce pca
+bash workflows/overview.sh configs/cazy.json esm2__l0-ft-ce tsne
+bash workflows/overview.sh configs/cazy.json esm2__l0-ft-ce visualization-tsne
 ```
 
-`overview/<方法>/coordinates.csv` 保存 train 的标签及 `x/y`。`visualization` 一次输出以下两种 class 着色图（PNG/PDF）：
+只有 train，不计算指标。UMAP 可单独运行 `umap`、`visualization-umap`。
 
-- `figures/classes.*`：标注 class 名称。
-- `figures/class_label_family.*`：标注每个 class 内的高频 family 名称。按序列数排序，选择该 class 的 family 种类数的前 15%，数量向上取整；不是覆盖 15% 的序列。
-- `figures/classes_legend.*` 和 `figures/class_label_family_legend.*`：独立图例，列出 class 及序列数。
-- `annotated_families.json`：记录实际标注的 family 清单和选择比例。
+| 位置（相对 `outputs/<system>/overview/`） | 内容 |
+| --- | --- |
+| `figures/<route>/tsne_classes.*` | class 着色 + class 名称 |
+| `figures/<route>/tsne_class_label_family.*` | class 着色 + 高频 family 名称 |
+| `figures/<route>/tsne_classes_legend.*`、`tsne_class_label_family_legend.*` | class 名称和序列数量的独立图例 |
+| `artifacts/<route>/tsne/coordinates.csv` | 全量 train 标签及 x/y |
+| `artifacts/<route>/visualization-tsne/annotated_families.json` | 标注的 family 列表及选择比例 |
 
-两种图均使用原 class 配色、透明散点、中位数位置标签、白色标签底和左下角方向箭头，隐藏轴刻度和边框。默认 Arial、300 dpi、12×10 英寸。标签沿用原版中位数定位，密集区域可能重叠。没有 `metrics`、`metric-plots` 或 summary 入口。
+高频 family 按每个 class 内序列数排序，取 family 种类数的前 15%，向上取整；不是覆盖 15% 的序列。沿用原配色、透明散点、中位数位置标签、白色标签底及方向箭头。默认 Arial、300 dpi、12×10 英寸；密集区域的中位数标签可能重叠。
+
+## Boundary / Exp1
+
+```bash
+bash workflows/boundary.sh configs/cazy.json esm2__l0-ft-ce pca
+bash workflows/boundary.sh configs/cazy.json esm2__l0-ft-ce sample
+bash workflows/boundary.sh configs/cazy.json esm2__l0-ft-ce metrics
+bash workflows/boundary.sh configs/cazy.json esm2__l0-ft-ce tsne
+bash workflows/boundary.sh configs/cazy.json esm2__l0-ft-ce visualization-tsne
+bash workflows/boundary.sh configs/cazy.json esm2__l0-ft-ce metric-plots
+```
+
+需要 train、ood、shuffled、idr；ood 是 non-target test。`sample` 在系统内各可用 route 的 ID 交集上按 seed/role/ID 的 SHA256 排序，分别选至多 3145 条；train 全量。清单存到 `artifacts/_shared/sample/sampling.json`，所有路线共用。Python 可用 `--sampling` 指定同系统同版本的另一个合法 sample checkpoint，通常无需填写。
+
+`metrics` 将每类 target 分别与 train 组成两个组，在 PCA 空间计算精确 Euclidean silhouette，只保存 target 的分数。t-SNE/UMAP 联合使用 train 与同一份采样清单中的三类 target。没有 kNN OOD score。
+
+| 位置（相对 `outputs/<system>/boundary/`） | 内容 |
+| --- | --- |
+| `tables/<route>/silhouette_samples.csv` | sequence_id、dataset_role、silhouette |
+| `tables/<route>/silhouette_summary.csv` | 按角色给出 count、mean、median、std、min、max |
+| `figures/<route>/tsne_balanced.*` | BuGn train hexbin + 三类 target 散点与轮廓 |
+| `figures/<route>/tsne_per_ood_panels.*` | 相同范围的三类分面，每面一类 target |
+| `figures/<route>/silhouette.*` | 单路线逐样本箱线图 |
+| `artifacts/<route>/tsne/coordinates.csv` | sequence_id、dataset_role、x、y |
+| `artifacts/<route>/metrics/` | manifest、sampling.json、日志；统计 CSV 已发布到 tables |
+
+balanced 的 90% 轮廓取样本密度第 10 百分位为阈值；分面的 80% 轮廓取第 20 百分位。它不是积分概率质量。silhouette 越高表示更靠近本组，不是 OOD 概率。箱线图顺序为 shuffled、IDR、non-target，保留离群点和零线，默认纵轴 [-0.2, 1]；范围外分数仍完整保存到 CSV。
+
+## Binary：目标 / non-target train 二分类图
+
+```bash
+bash workflows/binary.sh configs/cazy.json esm2__l0-ft-ce pca
+bash workflows/binary.sh configs/cazy.json esm2__l0-ft-ce tsne
+bash workflows/binary.sh configs/cazy.json esm2__l0-ft-ce visualization-tsne
+```
+
+同路线的 train 与 non_target_train 全量联合 L2-normalized PCA100，再联合降至二维。它不使用 Boundary 的 test，不抽样，也不读取公共 train-only PCA。
+
+CAZy 具备输入的路线：esm2、L0 FT-CE、L1 FT-CE、L2 frozen-NCA、L1 FT-CE → L2 frozen-NCA。L2 FT-CE 原目录没有 non-CAZy train，无法运行。Peptidase 尚未配置 non-target train。
+
+| 位置（相对 `outputs/<system>/binary/`） | 内容 |
+| --- | --- |
+| `artifacts/<route>/pca/` | joint.npz、metadata.csv、pca_model.joblib、explained_variance.csv |
+| `artifacts/<route>/tsne/coordinates.csv` | sequence_id、dataset_role、x、y |
+| `figures/<route>/tsne_cazy_vs_noncazy.*` | 灰色 non-target、红色 target，名称标签、数量图例与箭头 |
+
+manifest 的 `fit_on` 明确记录两组 train。默认 Arial、300 dpi、12×10 英寸。`plot.binary` 可设置字体、dpi 和类别显示名称。
+
+## Multilabel / Exp2
+
+```bash
+bash workflows/multilabel.sh configs/cazy.json esm2__l0-ft-ce pca
+bash workflows/multilabel.sh configs/cazy.json esm2__l0-ft-ce metrics
+bash workflows/multilabel.sh configs/cazy.json esm2__l0-ft-ce tsne
+bash workflows/multilabel.sh configs/cazy.json esm2__l0-ft-ce visualization-tsne
+bash workflows/multilabel.sh configs/cazy.json esm2__l0-ft-ce metric-plots
+```
+
+需要 train 和 multi。BA 固定 class-level，用 train 单标签 class 质心与 multi 标签组合计算；多标签以 `|` 解析。没有 family BA 或 bridge score。指标使用 PCA 特征，空间图独立降维 train+multi。
+
+| 位置（相对 `outputs/<system>/multilabel/`） | 内容 |
+| --- | --- |
+| `tables/<route>/ba_samples.csv` | 逐样本 BA，字段以表头为准，包括 sequence_id、class_label、ba_score |
+| `tables/<route>/ba_summary.csv` | 按 class 组合统计 count、mean、std、min、25%、50%、75%、max |
+| `figures/<route>/tsne_classes.*` | train + multi 的 class 图 |
+| `figures/<route>/tsne_combo_<组合>.*` | 配置指定组合的局部展示 |
+| `figures/<route>/ba.*` | BA 分布图 |
+| `artifacts/<route>/tsne/coordinates.csv` | 二维坐标及标签 |
 
 ## Unseen：未见 family 分析
 
-输入要求：带标签的 train 和 unseen PCA。每个 class 分开分析，默认使用前 100 个 PC。
-
-### 逐步运行
-
 ```bash
-bash workflows/unseen.sh configs/cazy.json esm2__l2-frozen-nca pca
-bash workflows/unseen.sh configs/cazy.json esm2__l2-frozen-nca metrics
-bash workflows/unseen.sh configs/cazy.json esm2__l2-frozen-nca tsne
-bash workflows/unseen.sh configs/cazy.json esm2__l2-frozen-nca visualization-tsne
-bash workflows/unseen.sh configs/cazy.json esm2__l2-frozen-nca umap
-bash workflows/unseen.sh configs/cazy.json esm2__l2-frozen-nca visualization-umap
-bash workflows/unseen.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
+bash workflows/unseen.sh configs/cazy.json esm2__l0-ft-ce pca
+bash workflows/unseen.sh configs/cazy.json esm2__l0-ft-ce metrics
+bash workflows/unseen.sh configs/cazy.json esm2__l0-ft-ce tsne
+bash workflows/unseen.sh configs/cazy.json esm2__l0-ft-ce visualization-tsne
+bash workflows/unseen.sh configs/cazy.json esm2__l0-ft-ce metric-plots
 ```
 
-指标步骤保留至少 2 条序列的 family，每个 class 从符合条件的 train family 中选至多 10 个参照，联合 unseen families 计算指标。参照选择是确定性的，写入清单。
+需要 train 和 unseen。每个 class 内保留至少 2 条序列的 family，从合格 train family 中确定性选择至多 10 个参照，与 unseen 联合计算指标。空间图的背景使用该 class 全部 train，并不局限于抽样参照；指标与降维各自准备输入，跳过 class 清单可能不同。
 
-**指标参照和图的背景不同**：指标用 sampled train families；二维图用该 class 全部 train 作背景，再加入符合大小门槛的 unseen families。降维自己准备输入，不调用指标步骤，因此指标与空间图的跳过 class 清单也可能不同。
-
-### 产物
-
-| 位置（相对 `unseen/`） | 内容 |
+| 位置（相对 `outputs/<system>/unseen/`） | 内容 |
 | --- | --- |
-| `metrics/families.csv` | 只汇总 unseen families 的逐家族指标，附 `class_label` |
-| `metrics/global.csv` | 各 class 的整体指标及上下文 |
-| `metrics/reference_families.json` | 每类的 train/unseen family 列表及序列数量 |
-| `metrics/skipped_classes.json` | 没有合格 train 或 unseen families 等跳过原因 |
-| `metrics/<class>/joint_families.csv` | 联合空间中 train 参照与 unseen 的全部 family 指标 |
-| `metrics/<class>/train_sample_families.csv` | 至少有两个参照 family 时，单独计算的 sampled-train 指标 |
-| `<方法>/<class>/coordinates.csv` | 每个 class 独立的二维坐标 |
-| `<方法>/skipped_visualization_classes.json` | 缺少 train 或合格 unseen 的绘图输入跳过记录 |
-| `visualization-<方法>/<class>/figures/families.*` | 灰色 train 背景上的 unseen family 空间图 |
-| `metric-plots/figures/silhouette_mean.*`、`dunn_cosine.*`、`legacy_pairwise_dbi.*` | 按 class 分组的指标分布图 |
+| `tables/<route>/families.csv` | unseen 的逐家族指标，附 class_label |
+| `tables/<route>/global.csv` | class 级联合/参照上下文的整体指标 |
+| `tables/<route>/<class>/joint_families.csv` | 联合空间全部 train/unseen family 指标 |
+| `tables/<route>/<class>/train_sample_families.csv` | 单独的 train 参照指标，至少两个 family 时生成 |
+| `artifacts/<route>/metrics/reference_families.json` | 实际参照列表和样本数 |
+| `artifacts/<route>/metrics/skipped_classes.json` | 指标跳过原因 |
+| `artifacts/<route>/tsne/<class>/coordinates.csv` | class 内独立二维坐标 |
+| `artifacts/<route>/tsne/skipped_visualization_classes.json` | 降维跳过原因 |
+| `figures/<route>/<class>/tsne_families.*` | 灰色 train 背景上的 unseen family 图 |
+| `figures/<route>/silhouette_mean.*`、`dunn_cosine.*`、`legacy_pairwise_dbi.*` | family 指标分布 |
 
 ### 表字段
 
@@ -307,53 +278,45 @@ bash workflows/unseen.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
 
 ## Centroid：family 质心结构
 
-只需 train。默认保留至少 5 条序列的 family，并在 PCA 空间计算家族质心。每个 family 必须属于一个 class。
-
 ```bash
-bash workflows/centroid.sh configs/cazy.json esm2__l2-frozen-nca pca
-bash workflows/centroid.sh configs/cazy.json esm2__l2-frozen-nca metrics
-bash workflows/centroid.sh configs/cazy.json esm2__l2-frozen-nca visualization
-bash workflows/centroid.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
+bash workflows/centroid.sh configs/cazy.json esm2__l0-ft-ce pca
+bash workflows/centroid.sh configs/cazy.json esm2__l0-ft-ce metrics
+bash workflows/centroid.sh configs/cazy.json esm2__l0-ft-ce visualization
+bash workflows/centroid.sh configs/cazy.json esm2__l0-ft-ce metric-plots
 ```
 
-该实验不做 t-SNE/UMAP。`visualization` 直接读取指标步骤保存的质心，画距离热图。
+只需要 train，在 PCA 空间对至少 5 条序列的 family 计算质心。每个 family 必须属于一个 class。此实验不做 t-SNE/UMAP，空间展示是质心距离热图。
 
-| 产物（相对 `centroid/`） | 内容 |
+| 位置（相对 `outputs/<system>/centroid/`） | 内容 |
 | --- | --- |
-| `metrics/centroids.csv` | `family_label`、`class_label`、`n_sequences`、`PC1...PCn` |
-| `metrics/metrics.csv` | 长表：`metric`、`k`、`value` |
-| `visualization/figures/centroid_distances.*` | family 按 class/family 排序后的 Euclidean 距离热图 |
-| `metric-plots/figures/knn_class_purity.*` | 不同 k 的质心同 class 邻居比例 |
+| `artifacts/<route>/metrics/centroids.csv` | family_label、class_label、n_sequences、PC1...PCn |
+| `tables/<route>/metrics.csv` | metric、k、value |
+| `figures/<route>/centroid_distances.*` | 按 class/family 排序的 Euclidean 距离热图 |
+| `figures/<route>/knn_class_purity.*` | 不同 k 的同 class 邻居比例 |
 
-`metric` 包括 `knn_class_purity`、`class_silhouette`、`median_within_class`、`median_between_class`、`between_over_within`；只有第一个使用 `k` 字段，其他行的 `k` 为空。这里的 kNN 是 family 质心的结构指标，不是已取消的 kNN OOD score。默认 k 为 1、3、5、7、9，合格 family 数必须大于最大 k。
+metric 包括 knn_class_purity、class_silhouette、median_within_class、median_between_class、between_over_within。只有第一个使用 k，其他行 k 为空。默认 k 为 1、3、5、7、9，合格 family 数需大于最大 k。这是质心结构指标，不是已取消的 kNN OOD score。
 
 ## 跨路线汇总
 
-每个实验有自己的汇总工具：`boundary_summary.py`、`multilabel_summary.py`、`unseen_summary.py`、`centroid_summary.py`。先汇总表，再单独绘图。只汇总同一系统、同一个实验；不要混入不同 PCA 设定或不可比较的计算配置，当前工具不会替你验证这些科学参数是否一致。
-
-以下例子要求两条路线的 Boundary `metrics` 都已经完成：
+四个实验各有自己的 summary 入口。先完成要比较的各路线 `metrics`，再运行：
 
 ```bash
-.venv/bin/python workflows/boundary_summary.py tables --config configs/cazy.json \
-  --inputs outputs/steps/cazy/esm2__l0-ft-ce/boundary/metrics \
-           outputs/steps/cazy/esm2__l2-frozen-nca/boundary/metrics \
-  --output outputs/summary/cazy/boundary/tables
-
-.venv/bin/python workflows/boundary_summary.py plots --config configs/cazy.json \
-  --input outputs/summary/cazy/boundary/tables \
-  --output outputs/summary/cazy/boundary/plots
+.venv/bin/python workflows/boundary_summary.py tables --config configs/cazy.json   --routes esm2__l0-ft-ce esm2__l1-ft-ce esm2__l2-ft-ce
+.venv/bin/python workflows/boundary_summary.py plots --config configs/cazy.json
 ```
 
-`tables --inputs` 接受多个指标目录，每个目录有有效 manifest；生成加上 `route` 列的 `summary.csv`。Boundary 还合并生成带 `route` 的 `samples.csv`，供箱线图使用；各输入目录必须同时有逐样本表和摘要表。不需要所有路线都完成，也不会自动寻找目录。
+`--routes` 按传入顺序读取对应指标，不要求所有路线都完成。也可以用 `--inputs` 显式列出同系统同版本的指标 checkpoint；不能同时传两种选择参数。不要重复输入同一路线。
 
-| 实验 | 汇总来源 | 比较图 |
+表格输出在 `<workflow>/tables/summary/`；manifest 在 `<workflow>/artifacts/summary/tables/`；图在 `<workflow>/figures/summary/`，绘图 manifest 在 `artifacts/summary/plots/`。
+
+| 实验 | 汇总表 | 汇总图 |
 | --- | --- | --- |
-| Boundary | 各路线 `metrics/summary.csv` 和 `metrics/samples.csv` | 按路线分组、组内三类 target 的逐样本 silhouette 箱线图 |
-| Multilabel | 各路线 `metrics/summary.csv` | 各 class 组合的平均 BA |
-| Unseen | 各路线 `metrics/families.csv` | 各 class 的 family silhouette 均值（按 family 等权） |
-| Centroid | 各路线 `metrics/metrics.csv` | 不同 k 的质心同 class 邻居比例 |
+| Boundary | 带 route 的 summary.csv 与逐样本 samples.csv | silhouette.*；按路线分组的三类 target 箱线图 |
+| Multilabel | 带 route 的 summary.csv | ba.*；各 class 组合平均 BA |
+| Unseen | 带 route 的 family 指标 summary.csv | silhouette.*；各 class 的 family silhouette 均值，family 等权 |
+| Centroid | 带 route 的 metrics 长表 summary.csv | knn_class_purity.*；不同 k 的纯度 |
 
-`plots` 输出 `comparison.png/.pdf`（按配置格式），直接放在指定输出目录中。若汇总表为空，可以成功结束但不生成图。每个输入目录只列一次，避免重复汇总。
+Overview 和 binary 没有指标汇总入口。空数据不一定生成图，应查看表头、行数和跳过记录。
 
 ## 配置参数
 
@@ -394,122 +357,52 @@ bash workflows/centroid.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
 
 当前每个实验的多个指标仍由一个 `metrics` 步骤一起计算；一个空间绘图步骤会导出该实验适用的全部空间图，没有逐指标或逐图的选择参数。
 
-## 重跑、缓存与成功检查
+## 覆盖、缓存与版本
 
-### 怎么判断成功
+默认使用固定位置。签名一致、全部产物存在且大小/SHA256 匹配时打印 `Cached`；配置或代码变化、产物缺失或损坏时重算当前步骤。签名仍包含完整配置、整个包的代码摘要及上游记录，因此无关代码/配置变动也可能使某步缓存失效。
 
-正常结束会输出产物目录；复用时输出 `Cached: ...`。检查该目录的 `manifest.json`，其中 `experiment`、`stage`、`route`、`config` 应对应当前任务，`artifacts` 列出完成文件及大小。绘图产物也纳入完成检查。
+计算先写到该步骤旁边的隐藏 `.步骤.work/`；成功后发布新图表、替换 checkpoint，并清理上一版 manifest 中本步骤已不再生成的文件。例如从 PNG/PDF 改为只输出 PNG，会删除该步骤旧 PDF。其他步骤或路线的产物不清理。失败计算保留工作目录和日志，旧的完整结果保留；同一步已有进程运行时拒绝第二次执行。
 
-同时检查本节对应的关键文件：指标表是否有有效行、`sampling.json` 实际样本数、unseen 跳过记录、期望图片是否存在。退出码为 0 并不表示每个 class 都有结果；合法的空表、被跳过的 class 和无效分数需要单独查看。
-
-### 缓存规则
-
-只有步骤签名匹配且文件清单完整时才复用。签名包含合并配置、包内 Python 代码摘要和上游 manifest；PCA / sample 还包含配置引用的原始输入指纹。代码摘要目前覆盖整个 Python 包，配置也整体参与，因此修改其他实验代码或无关配置也可能令缓存签名变化。
-
-原始输入指纹使用路径、大小、mtime 和文件首尾摘要，不是全文件校验和；产物完整性校验使用文件存在性和大小。不要原地修改中间产物，即使同样大小也可能被视为有效。
-
-下游读取的是你指定的上游产物，不会检查原始 embedding 是否刚被替换，也不会自动重建 PCA。更换输入或科学设置后，应显式准备新上游，沿对应分支重跑。
-
-### 重跑整个实验，保留原结果
-
-第四个 shell 参数指定新的根目录；后续各步骤都传同一个新根目录：
-
-```bash
-bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca all \
-  outputs/runs/cazy-l2nca-v2
-```
-
-只给下游指定新根目录不会把旧 PCA 搬过去，会报缺上游。若要复用旧 PCA 但重算某一步，用 Python 入口的 `--input` 指向旧 PCA，`--output` 指向新目录。
+原始 embedding 的输入指纹使用路径、大小、mtime 和首尾摘要；完成产物使用完整 SHA256。下游不会自动重建上游，也不会因为原始 embedding 变更自动补跑 PCA；改科学配置后应沿相应依赖分支显式重跑。
 
 ### 只改样式重画
 
 ```bash
-.venv/bin/python workflows/multilabel.py visualization \
-  --config configs/cazy.json \
-  --input outputs/steps/cazy/esm2__l2-frozen-nca/multilabel/umap \
-  --output outputs/replots/cazy-multilabel-umap-v2
-
-.venv/bin/python workflows/multilabel.py metric-plots \
-  --config configs/cazy.json \
-  --input outputs/steps/cazy/esm2__l2-frozen-nca/multilabel/metrics \
-  --output outputs/replots/cazy-multilabel-ba-v2
+bash workflows/overview.sh configs/cazy.json esm2__l0-ft-ce visualization-tsne
+bash workflows/boundary.sh configs/cazy.json esm2__l0-ft-ce metric-plots
 ```
 
-绘图的科学设置来自上游 manifest；只有当前配置的 `plot` 和 `class_colors` 覆盖进去。例如改变 `plot.overview.dpi` 或 `plot.boundary.dpi` 可直接重画对应实验；改变 `min_combination_size` 属于科学配置，当前绘图入口会沿用上游记录的值，不会应用当前配置里的新值。不要手工改 manifest。
+修改配置中的绘图选项后再运行即可原位替换，无需新建目录。绘图科学配置来自上游 manifest；当前配置只有 `plot` 和 `class_colors` 覆盖进去。因此改图的 dpi 可以直接重画，改筛选门槛等科学参数需要先重跑相应计算步骤。
 
-当前没有 `--force` 或覆盖选项。签名不匹配、文件缺失或失败留下的非空输出目录会被拒绝。检查后将失败目录移到别处，或选择新的输出目录，再运行该步。
-
-## 常见报错
-
-| 现象或报错 | 原因与处理 |
-| --- | --- |
-| `Incomplete upstream artifacts` | 上游没跑完、路径错误或产物缺失；先检查 manifest 和上游文件，再显式重跑 |
-| `Expected ... artifacts from steps ...` | 输入类型错误，例如把 metrics 当成二维坐标；按依赖表换成正确目录 |
-| `Input system mismatch` / `Input route mismatch` | 配置系统或指定 route 与产物不同；不要混用两套系统 |
-| `PCA artifacts lack ...` | PCA 中没有实验所需角色；检查路线支持范围，尤其是 peptidase 的 train-only 路线 |
-| OOD 要求显式上游目录 | Python 入口缺 `--sampling`；先运行 sample 并传其目录 |
-| `Output is occupied ...` | 输出与本次签名不符或不完整；使用新目录，不会自动覆盖 |
-| `Path leaves project` / 输出路径限制 | 输入输出不在配置所属项目中，或输出不在 `output_root` 下 |
-| PCA 维数超过矩阵形状 | 样本/特征不足；降低 `n_components`，准备新 PCA，并同步检查 unseen 的 `n_pcs` |
-| t-SNE perplexity / UMAP neighbors 过大 | 对当前降维数据（unseen 是每个 class）降低对应参数；总行数还须至少 4 |
-| `Need >... families` | centroid 的合格 family 太少；检查数据，合理降低最大 k 或 family 大小门槛 |
-| ID 重复、metadata 缺失、维度不一致、train 重叠 | 修正输入和对应配置；不会静默丢弃问题行 |
-| unseen 无图或部分 class 缺失 | 查看两个 skipped JSON；指标与图的纳入规则不同，不一定是失败 |
-| BA 部分分数为空 | 查看 `invalid_reason`，判断是缺质心、单标签还是退化半径 |
-
-## 代码归属
-
-| 位置 | 职责 |
-| --- | --- |
-| `workflows/<实验>.sh` | 本实验的路径约定、单步调用和 all 顺序 |
-| `workflows/<实验>.py` | 连接到本实验 CLI 的可执行入口 |
-| `src/embedding_analysis/experiments/<实验>/workflow.py` | 本实验的步骤、输入依赖与执行选择 |
-| 同目录 `compute.py` | 本实验的数据组织及独立计算任务 |
-| 同目录 `metrics.py` | 本实验的指标定义；overview 无此文件 |
-| 同目录 `plotting.py` | 本实验的空间图、指标图和比较图 |
-| 同目录 `summary.py` | 本实验跨路线汇总；overview 无此文件 |
-| Boundary / unseen 的 `sampling.py` | 各自的抽样策略 |
-| 公共 `prepared.py`、`reduction.py` | PCA、已处理数据读取、二维降维 |
-| 公共 `runtime.py`、`artifacts.py` | 参数与产物检查、缓存和完成记录；不分派实验 |
-
-不存在中央实验注册表，不共享实验指标或绘图实现。两套系统在同一实验内复用代码，通过配置区分类别、输入和样式。
-
-完整计算定义见 [METHODS.md](../docs/METHODS.md)，未纳入和取消的功能见 [DEFERRED.md](../docs/DEFERRED.md)。步骤与代码归属说明统一在本手册维护。
-
-## 已恢复绘图样式的来源
-
-Overview 参考原 `normpca100/train_plot/src/plot_class.py` 与 `plot_class_label_family.py`；Boundary 参考原 `normpca100/exp1/src/plot_tsne_labels.py`、`plot_per_ood_panels.py` 以及 `exp1/silhouette_balanced/src/plot_silhouette_balanced_box.py`。绘图实现在本项目各实验的 `plotting.py` 内，不运行或导入原目录代码。CAZy 与 peptidase 通过各自配置提供类别颜色、顺序和角色名称。
-
-## Binary：目标 / non-target train 二分类图
-
-此实验独立于 overview 和 Boundary。输入是同一路线的 `train` 与 `non_target_train`，使用两组全部训练序列联合拟合 L2-normalized PCA100，再联合降至二维。它不读取 Boundary 的 non-target test，不采样到 3145 条，也不使用原有 train-only PCA。PCA、t-SNE、UMAP、绘图可以分别执行。
-
-CAZy 当前可用路线：`esm2`、`esm2__l0-ft-ce`、`esm2__l1-ft-ce`、`esm2__l2-frozen-nca`、`esm2__l1-ft-ce__l2-frozen-nca`。原目录没有 L2 FT-CE 的 non-CAZy train embedding，因此该路线不能运行 binary。Peptidase 尚未配置 non-target train。
+### 显式保留一套新版本
 
 ```bash
-bash workflows/binary.sh configs/cazy.json esm2__l0-ft-ce pca
-bash workflows/binary.sh configs/cazy.json esm2__l0-ft-ce tsne
-bash workflows/binary.sh configs/cazy.json esm2__l0-ft-ce visualization-tsne
+bash workflows/boundary.sh configs/cazy.json esm2__l0-ft-ce all trial_v2
+# Python 等价版本参数
+.venv/bin/python workflows/boundary.py metrics --config configs/cazy.json --route esm2__l0-ft-ce --version trial_v2
 ```
 
-默认输出位置为 `outputs/steps/cazy/<route>/binary/`；shell 的第四个参数可以指定路线输出根目录。例如使用已有本次运行目录：
+版本输出为 `outputs/cazy/_versions/trial_v2/`，其中仍按 workflow/用途/route 组织；版本内有自己的共享 PCA 和索引。版本不读取默认结果，也不跨版本借用上游。版本名只允许字母、数字、下划线和连字符。
 
-```bash
-bash workflows/binary.sh configs/cazy.json esm2__l0-ft-ce pca outputs/cazy-tsne-20261107/esm2__l0-ft-ce
-```
+## 成功检查与常见错误
 
-底层独立 Python 入口：
+检查结束输出的路径、manifest、统计表有效行数、实际采样数量及跳过原因。退出码为 0 不意味着每个 class 都有可用结果。
 
-```bash
-.venv/bin/python workflows/binary.py pca --config configs/cazy.json --route esm2__l0-ft-ce --output outputs/steps/cazy/esm2__l0-ft-ce/binary/pca
-.venv/bin/python workflows/binary.py tsne --config configs/cazy.json --input outputs/steps/cazy/esm2__l0-ft-ce/binary/pca --output outputs/steps/cazy/esm2__l0-ft-ce/binary/tsne
-.venv/bin/python workflows/binary.py visualization --config configs/cazy.json --input outputs/steps/cazy/esm2__l0-ft-ce/binary/tsne --output outputs/steps/cazy/esm2__l0-ft-ce/binary/visualization-tsne
-```
-
-| 步骤 | 输出 |
+| 报错 | 处理 |
 | --- | --- |
-| `pca` | `joint.npz`、`metadata.csv`、`pca_model.joblib`、`explained_variance.csv`；manifest 的 `fit_on` 明确记录两组 train |
-| `tsne` / `umap` | `coordinates.csv`：sequence_id、dataset_role、x、y |
-| `visualization` | `figures/cazy_vs_noncazy.png`、`.pdf` |
+| Incomplete upstream artifacts | 上游缺失、未完成或校验失败；显式运行上游 |
+| Expected ... artifacts | 指定了错误类型的输入，例如把 metrics 当作 tsne |
+| same system and output version / Input system mismatch | 配置与输入所属系统或版本不同，不能混用 |
+| Input route mismatch | --route 与输入 manifest 不同 |
+| This step is already running | 等当前执行结束，避免并发写同一步 |
+| PCA artifacts lack ... | 该路线缺少实验所需角色；检查配置可用范围 |
+| Route has no non_target_train embedding | binary 没有对应训练输入，不能用 test 代替 |
+| PCA 维数超过矩阵形状 | 样本或维度不足；调整 n_components，并检查 unseen n_pcs |
+| perplexity / neighbors 过大 | 调低降维参数；unseen 按 class 检查样本数 |
+| Need >... families | centroid 合格 family 太少；检查数据或合理调整最大 k |
 
-绘图沿用原 `train_plot/src/plot_binary.py` 的灰色 non-target、红色 target、透明散点、中位数名称标签、带数量图例和左下角箭头。默认 Arial、300 dpi、12×10 英寸。`plot.binary` 配置字体、分辨率和类别显示名称。实现位于本项目 `experiments/binary/`，不调用旧目录代码。shell 的 `all` 会依次执行 PCA、t-SNE、UMAP 以及两套图；只需 t-SNE 时使用上面的三个独立步骤。
+## 代码归属与样式来源
+
+各实验的 `workflow.py`、`compute.py`、`metrics.py`（如有）、`plotting.py`、`summary.py`（如有）只管理本实验。`runtime.py` 与 `output.py` 负责公共路径、校验、发布和索引，不派发实验计算。PCA 与二维降维仍共享 `prepared.py` / `reduction.py`。
+
+Overview 样式来自原 `normpca100/train_plot/src/plot_class.py` 和 `plot_class_label_family.py`；binary 来自 `plot_binary.py`；Boundary 来自 `exp1/src/plot_tsne_labels.py`、`plot_per_ood_panels.py` 及 `silhouette_balanced/src/plot_silhouette_balanced_box.py`。实现都在本项目内部，不运行或导入原目录代码。
