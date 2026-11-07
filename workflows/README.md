@@ -70,7 +70,7 @@ outputs/
 
 | 用途 | 内容 | 查看入口 |
 | --- | --- | --- |
-| `figures` | 最终 PNG/PDF；空间图、指标图和独立图例 | `<workflow>/figures/index.html` 提供图片预览和 PDF 链接 |
+| `figures` | 最终 PNG/PDF；空间图和指标图（图例随主图显示） | `<workflow>/figures/index.html` 提供图片预览和 PDF 链接 |
 | `tables` | 逐样本指标、统计摘要、跨路线汇总表 | `<workflow>/RESULTS.md` 列出表格链接 |
 | `artifacts` | 坐标、抽样清单、执行日志、manifest 等 | 运行检查或继续下游步骤时使用 |
 | `_shared/pca` | 同系统、同路线共享的 train-only PCA | 各主实验自动查找；binary 不使用它 |
@@ -158,11 +158,10 @@ bash workflows/overview.sh configs/cazy.json esm2__l0-ft-ce visualization-tsne
 | --- | --- |
 | `figures/<route>/tsne_classes.*` | class 着色 + class 名称 |
 | `figures/<route>/tsne_class_label_family.*` | class 着色 + 高频 family 名称 |
-| `figures/<route>/tsne_classes_legend.*`、`tsne_class_label_family_legend.*` | class 名称和序列数量的独立图例 |
 | `artifacts/<route>/tsne/coordinates.csv` | 全量 train 标签及 x/y |
 | `artifacts/<route>/visualization-tsne/annotated_families.json` | 标注的 family 列表及选择比例 |
 
-高频 family 按每个 class 内序列数排序，取 family 种类数的前 15%，向上取整；不是覆盖 15% 的序列。沿用原配色、透明散点、中位数位置标签、白色标签底及方向箭头。默认 Arial、300 dpi、12×10 英寸；密集区域的中位数标签可能重叠。
+高频 family 按每个 class 内序列数排序，取 family 种类数的前 15%，向上取整；不是覆盖 15% 的序列。沿用原配色、透明散点、中位数位置标签、白色标签底及方向箭头。class 名称和序列数量的图例直接放在每张主图上方，不再单独保存图例。默认 Arial、300 dpi、12×10 英寸；密集区域的中位数标签可能重叠。
 
 ## Boundary / Exp1
 
@@ -352,6 +351,7 @@ Overview 和 binary 没有指标汇总入口。空数据不一定生成图，应
 | `plot.boundary.silhouette_ylim` | `[-0.2, 1]` | 单路线及跨路线箱线图纵轴范围 |
 | `plot.boundary.role_labels` | 系统配置 | 图例和分面角色名称 |
 | `plot.highlight_combinations` | 系统配置 | Multilabel 重点组合 |
+| `plot.legend.fontsize` | `10` | 所有类别图例字号；图外上方左对齐，按实际宽度自动分列/换行，无边框 |
 | `class_colors` | 系统配置 | class 颜色 |
 
 配置中仍存在 `experiments.<实验>.method` 字段，但当前独立入口不使用它选择降维：以执行的 `tsne` / `umap` 子命令为准，shell 的 `all` 会执行两种方法。
@@ -407,3 +407,7 @@ bash workflows/boundary.sh configs/cazy.json esm2__l0-ft-ce all trial_v2
 各实验的 `workflow.py`、`compute.py`、`metrics.py`（如有）、`plotting.py`、`summary.py`（如有）只管理本实验。`runtime.py` 与 `output.py` 负责公共路径、校验、发布和索引，不派发实验计算。PCA 与二维降维仍共享 `prepared.py` / `reduction.py`。
 
 Overview 样式来自原 `normpca100/train_plot/src/plot_class.py` 和 `plot_class_label_family.py`；binary 来自 `plot_binary.py`；Boundary 来自 `exp1/src/plot_tsne_labels.py`、`plot_per_ood_panels.py` 及 `silhouette_balanced/src/plot_silhouette_balanced_box.py`。实现都在本项目内部，不运行或导入原目录代码。
+
+## 图例位置
+
+所有类别图例放在图外上方、与绘图区左边缘对齐；有标题时图例位于标题上方。根据渲染后的文字宽度安排分列，单条过长时换行，不扩展图片宽度。图例字号默认 10，无边框。Overview 图例包含 class 名称和数量，随主图保存，不再输出独立 legend 文件。Multilabel/Unseen 类别较多时完整保留图例，不再因为超过 25 类而隐藏。Boundary 分面仍使用类别标题；不需要类别图例的单曲线/箱线图维持轴标签，Centroid 热图的 colorbar 仍放右侧。

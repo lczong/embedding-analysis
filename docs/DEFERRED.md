@@ -29,7 +29,7 @@
 | CAZy exp1 非 balanced / IDR-only / density-aware / contour-only / log-ratio | 已恢复 balanced density、三类分面以及单路线/跨路线 silhouette 箱线图；其余绘图变体暂缓 |
 | 两套 exp2 debug/marginal/KDE/white-background/per-combination variants | 首版保留统一 class/组合散点与 BA 分布；论文特定边际 KDE、白底布局等暂缓 |
 | 两套 exp3 family KDE contours、percentile sweeps、拼图、交互 HTML | 首版保留通用 family 散点及指标摘要，暂不复刻所有论文版式 |
-| 两套 train_plot 的固定 level1 专用图 | 已恢复 class 名称、高频 family 名称两种 class 着色图及独立图例；固定 level1 专用版式暂缓 |
+| 两套 train_plot 的固定 level1 专用图 | 已恢复 class 名称、高频 family 名称两种 class 着色图，图例统一随主图置于上方；固定 level1 专用版式暂缓 |
 | scanpy UMAP 实现 | 首版统一 umap-learn；旧 scanpy UMAP 坐标不会等同于新坐标 |
 | normalized/ 输入路线 | 用户要求不动，首版不导入/使用 |
 | 未使用的 val/test、历史采样及压缩包 | 不为首版复制；旧目录保留 |
