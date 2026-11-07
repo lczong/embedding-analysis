@@ -27,7 +27,7 @@
 | 两套 exp3 compute_train_integration | 未见家族与训练家族的蛋白级邻域整合分析暂缓 |
 | CAZy exp1 raw silhouette、cosine/PCA sweep | 首版统一 PCA 空间 Euclidean OOD silhouette；原始空间及额外距离对照暂缓 |
 | CAZy exp1 非 balanced / IDR-only / density-aware / contour-only / log-ratio | 已恢复 balanced density、三类分面以及单路线/跨路线 silhouette 箱线图；其余绘图变体暂缓 |
-| 两套 exp2 其他 debug/marginal 与 BA 绘图变体 | 已恢复白底、class/单组合/多组合高亮及上方和右侧 KDE；其余专用版式、旧 BA 直方图/KDE 和跨路线 violin 仍暂缓 |
+| 两套 exp2 其他 debug/marginal 与 BA 绘图变体 | 已恢复白底、class/单组合/多组合高亮及上方和右侧 KDE；另已恢复 BA 每组合直方图/KDE、单路线 KDE 叠加及跨路线双 class 组合 violin；其余专用版式暂缓 |
 | 两套 exp3 family KDE contours、percentile sweeps、拼图、交互 HTML | 首版保留通用 family 散点及指标摘要，暂不复刻所有论文版式 |
 | 两套 train_plot 的固定 level1 专用图 | 已恢复 class 名称、高频 family 名称两种 class 着色图，图例统一随主图置于上方；固定 level1 专用版式暂缓 |
 | scanpy UMAP 实现 | 首版统一 umap-learn；旧 scanpy UMAP 坐标不会等同于新坐标 |

@@ -229,12 +229,15 @@ bash workflows/multilabel.sh configs/cazy.json esm2__l0-ft-ce metric-plots
 | `figures/<route>/tsne_classes.*` | 单标签 class 着色，multi 灰色背景，上方/右侧 KDE |
 | `figures/<route>/tsne_combo_<组合>.*` | 单个组合高亮，父 class 淡色，其余灰色，上方/右侧 KDE |
 | `figures/<route>/tsne_combos_<组合>__<组合>.*` | 多个重点组合同时高亮（至少两个组合存在时生成） |
-| `figures/<route>/ba.*` | BA 分布图 |
+| `figures/<route>/ba.*` | 所有达标组合的 BA KDE 叠加图 |
+| `figures/<route>/ba_combo_<组合>.*` | 每个达标组合的直方图（30 bins）＋KDE、均值和 BA=0/1 参考线 |
 | `artifacts/<route>/tsne/coordinates.csv` | 二维坐标及标签 |
 
 Multilabel 空间图沿用旧 `exp2/debug/plot_umap_multi_white.py` 的白底风格，并增加上方 KDE：单标签点较小且透明，多标签点为较大、白边圆点；CAZy 的 `CBM|GH` 为蓝色、`CBM|PL` 为红色。所有视图保留同一套完整坐标和范围，不对组合单独降维或裁剪。左下角箭头标明实际降维方法；UMAP 输出将上述 `tsne_` 前缀替换为 `umap_`。
 
-KDE 分别沿二维坐标的 x/y 轴计算，每类独立使用 Scott 带宽、400 点网格；不按样本数量加权，不表示 PCA 空间中的指标。样本不足 10 或坐标无方差时跳过该曲线，记录在对应 visualization 步骤的 `kde_skipped.json` 中。图例包含样本数，放在上方 KDE 之外并左对齐，字号 14，按可用宽度分列。PNG/PDF 默认 300 dpi；`plot.multilabel` 管理画布、字体、KDE 最小样本数、class 顺序和组合颜色。空间图由本实验的 `spatial.py` 管理；BA 指标图维持原有独立实现。
+KDE 分别沿二维坐标的 x/y 轴计算，每类独立使用 Scott 带宽、400 点网格；不按样本数量加权，不表示 PCA 空间中的指标。样本不足 10 或坐标无方差时跳过该曲线，记录在对应 visualization 步骤的 `kde_skipped.json` 中。图例包含样本数，放在上方 KDE 之外并左对齐，字号 14，按可用宽度分列。PNG/PDF 默认 300 dpi；`plot.multilabel` 管理画布、字体、KDE 最小样本数、class 顺序和组合颜色。空间图由本实验的 `spatial.py` 管理；BA 指标图由本实验的 `plotting.py` 独立管理。
+
+BA 单路线图只画有限分数不少于 `experiments.multilabel.min_combination_size`（默认 5）的组合，KDE 使用 Scott 带宽；常数分数保留直方图/垂直线，不拟合 KDE。跨路线 `tables` 同时生成 `summary.csv` 与带 route 的逐样本 `samples.csv`；`plots` 读取后者画分组 violin，不能仅凭均值表生成分布。沿用旧版筛选：以传入的第一条 route 为参考，只取两个 class 的组合且有效样本数 > `plot.multilabel.ba_summary_min_n`（默认 30），按参考路线频数排序。图中灰线为中位数，N 为各路线有效样本数（不一致时按图例顺序列出）。默认显示范围 `plot.multilabel.ba_summary_ylim=[-7,1]` 沿用旧图，范围外尾部仅在图中裁切，原始分数和统计表完整保留。图例均为图外上方左对齐、14 号字。
 
 ## Unseen：未见 family 分析
 
@@ -316,7 +319,7 @@ metric 包括 knn_class_purity、class_silhouette、median_within_class、median
 | 实验 | 汇总表 | 汇总图 |
 | --- | --- | --- |
 | Boundary | 带 route 的 summary.csv 与逐样本 samples.csv | silhouette.*；按路线分组的三类 target 箱线图 |
-| Multilabel | 带 route 的 summary.csv | ba.*；各 class 组合平均 BA |
+| Multilabel | 带 route 的 summary.csv 与逐样本 samples.csv | ba.*；双 class 组合的逐样本 BA 分组 violin |
 | Unseen | 带 route 的 family 指标 summary.csv | silhouette.*；各 class 的 family silhouette 均值，family 等权 |
 | Centroid | 带 route 的 metrics 长表 summary.csv | knn_class_purity.*；不同 k 的纯度 |
 
