@@ -1,3 +1,4 @@
+from ...artifacts import artifact_file
 """Balanced, per-target panels and silhouette plots restored from normpca100/exp1."""
 import json
 from pathlib import Path
@@ -132,11 +133,11 @@ def boxplot(samples,cfg,stem):
 
 
 def plot_metrics(path,cfg,destination):
-    path=Path(path);samples=pd.read_csv(path/'samples.csv')
+    path=Path(path);samples=pd.read_csv(artifact_file(path, 'samples.csv'))
     samples.insert(0,'route',json.loads((path/'manifest.json').read_text())['route'])
     boxplot(samples,cfg,Path(destination)/'figures/silhouette')
 
 
 def plot_summary(path,cfg,destination):
     # Quantile boxes require sample-level data, not route means.
-    boxplot(pd.read_csv(Path(path)/'samples.csv'),cfg,Path(destination)/'comparison')
+    boxplot(pd.read_csv(artifact_file(Path(path), 'samples.csv')),cfg,Path(destination)/'comparison')

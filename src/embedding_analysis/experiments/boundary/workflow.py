@@ -7,7 +7,7 @@ def main(argv=None):
     from pathlib import Path
     parser.add_argument('--sampling', type=Path)
     args = parser.parse_args(argv)
-    job = Artifacts(parser, args, 'boundary')
+    job = Artifacts(parser, args, 'boundary', table_patterns=['samples.csv','summary.csv'] if args.step=='metrics' else (), table_names={'samples.csv':'silhouette_samples.csv','summary.csv':'silhouette_summary.csv'})
     if args.step == 'sample':
         from .sampling import boundary_manifest
         from ...artifacts import write_json

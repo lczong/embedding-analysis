@@ -5,7 +5,7 @@ from ...runtime import Artifacts, parser_for
 def main(argv=None):
     parser = parser_for('centroid independent workflow', ['metrics', 'visualization', 'metric-plots'])
     args = parser.parse_args(argv)
-    job = Artifacts(parser, args, 'centroid')
+    job = Artifacts(parser, args, 'centroid', table_patterns=['metrics.csv'] if args.step=='metrics' else (), table_names={})
     if args.step in ['metrics']:
         job.input('preprocess', ['prepare'], roles=['train'])
     elif args.step == 'visualization':

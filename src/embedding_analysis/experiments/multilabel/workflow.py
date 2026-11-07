@@ -5,7 +5,7 @@ from ...runtime import Artifacts, parser_for
 def main(argv=None):
     parser = parser_for('multilabel independent workflow', ['metrics', 'tsne', 'umap', 'visualization', 'metric-plots'])
     args = parser.parse_args(argv)
-    job = Artifacts(parser, args, 'multilabel')
+    job = Artifacts(parser, args, 'multilabel', table_patterns=['scores.csv','summary.csv'] if args.step=='metrics' else (), table_names={'scores.csv':'ba_samples.csv','summary.csv':'ba_summary.csv'})
     if job.cfg['experiments']['multilabel']['label_level'] != 'class':
         parser.error('Multilabel BA requires class labels')
     if args.step in ['metrics', 'tsne', 'umap']:

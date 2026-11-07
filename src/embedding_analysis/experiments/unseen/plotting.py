@@ -1,3 +1,4 @@
+from ...artifacts import artifact_file
 """Plots owned by unseen; independent of other experiment plots."""
 from pathlib import Path
 import numpy as np
@@ -56,7 +57,7 @@ def plot_visualization(path, cfg, destination):
 def plot_metrics(path, cfg, destination):
     path = Path(path)
     dest = Path(destination)
-    df = pd.read_csv(path / 'families.csv')
+    df = pd.read_csv(artifact_file(path, 'families.csv'))
     if len(df):
         for metric in ['silhouette_mean', 'dunn_cosine', 'legacy_pairwise_dbi']:
             distributions(df, metric, 'class_label', dest / 'figures' / metric, cfg, 'Unseen families')
@@ -64,7 +65,7 @@ def plot_metrics(path, cfg, destination):
 
 
 def plot_summary(path, cfg, destination):
-    df=pd.read_csv(Path(path)/"summary.csv")
+    df=pd.read_csv(artifact_file(Path(path), 'summary.csv'))
     if df.empty: return
     fig,ax=plt.subplots(figsize=(9,4))
     df.pivot_table(index='class_label',columns='route',values='silhouette_mean',aggfunc='mean').plot.bar(ax=ax)

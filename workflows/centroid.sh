@@ -1,31 +1,24 @@
 #!/usr/bin/env bash
-# centroid owns the execution order and input/output paths.
+# centroid owns its step order. Output paths are system-scoped.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-EXPERIMENT="centroid"
 CONFIG="${1:-configs/cazy.json}"
 ROUTE="${2:-esm2__l2-frozen-nca}"
 STEP="${3:-help}"
-SYSTEM="$(basename "$CONFIG" .json)"
-BASE="${4:-outputs/steps/$SYSTEM/$ROUTE}"
+VERSION="${4:-}"
 PYTHON="$ROOT/.venv/bin/python"
+COMMON=(--config "$CONFIG")
+if [[ -n "$VERSION" ]]; then COMMON+=(--version "$VERSION"); fi
 run_step() {
     case "$1" in
-        pca) "$PYTHON" workflows/pca.py prepare --config "$CONFIG" --route "$ROUTE" --output "$BASE/pca" ;;
-        metrics)
-            local command=("$PYTHON" "workflows/$EXPERIMENT.py" "$1" --config "$CONFIG" --route "$ROUTE" --input "$BASE/pca" --output "$BASE/$EXPERIMENT/$1")
-
-            "${command[@]}" ;;
-        visualization)
-            "$PYTHON" "workflows/$EXPERIMENT.py" visualization --config "$CONFIG" --input "$BASE/$EXPERIMENT/metrics" --output "$BASE/$EXPERIMENT/visualization" ;;
-        metric-plots)
-            "$PYTHON" "workflows/$EXPERIMENT.py" metric-plots --config "$CONFIG" --input "$BASE/$EXPERIMENT/metrics" --output "$BASE/$EXPERIMENT/metric-plots" ;;
+        pca) "$PYTHON" workflows/pca.py prepare "${COMMON[@]}" --route "$ROUTE" ;;
+        metrics|visualization|metric-plots) "$PYTHON" workflows/centroid.py "$1" "${COMMON[@]}" --route "$ROUTE" ;;
         *) echo "Unknown step: $1" >&2; exit 2 ;;
     esac
 }
 if [[ "$STEP" == help ]]; then
-    echo "Usage: bash workflows/$EXPERIMENT.sh CONFIG ROUTE STEP [OUTPUT_BASE]"
+    echo "Usage: bash workflows/centroid.sh CONFIG ROUTE STEP [VERSION]"
     echo "Steps: pca; metrics; visualization; metric-plots; all"
     exit 0
 fi

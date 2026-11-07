@@ -1,3 +1,4 @@
+from ...artifacts import artifact_file
 """Plots owned by centroid; independent of other experiment plots."""
 from pathlib import Path
 import numpy as np
@@ -30,7 +31,7 @@ def plot_visualization(path, cfg, destination):
 def plot_metrics(path, cfg, destination):
     path = Path(path)
     dest = Path(destination)
-    df = pd.read_csv(path / 'metrics.csv')
+    df = pd.read_csv(artifact_file(path, 'metrics.csv'))
     knn = df[df.metric == 'knn_class_purity']
     (fig, ax) = plt.subplots(figsize=(6, 4))
     ax.plot(knn.k, knn.value, marker='o')
@@ -40,7 +41,7 @@ def plot_metrics(path, cfg, destination):
 
 
 def plot_summary(path, cfg, destination):
-    df=pd.read_csv(Path(path)/"summary.csv")
+    df=pd.read_csv(artifact_file(Path(path), 'summary.csv'))
     if df.empty: return
     fig,ax=plt.subplots(figsize=(9,4))
     for route,g in df[df.metric=='knn_class_purity'].groupby('route'):

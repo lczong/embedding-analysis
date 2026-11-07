@@ -1,3 +1,4 @@
+from ...artifacts import artifact_file
 """Plots owned by multilabel; independent of other experiment plots."""
 from pathlib import Path
 import numpy as np
@@ -61,7 +62,7 @@ def plot_visualization(path, cfg, destination):
 def plot_metrics(path, cfg, destination):
     path = Path(path)
     dest = Path(destination)
-    scores = pd.read_csv(path / 'scores.csv')
+    scores = pd.read_csv(artifact_file(path, 'scores.csv'))
     count = scores.groupby('class_label').size()
     scores = scores[scores.class_label.isin(count[count >= cfg['experiments']['multilabel']['min_combination_size']].index)]
     distributions(scores, 'ba_score', 'class_label', dest / 'figures/ba', cfg, 'Class barycentric alignment')
@@ -69,7 +70,7 @@ def plot_metrics(path, cfg, destination):
 
 
 def plot_summary(path, cfg, destination):
-    df=pd.read_csv(Path(path)/"summary.csv")
+    df=pd.read_csv(artifact_file(Path(path), 'summary.csv'))
     if df.empty: return
     fig,ax=plt.subplots(figsize=(9,4))
     df.pivot_table(index='class_label',columns='route',values='mean',aggfunc='mean').plot.bar(ax=ax)
