@@ -1,5 +1,6 @@
 """System-scoped output paths, publication and browsable result indexes."""
 import html
+import fcntl
 import os
 from pathlib import Path
 from .config import local_path
@@ -15,7 +16,7 @@ def stage_path(root, owner, route, stage, method='tsne'):
         if not route:raise ValueError('PCA requires --route')
         return root/'_shared/pca'/route
     scope=route or ('summary' if stage in ['tables','plots'] else '_shared')
-    step=f'visualization-{method}' if stage=='visualization' else stage
+    step=f'visualization-{method}' if stage=='visualization' and method in ['tsne','umap'] else stage
     return root/owner/'artifacts'/scope/step
 
 
@@ -31,7 +32,7 @@ def publish_target(root,owner,route,stage,logical,method,table_patterns,table_na
     return None
 
 
-def indexes(root):
+def _indexes(root):
     """Generated only from published figures/tables, never creates empty workflows."""
     workflows=[]
     for workflow in sorted(root.iterdir()):
@@ -55,3 +56,10 @@ def indexes(root):
             lines+=['', '## 统计表', '']+[f'- [{p.relative_to(workflow/"tables")}]({p.relative_to(workflow).as_posix()})' for p in tables]
         (workflow/'RESULTS.md').write_text('\n'.join(lines)+'\n')
     (root/'RESULTS.md').write_text('# '+root.name+' results\n\n'+'\n'.join(f'- [{w.name}]({w.name}/RESULTS.md)'+(f' · [图片预览]({w.name}/figures/index.html)' if (w/'figures/index.html').exists() else '') for w in workflows)+'\n')
+
+
+def indexes(root):
+    root.mkdir(parents=True,exist_ok=True)
+    with (root/'.index.lock').open('a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX)
+        _indexes(root)

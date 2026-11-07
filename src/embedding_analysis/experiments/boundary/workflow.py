@@ -13,7 +13,7 @@ def main(argv=None):
         from ...artifacts import write_json
         job.raw_inputs()
         if job.cached(): return job.dest
-        write_json(job.dest/'sampling.json', boundary_manifest(job.cfg, job.run_id))
+        write_json(job.dest/'sampling.json', boundary_manifest(job.cfg))
         return job.finish()
     if args.step in ['metrics', 'tsne', 'umap']:
         job.input('preprocess', ['prepare'], roles=['train', 'ood', 'shuffled', 'idr'])

@@ -1,14 +1,8 @@
 """OOD cross-route sample selection."""
-import json
 from ...sampling import choose_ids
 from ...data import read_ids
-from ...config import local_path
-from ...artifacts import write_json
 
-def boundary_manifest(cfg, run_id):
-    path = local_path(cfg, cfg['output_root']) / cfg['system'] / '_sampling' / run_id / 'boundary.json'
-    if path.exists():
-        return json.loads(path.read_text())
+def boundary_manifest(cfg):
     result = {}
     for role in ['ood', 'shuffled', 'idr']:
         sets = {route: set(read_ids(cfg, info['datasets'][role])) for (route, info) in cfg['routes'].items() if role in info['datasets']}
@@ -19,6 +13,5 @@ def boundary_manifest(cfg, run_id):
             raise ValueError(f'{role} has fewer than 2 common IDs across routes')
         ids = choose_ids(common, cfg['experiments']['boundary']['target_size'], cfg['seed'], role)
         result[role] = {'ids': ids, 'requested': cfg['experiments']['boundary']['target_size'], 'actual': len(ids), 'common_count': len(common), 'source_counts': {r: len(v) for (r, v) in sets.items()}}
-    write_json(path, result)
     return result
 

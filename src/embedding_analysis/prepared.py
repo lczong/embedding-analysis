@@ -21,7 +21,7 @@ def prepare(cfg, route, payload, destination):
     expected = train.values.shape[1]
     del train, X
     for (role, spec) in datasets.items():
-        if role == 'train':
+        if role in ['train', 'non_target_train']:
             continue
         data = load_embedding(cfg, spec)
         if data.values.shape[1] != expected:

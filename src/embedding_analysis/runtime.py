@@ -6,10 +6,11 @@ import json
 import os
 import re
 import shutil
+import traceback
 import sys
 from pathlib import Path
 from .config import load_config, local_path
-from .artifacts import code_hash, ready, run_context, write_json, artifact_file
+from .artifacts import code_hash, ready, run_context, write_json, artifact_file, file_digest
 from .output import system_root, stage_path, publish_target, indexes
 
 
@@ -45,7 +46,7 @@ class Artifacts:
         if not self.route and args.step not in ['sample','tables','plots']:parser.error('This step requires --route or --input with a route manifest')
         self.checkpoint=self.path(owner,self.route,args.step)
         self.dest=self.checkpoint
-        self.old={};self.lock=None
+        self.old={};self.lock=None;self.log=None
         for var,name in [('MPLCONFIGDIR','matplotlib'),('NUMBA_CACHE_DIR','numba'),('XDG_CACHE_HOME','xdg')]:
             cache=local_path(self.cfg,'.cache/'+name);cache.mkdir(parents=True,exist_ok=True);os.environ.setdefault(var,str(cache))
 
@@ -98,6 +99,9 @@ class Artifacts:
         if self.dest.exists():shutil.rmtree(self.dest)
         self.dest.mkdir()
         (self.dest/'run.log').write_text('Command: '+repr(sys.argv)+'\nSignature: '+self.signature+'\n')
+        self.log=(self.dest/'run.log').open('a',buffering=1)
+        self.stdout,self.stderr=sys.stdout,sys.stderr
+        sys.stdout=Tee(self.stdout,self.log);sys.stderr=Tee(self.stderr,self.log)
         return False
 
     def report(self,status):
@@ -108,13 +112,17 @@ class Artifacts:
         if (self.root/self.owner/'figures/index.html').exists():print('Preview: '+(self.root/self.owner/'figures/index.html').as_uri())
 
     def finish(self):
+        if self.log:
+            sys.stdout,sys.stderr=self.stdout,self.stderr
+            self.log.close();self.log=None
         # prepare() may write a provisional manifest; only this final record is published.
         (self.dest/'manifest.json').unlink(missing_ok=True)
         with (self.dest/'run.log').open('a') as log:log.write('Completed successfully\n')
-        files={};locations={};targets=set()
+        files={};locations={};digests={};targets=set()
         for p in sorted(self.dest.rglob('*')):
             if not p.is_file():continue
             logical=p.relative_to(self.dest);size=p.stat().st_size
+            digests[str(logical)]=file_digest(p)
             target=publish_target(self.root,self.owner,self.route,self.args.step,logical,self.upstream.get('stage') if self.upstream else None,self.table_patterns,self.table_names,self.figure_names)
             if target:
                 target.parent.mkdir(parents=True,exist_ok=True);os.replace(p,target)
@@ -126,6 +134,12 @@ class Artifacts:
             if old not in targets and not old.is_relative_to(self.checkpoint):old.unlink(missing_ok=True)
         if self.checkpoint.exists():shutil.rmtree(self.checkpoint)
         os.replace(self.dest,self.checkpoint);self.dest=self.checkpoint
-        write_json(self.checkpoint/'manifest.json',{**self.payload,'signature':self.signature,'source':str(self.source) if self.source else None,'artifacts':files,'locations':locations})
+        write_json(self.checkpoint/'manifest.json',{**self.payload,'signature':self.signature,'source':str(self.source) if self.source else None,'artifacts':files,'locations':locations,'sha256':digests})
         indexes(self.root);self.report('Completed');self.release()
         return self.checkpoint
+
+
+class Tee:
+    def __init__(self,terminal,log):self.terminal,self.log=terminal,log
+    def write(self,text):self.log.write(text);return self.terminal.write(text)
+    def flush(self):self.log.flush();self.terminal.flush()

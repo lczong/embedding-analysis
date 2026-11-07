@@ -71,8 +71,20 @@ def artifact_file(path, logical):
     return target
 
 
+def file_digest(path):
+    digest=hashlib.sha256()
+    with Path(path).open('rb') as stream:
+        for block in iter(lambda:stream.read(8*1024*1024),b''):digest.update(block)
+    return digest.hexdigest()
+
+
 def ready(path):
     path=Path(path);manifest=path/'manifest.json'
     if not manifest.exists():return False
     data=json.loads(manifest.read_text())
-    return all(artifact_file(path,p).is_file() and artifact_file(path,p).stat().st_size==size for p,size in data['artifacts'].items())
+    for logical,size in data['artifacts'].items():
+        target=artifact_file(path,logical)
+        if not target.is_file() or target.stat().st_size!=size:return False
+        digest=data.get('sha256',{}).get(logical)
+        if digest and file_digest(target)!=digest:return False
+    return True

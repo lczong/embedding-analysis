@@ -5,6 +5,7 @@ from ...runtime import Artifacts, parser_for
 def main(argv=None):
     parser = parser_for('centroid independent workflow', ['metrics', 'visualization', 'metric-plots'])
     args = parser.parse_args(argv)
+    args.method = None  # Centroid visualization is a PCA distance heatmap.
     job = Artifacts(parser, args, 'centroid', table_patterns=['metrics.csv'] if args.step=='metrics' else (), table_names={})
     if args.step in ['metrics']:
         job.input('preprocess', ['prepare'], roles=['train'])
