@@ -8,7 +8,7 @@
 
 每个系统内，分别对 non-target、shuffled、IDR 取各可用 route 的 ID 交集，再按 seed + role + ID 的 SHA256 排序选至多 3145 条。train 全量。固定 manifest 同时用于 silhouette 和 t-SNE，跨 route 共享。小于目标数时记录 actual/common_count/source_counts。
 
-每个 target 单独对 train 计算二组 Euclidean silhouette，仅输出 target 的分数。逐块精确计算，不构造全量两两矩阵。密度图的 KDE 线沿用旧版“样本密度值的第 90 百分位”定义，不声称包围 90% 概率质量。
+每个 target 单独对 train 计算二组 Euclidean silhouette，仅输出 target 的分数。逐块精确计算，不构造全量两两矩阵。balanced 图的 KDE 线沿用旧版 90% 样本覆盖定义：取样本密度值的第 10 百分位作为阈值；三类分面使用 80% 样本覆盖，即第 20 百分位阈值。此定义不声称包围相应比例的积分概率质量。
 
 ## Class BA
 

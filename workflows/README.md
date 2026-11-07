@@ -175,14 +175,16 @@ bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
 | `sample` | 配置内各路线的原始 ID | `boundary/sample/sampling.json` |
 | `metrics` | `pca/` 和 `boundary/sample/` | `boundary/metrics/samples.csv`、`summary.csv`、`sampling.json` |
 | `tsne` / `umap` | 同上 | `boundary/<方法>/coordinates.csv`、`sampling.json` |
-| `visualization-<方法>` | `boundary/<方法>/` | `boundary/visualization-<方法>/figures/density.png`、`.pdf` |
+| `visualization-<方法>` | `boundary/<方法>/` | `boundary/visualization-<方法>/figures/balanced.*`、`per_ood_panels.*`（PNG/PDF） |
 | `metric-plots` | `boundary/metrics/` | `boundary/metric-plots/figures/silhouette.png`、`.pdf` |
 
 `sampling.json` 每个角色包含 `ids`、`requested`、`actual`、`common_count` 和各路线的 `source_counts`。
 
 `samples.csv` 字段为 `sequence_id`、`dataset_role`、`silhouette`；`summary.csv` 按 `dataset_role` 给出 `count/mean/median/std/min/max`。silhouette 范围通常为 [-1, 1]，越高表示该 target 点在这两个组之间更靠近自身组，不是 OOD 概率。
 
-`coordinates.csv` 包含 `sequence_id`、`dataset_role`、`x`、`y`。密度图的 KDE 轮廓是样本密度值的第 90 百分位，不表示包围 90% 概率质量。
+`coordinates.csv` 包含 `sequence_id`、`dataset_role`、`x`、`y`。balanced 图使用 BuGn 训练集 hexbin 背景和三类 target 散点；三类分面使用同一坐标及范围，每面只叠加一种 target。balanced 的 90% KDE 轮廓取样本密度的第 10 百分位作为阈值，分面的 80% 轮廓取第 20 百分位；这是样本位置的密度阈值，不表示积分概率质量。
+
+`metric-plots` 生成单路线 silhouette 箱线图，组内顺序为 shuffled、IDR、non-target；跨路线图由 `boundary_summary.py` 独立生成。两者使用逐样本分数，保留离群点和零线。默认纵轴为 [-0.2, 1]，范围外的分数仍完整保存在 CSV。
 
 ### 显式复用一份抽样清单
 
@@ -240,7 +242,14 @@ bash workflows/overview.sh configs/cazy.json esm2__l2-frozen-nca umap
 bash workflows/overview.sh configs/cazy.json esm2__l2-frozen-nca visualization-umap
 ```
 
-`overview/<方法>/coordinates.csv` 保存 train 的标签及 `x/y`。`overview/visualization-<方法>/figures/classes.*`、`families.*` 分别按 class 和 family 着色。没有 `metrics`、`metric-plots` 或 summary 入口。
+`overview/<方法>/coordinates.csv` 保存 train 的标签及 `x/y`。`visualization` 一次输出以下两种 class 着色图（PNG/PDF）：
+
+- `figures/classes.*`：标注 class 名称。
+- `figures/class_label_family.*`：标注每个 class 内的高频 family 名称。按序列数排序，选择该 class 的 family 种类数的前 15%，数量向上取整；不是覆盖 15% 的序列。
+- `figures/classes_legend.*` 和 `figures/class_label_family_legend.*`：独立图例，列出 class 及序列数。
+- `annotated_families.json`：记录实际标注的 family 清单和选择比例。
+
+两种图均使用原 class 配色、透明散点、中位数位置标签、白色标签底和左下角方向箭头，隐藏轴刻度和边框。默认 Arial、300 dpi、12×10 英寸。标签沿用原版中位数定位，密集区域可能重叠。没有 `metrics`、`metric-plots` 或 summary 入口。
 
 ## Unseen：未见 family 分析
 
@@ -335,11 +344,11 @@ bash workflows/centroid.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
   --output outputs/summary/cazy/boundary/plots
 ```
 
-`tables --inputs` 接受多个指标目录，每个目录有有效 manifest；生成加上 `route` 列的 `summary.csv`。不需要所有路线都完成，也不会自动寻找目录。
+`tables --inputs` 接受多个指标目录，每个目录有有效 manifest；生成加上 `route` 列的 `summary.csv`。Boundary 还合并生成带 `route` 的 `samples.csv`，供箱线图使用；各输入目录必须同时有逐样本表和摘要表。不需要所有路线都完成，也不会自动寻找目录。
 
 | 实验 | 汇总来源 | 比较图 |
 | --- | --- | --- |
-| Boundary | 各路线 `metrics/summary.csv` | 各角色的平均 silhouette |
+| Boundary | 各路线 `metrics/summary.csv` 和 `metrics/samples.csv` | 按路线分组、组内三类 target 的逐样本 silhouette 箱线图 |
 | Multilabel | 各路线 `metrics/summary.csv` | 各 class 组合的平均 BA |
 | Unseen | 各路线 `metrics/families.csv` | 各 class 的 family silhouette 均值（按 family 等权） |
 | Centroid | 各路线 `metrics/metrics.csv` | 不同 k 的质心同 class 邻居比例 |
@@ -369,7 +378,15 @@ bash workflows/centroid.sh configs/cazy.json esm2__l2-frozen-nca metric-plots
 | `experiments.unseen.train_family_count` | 10 | 每类最多选择多少个 train 参照 family |
 | `experiments.unseen.chunk_size` | 256 | family 距离计算分块大小 |
 | `experiments.centroid.min_family_size / ks` | `5 / [1,3,5,7,9]` | family 门槛和质心邻居统计 |
-| `plot.dpi / formats / point_size` | `180 / [png,pdf] / 3` | 导出设置及使用此参数的散点大小；OOD 点大小目前在本实验绘图代码中固定 |
+| `plot.dpi / formats / point_size` | `180 / [png,pdf] / 3` | 通用导出设置；overview 和 boundary 使用下面各自的 dpi，格式仍共用 |
+| `plot.overview.dpi / font / top_family_fraction` | `300 / Arial / 0.15` | overview 分辨率、字体及每类高频 family 的种类比例 |
+| `plot.overview.class_order` | 系统配置 | class 绘制及图例顺序 |
+| `plot.boundary.dpi / font` | `300 / Arial` | boundary 空间图及指标图导出 |
+| `plot.boundary.hexbin_gridsize / hexbin_cmap / hexbin_vmax_mult` | `120 / BuGn / 1.5` | 背景密度网格、配色及 balanced 亮度；分面不使用亮度倍数 |
+| `plot.boundary.point_size / alpha` | `10 / 0.55` | target 散点样式 |
+| `plot.boundary.contour_percentile / panel_contour_percentile` | `90 / 80` | balanced / 分面 KDE 样本覆盖比例 |
+| `plot.boundary.silhouette_ylim` | `[-0.2, 1]` | 单路线及跨路线箱线图纵轴范围 |
+| `plot.boundary.role_labels` | 系统配置 | 图例和分面角色名称 |
 | `plot.highlight_combinations` | 系统配置 | Multilabel 重点组合 |
 | `class_colors` | 系统配置 | class 颜色 |
 
@@ -418,7 +435,7 @@ bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca all \
   --output outputs/replots/cazy-multilabel-ba-v2
 ```
 
-绘图的科学设置来自上游 manifest；只有当前配置的 `plot` 和 `class_colors` 覆盖进去。例如改变 `plot.dpi` 可直接重画；改变 `min_combination_size` 属于科学配置，当前绘图入口会沿用上游记录的值，不会应用当前配置里的新值。不要手工改 manifest。
+绘图的科学设置来自上游 manifest；只有当前配置的 `plot` 和 `class_colors` 覆盖进去。例如改变 `plot.overview.dpi` 或 `plot.boundary.dpi` 可直接重画对应实验；改变 `min_combination_size` 属于科学配置，当前绘图入口会沿用上游记录的值，不会应用当前配置里的新值。不要手工改 manifest。
 
 当前没有 `--force` 或覆盖选项。签名不匹配、文件缺失或失败留下的非空输出目录会被拒绝。检查后将失败目录移到别处，或选择新的输出目录，再运行该步。
 
@@ -458,3 +475,7 @@ bash workflows/boundary.sh configs/cazy.json esm2__l2-frozen-nca all \
 不存在中央实验注册表，不共享实验指标或绘图实现。两套系统在同一实验内复用代码，通过配置区分类别、输入和样式。
 
 完整计算定义见 [METHODS.md](../docs/METHODS.md)，未纳入和取消的功能见 [DEFERRED.md](../docs/DEFERRED.md)。步骤与代码归属说明统一在本手册维护。
+
+## 已恢复绘图样式的来源
+
+Overview 参考原 `normpca100/train_plot/src/plot_class.py` 与 `plot_class_label_family.py`；Boundary 参考原 `normpca100/exp1/src/plot_tsne_labels.py`、`plot_per_ood_panels.py` 以及 `exp1/silhouette_balanced/src/plot_silhouette_balanced_box.py`。绘图实现在本项目各实验的 `plotting.py` 内，不运行或导入原目录代码。CAZy 与 peptidase 通过各自配置提供类别颜色、顺序和角色名称。
