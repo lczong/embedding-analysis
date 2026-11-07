@@ -56,8 +56,23 @@ def complete(path, payload):
     write_json(path/'manifest.json', {**payload, 'artifacts': files})
 
 
+def artifact_file(path, logical):
+    """Resolve a logical result name through its step manifest."""
+    path=Path(path)
+    manifest=path/'manifest.json'
+    if not manifest.exists():return path/logical
+    data=json.loads(manifest.read_text())
+    target=(path/data.get('locations',{}).get(str(logical),str(logical))).resolve()
+    system=data['config']['system']
+    # Locate the enclosing system directory; paths may reach tables/figures, never another system.
+    roots=[p for p in [path.resolve(),*path.resolve().parents] if p.name==system]
+    if not roots or not target.is_relative_to(roots[0]):
+        raise ValueError(f'Artifact leaves system output: {target}')
+    return target
+
+
 def ready(path):
-    manifest = path/'manifest.json'
-    if not manifest.exists(): return False
-    data = json.loads(manifest.read_text())
-    return all((path/p).is_file() and (path/p).stat().st_size == size for p,size in data['artifacts'].items())
+    path=Path(path);manifest=path/'manifest.json'
+    if not manifest.exists():return False
+    data=json.loads(manifest.read_text())
+    return all(artifact_file(path,p).is_file() and artifact_file(path,p).stat().st_size==size for p,size in data['artifacts'].items())
