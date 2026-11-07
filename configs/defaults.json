@@ -56,8 +56,7 @@
   "plot": {
     "dpi": 180,
     "formats": [
-      "png",
-      "pdf"
+      "png"
     ],
     "point_size": 3,
     "highlight_combinations": [],

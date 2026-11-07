@@ -122,9 +122,8 @@ def plot_visualization(source, cfg, destination):
     top_legend(ax,cfg)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(args.output, dpi=args.dpi, bbox_inches='tight')
-    pdf_out = args.output.with_suffix('.pdf')
-    plt.savefig(pdf_out, bbox_inches='tight')
+    for extension in cfg['plot']['formats']:
+        output=args.output.with_suffix('.'+extension)
+        fig.savefig(output,dpi=args.dpi,bbox_inches='tight')
+        print(f"saved: {output}")
     plt.close(fig)
-    print(f"saved: {args.output}")
-    print(f"saved: {pdf_out}")
