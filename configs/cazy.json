@@ -60,6 +60,10 @@
         "idr": {
           "format": "csv",
           "path": "data/cazy/embeddings/esm2/DisProt_cluster100_rep_seq_min21.embeddings.csv"
+        },
+        "non_target_train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2/non-cazy_train.embeddings.csv"
         }
       }
     },
@@ -96,6 +100,10 @@
         "idr": {
           "format": "csv",
           "path": "data/cazy/embeddings/esm2__l0-ft-ce/DisProt_cluster100_rep_seq_min21.embeddings.csv"
+        },
+        "non_target_train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l0-ft-ce/non-cazy_train.embeddings.csv"
         }
       }
     },
@@ -125,6 +133,10 @@
         "idr": {
           "format": "csv",
           "path": "data/cazy/embeddings/esm2__l1-ft-ce/DisProt_cluster100_rep_seq_min21.embeddings.csv"
+        },
+        "non_target_train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l1-ft-ce/non-cazy_train.embeddings.csv"
         }
       }
     },
@@ -154,6 +166,10 @@
         "idr": {
           "format": "csv",
           "path": "data/cazy/embeddings/esm2__l1-ft-ce__l2-frozen-nca/DisProt_cluster100_rep_seq_min21.embeddings.csv"
+        },
+        "non_target_train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l1-ft-ce__l2-frozen-nca/non-cazy_train.embeddings.csv"
         }
       }
     },
@@ -183,6 +199,10 @@
         "idr": {
           "format": "csv",
           "path": "data/cazy/embeddings/esm2__l2-frozen-nca/DisProt_cluster100_rep_seq_min21.embeddings.csv"
+        },
+        "non_target_train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2__l2-frozen-nca/non-cazy_train.embeddings.csv"
         }
       }
     },
@@ -235,6 +255,18 @@
       "role_labels": {
         "shuffled": "CAZyme-shuffled",
         "idr": "Intrinsically disordered (IDR)"
+      }
+    },
+    "binary": {
+      "dpi": 300,
+      "font": "Arial",
+      "labels": {
+        "train": "cazy",
+        "non_target_train": "non-cazy"
+      },
+      "names": {
+        "train": "CAZyme",
+        "non_target_train": "Non-CAZyme"
       }
     }
   }
