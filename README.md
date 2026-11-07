@@ -4,10 +4,8 @@
 
 不包含 kNN OOD score、Leiden、HDBSCAN 或 bridge score。BA 只按 class 计算。
 
-- [第一阶段范围与提交步骤](docs/SCOPE.md)
 - [未纳入的功能和两套系统的差异](docs/DEFERRED.md)
 - [计算定义及与旧版的差异](docs/METHODS.md)
-- [验证记录](docs/VALIDATION.md)
 
 ## 分步骤运行（推荐）
 
@@ -37,13 +35,7 @@ Peptidase 的 `esm2__l1-ft-ce__l2-frozen-nca` 只有 train，仅支持 overview 
 
 已导入配置所需的 72 个文件，约 27.51 GiB 逻辑大小。macOS 下使用 APFS 写时复制，副本有独立 inode，不是软链接/硬链接。原两个目录、原始结果以及 normalized/ 未改动。只导入核心需要的输入；数据和环境不进入 Git。
 
-需要重新导入时：
-
-```bash
-python scripts/import_data.py --source-root /path/to/OOD2
-```
-
-详细来源与复制验证方式在未跟踪的 `data/import_manifest.json`。默认验证大小及首尾各 1 MiB 摘要；可加 `--verify-full` 做逐字节校验。原始项目路径只用于这个一次性导入工具，运行期不访问它们。
+运行只读取本项目 `data/`。迁移机器时一并复制该目录，按配置中的相对路径放置文件，再用 `workflows/validate.py` 检查。数据来源及初次复制校验记录保留在 `data/import_manifest.json`，它不参与运行。
 
 NPY 的 ID 来源由 `ids_reference` 显式声明。它只能检查行数和 ID 完整性，不能仅凭文件推断行序正确。当前 peptidase 数据沿用原脚本的 level0 CSV 行序约定。
 
@@ -74,10 +66,9 @@ OOD 抽样按每个系统各路线 ID 交集固定，因 CAZy l2-ft 原有预抽
 
 ```bash
 PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -v
-.venv/bin/python scripts/smoke_real_data.py
 ```
 
-第一条运行输入完整性、旧指标回归、两个系统的分步工作流/缓存/输入校验测试；其中工作流测试用确定性二维坐标替代耗时降维。第二条读取新目录的数据，建立独立的小样本项目，实际运行 PCA、openTSNE、UMAP、全部核心指标及 PNG 导出，输出在 `outputs/smoke/`，不改动主数据。
+测试覆盖输入完整性、指标回归、两个系统的分步流程与汇总、缓存及实验隔离。流程测试用确定性二维坐标替代耗时降维，不代表生产全量实验已经完成。测试说明集中在[操作手册](workflows/README.md#代码归属与验证)。
 
 ## 移动或在其他机器安装
 

@@ -1,11 +1,14 @@
 # 本地数据
 
-只导入 configs 中显式列出的输入。运行期不依赖旧项目目录。
+`cazy/` 和 `peptidase/` 保存系统配置引用的 embedding 与 metadata。运行期只读取本项目中的文件，不依赖原项目目录。
+
+迁移项目时一并复制这些数据，保持配置中的相对路径，再从项目根目录检查：
 
 ```bash
-python scripts/import_data.py --source-root /path/to/OOD2
+.venv/bin/python workflows/validate.py --config configs/cazy.json
+.venv/bin/python workflows/validate.py --config configs/peptidase.json
 ```
 
-macOS 使用独立的 APFS 写时复制，其余系统使用普通复制。不会建立软链接或硬链接。默认校验大小及文件首尾摘要；`--verify-full` 可额外逐字节比较。`import_manifest.json` 保存来源及检查方式。
+需要全量 ID、有限值和标签对齐检查时加 `--deep`。
 
-数据不进入 Git。normalized/、无关 train/val/test、历史结果、压缩包不导入。
+`import_manifest.json` 仅保留初次复制的来源及校验记录，运行不读取。数据不进入 Git；本目录的 README 由 Git 跟踪。

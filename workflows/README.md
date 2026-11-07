@@ -460,8 +460,15 @@ bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca all \
 ```bash
 # 数值回归、输入校验、步骤隔离、实验导入隔离及汇总测试
 PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -v
-# 读取真实小样本，运行两套系统的实际降维及全部适用步骤
-.venv/bin/python scripts/smoke_real_data.py
 ```
 
-Smoke 输出在 `outputs/smoke/` 内的独立小样本项目，不是生产全量结果。完整计算定义见 [METHODS.md](../docs/METHODS.md)，暂缓内容见 [DEFERRED.md](../docs/DEFERRED.md)，验证范围见 [VALIDATION.md](../docs/VALIDATION.md)。
+测试包括：
+
+- 数值回归：OOD silhouette 对照 sklearn，class BA 确定值与无效情况，family 指标对照保留的数值基准，质心邻居统计排除自身。
+- 输入完整性：NPY 的参考 ID、CSV 重复 ID、metadata 缺失、路径边界，以及 PCA 仅在 train 上拟合。
+- 步骤隔离：指标不触发降维，降维不计算指标，移走原始数据后仍可读取产物绘图与汇总，错误输入类型明确报错。
+- 实验隔离：禁止导入其他实验后，逐个验证本实验的流程、计算、指标和绘图模块能独立加载。
+
+流程单元测试用确定性二维坐标代替 t-SNE/UMAP；测试通过不等于正式数据的全部实验已经运行。实际实验需按前述步骤执行，并检查产物、有效样本数和跳过记录。
+
+完整计算定义见 [METHODS.md](../docs/METHODS.md)，未纳入和取消的功能见 [DEFERRED.md](../docs/DEFERRED.md)。步骤、代码归属与测试使用说明统一在本手册维护。
