@@ -230,14 +230,23 @@ bash workflows/multilabel.sh configs/cazy.json esm2__l0-ft-ce metric-plots
 | `figures/<route>/tsne_combo_<组合>.*` | 单个组合高亮，父 class 淡色，其余灰色，上方/右侧 KDE |
 | `figures/<route>/tsne_combos_<组合>__<组合>.*` | 多个重点组合同时高亮（至少两个组合存在时生成） |
 | `figures/<route>/ba.*` | 所有达标组合的 BA KDE 叠加图 |
-| `figures/<route>/ba_combo_<组合>.*` | 每个达标组合的直方图（30 bins）＋KDE、均值和 BA=0/1 参考线 |
+| `figures/<route>/ba_combos/ba_combo_<组合>.*` | 每个达标组合的直方图（30 bins）＋KDE、均值和 BA=0/1 参考线 |
 | `artifacts/<route>/tsne/coordinates.csv` | 二维坐标及标签 |
 
 Multilabel 空间图沿用旧 `exp2/debug/plot_umap_multi_white.py` 的白底风格，并增加上方 KDE：单标签点较小且透明，多标签点为较大、白边圆点；CAZy 的 `CBM|GH` 为蓝色、`CBM|PL` 为红色。所有视图保留同一套完整坐标和范围，不对组合单独降维或裁剪。左下角箭头标明实际降维方法；UMAP 输出将上述 `tsne_` 前缀替换为 `umap_`。
 
 KDE 分别沿二维坐标的 x/y 轴计算，每类独立使用 Scott 带宽、400 点网格；不按样本数量加权，不表示 PCA 空间中的指标。样本不足 10 或坐标无方差时跳过该曲线，记录在对应 visualization 步骤的 `kde_skipped.json` 中。图例包含样本数，放在上方 KDE 之外并左对齐，字号 14，按可用宽度分列。PNG/PDF 默认 300 dpi；`plot.multilabel` 管理画布、字体、KDE 最小样本数、class 顺序和组合颜色。空间图由本实验的 `spatial.py` 管理；BA 指标图由本实验的 `plotting.py` 独立管理。
 
-BA 单路线图只画有限分数不少于 `experiments.multilabel.min_combination_size`（默认 5）的组合，KDE 使用 Scott 带宽；常数分数保留直方图/垂直线，不拟合 KDE。跨路线 `tables` 同时生成 `summary.csv` 与带 route 的逐样本 `samples.csv`；`plots` 读取后者画分组 violin，不能仅凭均值表生成分布。沿用旧版筛选：以传入的第一条 route 为参考，只取两个 class 的组合且有效样本数 > `plot.multilabel.ba_summary_min_n`（默认 30），按参考路线频数排序。图中灰线为中位数，N 为各路线有效样本数（不一致时按图例顺序列出）。默认显示范围 `plot.multilabel.ba_summary_ylim=[-7,1]` 沿用旧图，范围外尾部仅在图中裁切，原始分数和统计表完整保留。图例均为图外上方左对齐、14 号字。
+BA 单路线图只画有限分数不少于 `experiments.multilabel.min_combination_size`（默认 5）的组合，KDE 使用 Scott 带宽；常数分数保留直方图/垂直线，不拟合 KDE。跨路线 `tables` 同时生成 `summary.csv` 与带 route 的逐样本 `samples.csv`；`plots` 读取后者画分组 violin，不能仅凭均值表生成分布。沿用旧版筛选：未显式指定组合时，以传入的第一条 route 为参考，只取两个 class 的组合且有效样本数 > `plot.multilabel.ba_summary_min_n`（默认 30），按参考路线频数排序。图中灰线为中位数，N 为各路线有效样本数（不一致时按图例顺序列出）。默认显示范围 `plot.multilabel.ba_summary_ylim=[-7,1]` 沿用旧图，范围外尾部仅在图中裁切，原始分数和统计表完整保留。图例均为图外上方左对齐、14 号字。
+
+CAZy 的 `plot.multilabel.combinations` 是空间单组合图和 BA summary 共用的默认组合清单，固定为当前 ESM2 参考数据中满足上述规则的九组（顺序一致）：`CBM|GH`、`CBM|PL`、`AA|CBM`、`CBM|CE`、`GH|GT`、`CBM|GT`、`CE|GH`、`CE|PL`、`CE|GT`。更换数据后如需更新这份固定清单，应同步修改此配置。空间绘图只读取已有坐标，不要求先运行 BA summary；t-SNE 和 UMAP 都按此清单逐组绘图。双组合叠加图仍由 `plot.highlight_combinations` 控制。未配置共用清单的系统，空间图沿用其重点组合配置，BA summary 沿用频数筛选。
+
+`plot.multilabel.ba_summary_groups` 配置跨路线分组。CAZy 生成两张图，共用上述九组及相同纵轴范围：
+
+- `figures/summary/ba_ftce.*`：ESM2、L0 FT-CE、L1 FT-CE、L2 FT-CE。
+- `figures/summary/ba_frozen_nca.*`：ESM2、ESM2→L2 frozen-NCA、ESM2→L1 FT-CE→L2 frozen-NCA。
+
+只绘制 summary 输入中实际存在的路线；空组不出图。未配置分组的系统生成 `ba_all.*`。重新运行 summary `plots` 会替换旧的单张 `ba.*`。各路线 BA 的 KDE 总览仍是 `figures/<route>/ba.*`，15 张达标单组合图放入 `ba_combos/` 子目录，与仅显示九组的 summary 筛选相互独立。
 
 ## Unseen：未见 family 分析
 
@@ -319,7 +328,7 @@ metric 包括 knn_class_purity、class_silhouette、median_within_class、median
 | 实验 | 汇总表 | 汇总图 |
 | --- | --- | --- |
 | Boundary | 带 route 的 summary.csv 与逐样本 samples.csv | silhouette.*；按路线分组的三类 target 箱线图 |
-| Multilabel | 带 route 的 summary.csv 与逐样本 samples.csv | ba.*；双 class 组合的逐样本 BA 分组 violin |
+| Multilabel | 带 route 的 summary.csv 与逐样本 samples.csv | ba_ftce.*、ba_frozen_nca.*（CAZy）；双 class 组合的逐样本 BA 分组 violin |
 | Unseen | 带 route 的 family 指标 summary.csv | silhouette.*；各 class 的 family silhouette 均值，family 等权 |
 | Centroid | 带 route 的 metrics 长表 summary.csv | knn_class_purity.*；不同 k 的纯度 |
 
