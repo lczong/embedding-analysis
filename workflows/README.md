@@ -239,7 +239,7 @@ KDE 分别沿二维坐标的 x/y 轴计算，每类独立使用 Scott 带宽、4
 
 BA 单路线图只画有限分数不少于 `experiments.multilabel.min_combination_size`（默认 5）的组合，KDE 使用 Scott 带宽；常数分数保留直方图/垂直线，不拟合 KDE。跨路线 `tables` 同时生成 `summary.csv` 与带 route 的逐样本 `samples.csv`；`plots` 读取后者画分组 violin，不能仅凭均值表生成分布。沿用旧版筛选：未显式指定组合时，以传入的第一条 route 为参考，只取两个 class 的组合且有效样本数 > `plot.multilabel.ba_summary_min_n`（默认 30），按参考路线频数排序。图中灰线为中位数，N 为各路线有效样本数（不一致时按图例顺序列出）。默认显示范围 `plot.multilabel.ba_summary_ylim=[-7,1]` 沿用旧图，范围外尾部仅在图中裁切，原始分数和统计表完整保留。图例均为图外上方左对齐、14 号字。
 
-CAZy 的 `plot.multilabel.combinations` 是空间单组合图和 BA summary 共用的默认组合清单，固定为当前 ESM2 参考数据中满足上述规则的九组（顺序一致）：`CBM|GH`、`CBM|PL`、`AA|CBM`、`CBM|CE`、`GH|GT`、`CBM|GT`、`CE|GH`、`CE|PL`、`CE|GT`。更换数据后如需更新这份固定清单，应同步修改此配置。空间绘图只读取已有坐标，不要求先运行 BA summary；t-SNE 和 UMAP 都按此清单逐组绘图。双组合叠加图仍由 `plot.highlight_combinations` 控制。未配置共用清单的系统，空间图沿用其重点组合配置，BA summary 沿用频数筛选。
+CAZy 的 `plot.multilabel.combinations` 是空间单组合图和 BA summary 共用的默认组合清单，固定为当前 ESM2 参考数据中满足上述规则的九组（顺序一致）：`CBM|GH`、`CBM|PL`、`AA|CBM`、`CBM|CE`、`GH|GT`、`CBM|GT`、`CE|GH`、`CE|PL`、`CE|GT`。九组高亮颜色在 `plot.multilabel.combo_colors` 中显式固定，按与父 class 的对比及白底可见性选择；组合顺序改变不会改变配色。空间散点、边际 KDE 和 BA KDE 叠加图共用该映射。更换数据后如需更新这份固定清单，应同步修改此配置。空间绘图只读取已有坐标，不要求先运行 BA summary；t-SNE 和 UMAP 都按此清单逐组绘图。双组合叠加图仍由 `plot.highlight_combinations` 控制。未配置共用清单的系统，空间图沿用其重点组合配置，BA summary 沿用频数筛选。
 
 `plot.multilabel.ba_summary_groups` 配置跨路线分组。CAZy 生成两张图，共用上述九组及相同纵轴范围：
 
