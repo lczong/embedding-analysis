@@ -194,6 +194,17 @@
         "shuffled": "Peptidase-shuffled",
         "idr": "Intrinsically disordered (IDR)"
       }
+    },
+    "multilabel": {
+      "class_order": [
+        "S",
+        "M",
+        "C",
+        "A",
+        "T",
+        "G",
+        "N"
+      ]
     }
   }
 }

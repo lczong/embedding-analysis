@@ -15,27 +15,6 @@ def save(fig, stem, cfg):
         fig.savefig(stem.with_suffix('.' + ext), dpi=cfg['plot']['dpi'], bbox_inches='tight')
     plt.close(fig)
 
-def colors(labels, cfg):
-    unique = sorted(set(labels))
-    cmap = plt.get_cmap('tab20' if len(unique) <= 20 else 'hsv')
-    return {v: cfg['class_colors'].get(v, cmap(i if len(unique) <= 20 else i / len(unique))) for (i, v) in enumerate(unique)}
-
-def scatter(df, column, stem, cfg, title='', background_train=False):
-    (fig, ax) = plt.subplots(figsize=(7, 6))
-    foreground = df
-    if background_train:
-        bg = df[df.dataset_role == 'train']
-        ax.scatter(bg.x, bg.y, c='#cccccc', s=cfg['plot']['point_size'], alpha=0.15, rasterized=True)
-        foreground = df[df.dataset_role != 'train']
-    palette = colors(foreground[column], cfg)
-    for (label, group) in foreground.groupby(column, sort=True):
-        ax.scatter(group.x, group.y, s=cfg['plot']['point_size'], color=palette[label], label=label, alpha=0.6, rasterized=True)
-    ax.set(title=title, xlabel='Dimension 1', ylabel='Dimension 2', aspect='equal')
-    ax.set_xticks([])
-    ax.set_yticks([])
-    top_legend(ax,cfg)
-    save(fig, stem, cfg)
-
 def distributions(df, value, group, stem, cfg, title):
     valid = df[np.isfinite(df[value])]
     (fig, ax) = plt.subplots(figsize=(max(6, valid[group].nunique() * 0.6), 4))
@@ -48,16 +27,7 @@ def distributions(df, value, group, stem, cfg, title):
     ax.tick_params(axis='x', labelrotation=45)
     save(fig, stem, cfg)
 
-def plot_visualization(path, cfg, destination):
-    path = Path(path)
-    dest = Path(destination)
-    df = pd.read_csv(path / 'coordinates.csv')
-    scatter(df, 'class_label', dest / 'figures/classes', cfg, 'Train + multi-class')
-    for combo in cfg['plot']['highlight_combinations']:
-        parents = combo.split('|')
-        subset = df.copy()
-        subset['selection'] = np.where(subset.class_label.isin(parents + [combo]), subset.class_label, 'background')
-        scatter(subset, 'selection', dest / 'figures' / ('combo_' + '_'.join(parents)), cfg, combo)
+from .spatial import plot_visualization
 
 def plot_metrics(path, cfg, destination):
     path = Path(path)

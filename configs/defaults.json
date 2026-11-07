@@ -91,6 +91,15 @@
     },
     "legend": {
       "fontsize": 14
+    },
+    "multilabel": {
+      "font": "Arial",
+      "dpi": 300,
+      "figsize": [
+        11,
+        11
+      ],
+      "kde_min_samples": 10
     }
   }
 }
