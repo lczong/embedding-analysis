@@ -70,12 +70,12 @@ outputs/
 
 | 用途 | 内容 | 查看入口 |
 | --- | --- | --- |
-| `figures` | 最终 PNG/PDF；空间图和指标图（图例随主图显示） | `<workflow>/figures/index.html` 提供图片预览和 PDF 链接 |
+| `figures` | 最终 PNG；空间图和指标图（图例随主图显示） | `<workflow>/figures/index.html` 提供图片预览 |
 | `tables` | 逐样本指标、统计摘要、跨路线汇总表 | `<workflow>/RESULTS.md` 列出表格链接 |
 | `artifacts` | 坐标、抽样清单、执行日志、manifest 等 | 运行检查或继续下游步骤时使用 |
 | `_shared/pca` | 同系统、同路线共享的 train-only PCA | 各主实验自动查找；binary 不使用它 |
 
-例如找 CAZy Boundary 图，直接进入 `outputs/cazy/boundary/figures/`。单路线目录中是 `tsne_balanced.png`、`tsne_per_ood_panels.png`、`silhouette.png` 等，汇总图在 `summary/silhouette.png`。PNG/PDF 同目录。UMAP 文件用 `umap_` 前缀，两种方法不会互相覆盖。
+例如找 CAZy Boundary 图，直接进入 `outputs/cazy/boundary/figures/`。单路线目录中是 `tsne_balanced.png`、`tsne_per_ood_panels.png`、`silhouette.png` 等，汇总图在 `summary/silhouette.png`。默认只生成 PNG。UMAP 文件用 `umap_` 前缀，两种方法不会互相覆盖。
 
 索引在步骤完成后自动更新；程序会打印本步骤的 checkpoint、图片目录、表格目录和预览链接。未运行的实验不创建空目录。`manifest.json` 位于 checkpoint 中，以逻辑文件名记录最终文件的相对位置、大小和 SHA256；不要手工移动单张图或修改 manifest。
 
@@ -235,7 +235,7 @@ bash workflows/multilabel.sh configs/cazy.json esm2__l0-ft-ce metric-plots
 
 Multilabel 空间图沿用旧 `exp2/debug/plot_umap_multi_white.py` 的白底风格，并增加上方 KDE：单标签点较小且透明，多标签点为较大、白边圆点；CAZy 的 `CBM|GH` 为蓝色、`CBM|PL` 为红色。所有视图保留同一套完整坐标和范围，不对组合单独降维或裁剪。左下角箭头标明实际降维方法；UMAP 输出将上述 `tsne_` 前缀替换为 `umap_`。
 
-KDE 分别沿二维坐标的 x/y 轴计算，每类独立使用 Scott 带宽、400 点网格；不按样本数量加权，不表示 PCA 空间中的指标。样本不足 10 或坐标无方差时跳过该曲线，记录在对应 visualization 步骤的 `kde_skipped.json` 中。图例包含样本数，放在上方 KDE 之外并左对齐，字号 14，按可用宽度分列。PNG/PDF 默认 300 dpi；`plot.multilabel` 管理画布、字体、KDE 最小样本数、class 顺序和组合颜色。空间图由本实验的 `spatial.py` 管理；BA 指标图由本实验的 `plotting.py` 独立管理。
+KDE 分别沿二维坐标的 x/y 轴计算，每类独立使用 Scott 带宽、400 点网格；不按样本数量加权，不表示 PCA 空间中的指标。样本不足 10 或坐标无方差时跳过该曲线，记录在对应 visualization 步骤的 `kde_skipped.json` 中。图例包含样本数，放在上方 KDE 之外并左对齐，字号 14，按可用宽度分列。PNG 默认 300 dpi；`plot.multilabel` 管理画布、字体、KDE 最小样本数、class 顺序和组合颜色。空间图由本实验的 `spatial.py` 管理；BA 指标图由本实验的 `plotting.py` 独立管理。
 
 BA 单路线图只画有限分数不少于 `experiments.multilabel.min_combination_size`（默认 5）的组合，KDE 使用 Scott 带宽；常数分数保留直方图/垂直线，不拟合 KDE。跨路线 `tables` 同时生成 `summary.csv` 与带 route 的逐样本 `samples.csv`；`plots` 读取后者画分组 violin，不能仅凭均值表生成分布。沿用旧版筛选：未显式指定组合时，以传入的第一条 route 为参考，只取两个 class 的组合且有效样本数 > `plot.multilabel.ba_summary_min_n`（默认 30），按参考路线频数排序。图中灰线为中位数，N 为各路线有效样本数（不一致时按图例顺序列出）。默认显示范围 `plot.multilabel.ba_summary_ylim=[-7,1]` 沿用旧图，范围外尾部仅在图中裁切，原始分数和统计表完整保留。图例均为图外上方左对齐、14 号字。
 
@@ -357,7 +357,7 @@ Overview 和 binary 没有指标汇总入口。空数据不一定生成图，应
 | `experiments.unseen.train_family_count` | 10 | 每类最多选择多少个 train 参照 family |
 | `experiments.unseen.chunk_size` | 256 | family 距离计算分块大小 |
 | `experiments.centroid.min_family_size / ks` | `5 / [1,3,5,7,9]` | family 门槛和质心邻居统计 |
-| `plot.dpi / formats / point_size` | `180 / [png,pdf] / 3` | 通用导出设置；overview 和 boundary 使用下面各自的 dpi，格式仍共用 |
+| `plot.dpi / formats / point_size` | `180 / [png] / 3` | 通用导出设置；overview 和 boundary 使用下面各自的 dpi，格式仍共用 |
 | `plot.overview.dpi / font / top_family_fraction` | `300 / Arial / 0.15` | overview 分辨率、字体及每类高频 family 的种类比例 |
 | `plot.overview.class_order` | 系统配置 | class 绘制及图例顺序 |
 | `plot.boundary.dpi / font` | `300 / Arial` | boundary 空间图及指标图导出 |
