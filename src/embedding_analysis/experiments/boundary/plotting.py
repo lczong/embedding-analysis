@@ -1,3 +1,4 @@
+from ...legend import top_legend
 from ...artifacts import artifact_file
 """Balanced, per-target panels and silhouette plots restored from normpca100/exp1."""
 import json
@@ -83,9 +84,8 @@ def plot_visualization(path,cfg,destination):
             group=df[df.dataset_role==role];foreground(ax,group,role,options)
             contour(ax,group[['x','y']].to_numpy(),darken(COLORS[role],.7),options.get('contour_percentile',90))
             handles.append(ax.scatter([],[],c=COLORS[role],s=50,edgecolors='white',linewidths=.25,label=names[role]))
-        ax.legend(handles=handles,loc='upper right',frameon=True,facecolor='white',edgecolor='#CCCCCC',
-                  prop={'size':13},handlelength=1.2,handletextpad=.6)
         ax.set_aspect('equal',adjustable='datalim');ax.axis('off');axis_indicator(ax,method)
+        top_legend(ax,cfg,handles=handles)
         save(fig,dest/'balanced',cfg)
         # Original per-target layout has 80% contours and its own shared bounds.
         fig,axes=plt.subplots(1,3,figsize=(24,8),sharey=True)
@@ -130,11 +130,7 @@ def boxplot(samples,cfg,stem):
         ax.set_ylim(*options.get('silhouette_ylim',[-.2,1]));ax.set_ylabel('Per-sample silhouette score',fontsize=12)
         ax.tick_params(axis='y',labelsize=11);ax.spines['top'].set_visible(False);ax.spines['right'].set_visible(False)
         handles=[mpatches.Patch(facecolor=COLORS[r],edgecolor=darken(COLORS[r],.6),alpha=.6,label=names[r]) for r in BOX_ORDER]
-        if single:
-            ax.legend(handles=handles,loc='lower left',bbox_to_anchor=(0,1.02),borderaxespad=0,
-                      facecolor='white',edgecolor='#CCCCCC',prop={'size':9})
-        else:
-            ax.legend(handles=handles,loc='upper right',facecolor='white',edgecolor='#CCCCCC',prop={'size':12})
+        top_legend(ax,cfg,handles=handles)
         save(fig,stem,cfg)
 
 

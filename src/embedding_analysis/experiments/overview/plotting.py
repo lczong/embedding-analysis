@@ -1,3 +1,4 @@
+from ...legend import top_legend
 """Class-colored views restored from normpca100/train_plot plotting scripts."""
 import json
 import math
@@ -38,15 +39,11 @@ def selected_families(df, classes, fraction):
     return sorted(set(selected))
 
 
-def legend(df, classes, dest, cfg):
+def legend(ax, df, classes, cfg):
     handles=[Line2D([0],[0],linestyle='none',marker='o',markerfacecolor=cfg['class_colors'][cls],
                     markeredgecolor='white',markeredgewidth=.3,markersize=14,alpha=1,
                     label=f'{cls} ({int((df.class_label==cls).sum()):,})') for cls in classes]
-    ncol=math.ceil(len(classes)/2)
-    fig,ax=plt.subplots(figsize=(ncol*1.9,1.4));ax.axis('off')
-    ax.legend(handles=handles,loc='center',ncol=ncol,fontsize=14,frameon=False,
-              handletextpad=.4,columnspacing=1,labelspacing=.6)
-    save(fig,dest,cfg)
+    top_legend(ax,cfg,handles=handles)
 
 
 def plot_visualization(path,cfg,destination):
@@ -79,8 +76,8 @@ def plot_visualization(path,cfg,destination):
             ax.set_xticks([]);ax.set_yticks([])
             for spine in ax.spines.values():spine.set_visible(False)
             axis_indicator(ax,method)
+            legend(ax,df,classes,cfg)
             save(fig,dest/stem,cfg)
-            legend(df,classes,dest/(stem+'_legend'),cfg)
     # Record exactly which families are annotated without touching source coordinates.
     dest.parent.mkdir(parents=True,exist_ok=True)
     (dest.parent/'annotated_families.json').write_text(json.dumps({'fraction':fraction,'families':family_labels},indent=2)+'\n')

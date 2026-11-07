@@ -1,3 +1,4 @@
+from ...legend import top_legend
 from ...artifacts import artifact_file
 """Plots owned by centroid; independent of other experiment plots."""
 from pathlib import Path
@@ -46,5 +47,5 @@ def plot_summary(path, cfg, destination):
     fig,ax=plt.subplots(figsize=(9,4))
     for route,g in df[df.metric=='knn_class_purity'].groupby('route'):
         ax.plot(g.k,g.value,marker='o',label=route)
-    ax.set(xlabel='k',ylabel='Centroid class purity');ax.legend(fontsize=7)
+    ax.set(xlabel='k',ylabel='Centroid class purity');top_legend(ax,cfg)
     save(fig,Path(destination)/'comparison',cfg)

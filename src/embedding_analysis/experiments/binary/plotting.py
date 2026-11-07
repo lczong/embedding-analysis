@@ -6,6 +6,7 @@ sequence_id, label, tsne_x, tsne_y; label in {cazy, non-cazy}). Style mirrors
 plot_class.py.
 """
 from __future__ import annotations
+from ...legend import top_legend
 
 import argparse
 from pathlib import Path
@@ -118,10 +119,7 @@ def plot_visualization(source, cfg, destination):
     if method=="umap":
         for text in ax.texts:text.set_text(text.get_text().replace("t-SNE","UMAP"))
 
-    ax.legend(
-        bbox_to_anchor=(1.05, 1), loc='upper left',
-        fontsize=LEGEND_FONTSIZE, markerscale=LEGEND_MARKERSCALE,
-    )
+    top_legend(ax,cfg)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(args.output, dpi=args.dpi, bbox_inches='tight')

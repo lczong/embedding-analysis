@@ -1,3 +1,4 @@
+from ...legend import top_legend
 from ...artifacts import artifact_file
 """Plots owned by unseen; independent of other experiment plots."""
 from pathlib import Path
@@ -29,11 +30,10 @@ def scatter(df, column, stem, cfg, title='', background_train=False):
     palette = colors(foreground[column], cfg)
     for (label, group) in foreground.groupby(column, sort=True):
         ax.scatter(group.x, group.y, s=cfg['plot']['point_size'], color=palette[label], label=label, alpha=0.6, rasterized=True)
-    if len(palette) <= 25:
-        ax.legend(markerscale=3, fontsize=8, frameon=False, loc='best')
     ax.set(title=title, xlabel='Dimension 1', ylabel='Dimension 2', aspect='equal')
     ax.set_xticks([])
     ax.set_yticks([])
+    top_legend(ax,cfg)
     save(fig, stem, cfg)
 
 def distributions(df, value, group, stem, cfg, title):
@@ -69,5 +69,5 @@ def plot_summary(path, cfg, destination):
     if df.empty: return
     fig,ax=plt.subplots(figsize=(9,4))
     df.pivot_table(index='class_label',columns='route',values='silhouette_mean',aggfunc='mean').plot.bar(ax=ax)
-    ax.set_ylabel('silhouette_mean');ax.legend(fontsize=6)
+    ax.set_ylabel('silhouette_mean');top_legend(ax,cfg)
     save(fig,Path(destination)/'comparison',cfg)
