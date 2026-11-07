@@ -62,17 +62,9 @@ outputs/steps/<system>/<route>/<experiment>/metric-plots/
 
 OOD 抽样按每个系统各路线 ID 交集固定，因 CAZy l2-ft 原有预抽样，实际共同样本可能小于 3145；manifest 会记录实际数。新抽样不承诺复现旧图的随机样本。
 
-## 测试
-
-```bash
-PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -v
-```
-
-测试覆盖输入完整性、指标回归、两个系统的分步流程与汇总、缓存及实验隔离。流程测试用确定性二维坐标替代耗时降维，不代表生产全量实验已经完成。测试说明集中在[操作手册](workflows/README.md#代码归属与验证)。
-
 ## 移动或在其他机器安装
 
-代码和 configs 可直接移植。数据需一起携带，或通过导入工具准备。虚拟环境依赖本机系统 Python，换机器应重新创建：
+代码和 configs 可直接移植。数据需一起携带，并保持配置中的相对路径。虚拟环境依赖本机系统 Python，换机器应重新创建：
 
 ```bash
 python3.10 -m venv .venv

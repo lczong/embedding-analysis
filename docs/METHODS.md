@@ -36,6 +36,6 @@ joint 指标的上下文是 unseen + sampled train。Silhouette、Dunn 使用 co
 
 ## 降维、缓存与历史差异
 
-共用 openTSNE（PCA initialization，250/500 iterations）和 umap-learn。旧 scanpy UMAP 不迁移。新的固定 ID 抽样、严格元数据校验和哈希 family 抽样可能使结果不同于旧脚本；回归测试检查指标定义，而不是承诺重现所有旧图坐标。
+共用 openTSNE（PCA initialization，250/500 iterations）和 umap-learn。旧 scanpy UMAP 不迁移。新的固定 ID 抽样、严格元数据校验和哈希 family 抽样可能使结果不同于旧脚本；不承诺重现所有旧图坐标。
 
 每个独立步骤使用显式输入、输出目录。签名记录配置、代码摘要和上游 manifest；PCA / sample 另记录原始输入路径、大小、mtime 和首尾摘要（不是全文件校验和）。相同签名可复用完成产物；参数或输入变化时需指定新输出目录，不覆盖既有结果。指标、二维降维和两类绘图分别运行，任何步骤都不自动补跑上游。

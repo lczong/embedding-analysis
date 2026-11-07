@@ -16,7 +16,7 @@
 10. [配置参数](#配置参数)
 11. [重跑、缓存与成功检查](#重跑缓存与成功检查)
 12. [常见报错](#常见报错)
-13. [代码归属与验证](#代码归属与验证)
+13. [代码归属](#代码归属)
 
 ## 准备环境、选择系统和路线
 
@@ -440,7 +440,7 @@ bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca all \
 | unseen 无图或部分 class 缺失 | 查看两个 skipped JSON；指标与图的纳入规则不同，不一定是失败 |
 | BA 部分分数为空 | 查看 `invalid_reason`，判断是缺质心、单标签还是退化半径 |
 
-## 代码归属与验证
+## 代码归属
 
 | 位置 | 职责 |
 | --- | --- |
@@ -457,18 +457,4 @@ bash workflows/ood.sh configs/cazy.json esm2__l2-frozen-nca all \
 
 不存在中央实验注册表，不共享实验指标或绘图实现。两套系统在同一实验内复用代码，通过配置区分类别、输入和样式。
 
-```bash
-# 数值回归、输入校验、步骤隔离、实验导入隔离及汇总测试
-PYTHONPATH=src .venv/bin/python -m unittest discover -s tests -v
-```
-
-测试包括：
-
-- 数值回归：OOD silhouette 对照 sklearn，class BA 确定值与无效情况，family 指标对照保留的数值基准，质心邻居统计排除自身。
-- 输入完整性：NPY 的参考 ID、CSV 重复 ID、metadata 缺失、路径边界，以及 PCA 仅在 train 上拟合。
-- 步骤隔离：指标不触发降维，降维不计算指标，移走原始数据后仍可读取产物绘图与汇总，错误输入类型明确报错。
-- 实验隔离：禁止导入其他实验后，逐个验证本实验的流程、计算、指标和绘图模块能独立加载。
-
-流程单元测试用确定性二维坐标代替 t-SNE/UMAP；测试通过不等于正式数据的全部实验已经运行。实际实验需按前述步骤执行，并检查产物、有效样本数和跳过记录。
-
-完整计算定义见 [METHODS.md](../docs/METHODS.md)，未纳入和取消的功能见 [DEFERRED.md](../docs/DEFERRED.md)。步骤、代码归属与测试使用说明统一在本手册维护。
+完整计算定义见 [METHODS.md](../docs/METHODS.md)，未纳入和取消的功能见 [DEFERRED.md](../docs/DEFERRED.md)。步骤与代码归属说明统一在本手册维护。
