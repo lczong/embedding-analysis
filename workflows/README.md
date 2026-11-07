@@ -348,6 +348,7 @@ Overview 和 binary 没有指标汇总入口。空数据不一定生成图，应
 | `plot.boundary.hexbin_gridsize / hexbin_cmap / hexbin_vmax_mult` | `120 / BuGn / 1.5` | 背景密度网格、配色及 balanced 亮度；分面不使用亮度倍数 |
 | `plot.boundary.point_size / alpha` | `10 / 0.55` | target 散点样式 |
 | `plot.boundary.contour_percentile / panel_contour_percentile` | `90 / 80` | balanced / 分面 KDE 样本覆盖比例 |
+| `plot.boundary.silhouette_single_figsize` | `[3.6, 6]` 英寸 | 单路线 silhouette 使用瘦高版式，图例置于图上方；跨路线汇总保持 10×4 英寸 |
 | `plot.boundary.silhouette_ylim` | `[-0.2, 1]` | 单路线及跨路线箱线图纵轴范围 |
 | `plot.boundary.role_labels` | 系统配置 | 图例和分面角色名称 |
 | `plot.highlight_combinations` | 系统配置 | Multilabel 重点组合 |

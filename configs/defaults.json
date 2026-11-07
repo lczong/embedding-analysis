@@ -83,6 +83,10 @@
       "silhouette_ylim": [
         -0.2,
         1
+      ],
+      "silhouette_single_figsize": [
+        3.6,
+        6
       ]
     }
   }
