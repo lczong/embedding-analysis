@@ -1,70 +1,142 @@
-"""Plots owned by boundary; independent of other experiment plots."""
+"""Balanced, per-target panels and silhouette plots restored from normpca100/exp1."""
+import json
 from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib
-matplotlib.use("Agg")
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from matplotlib import patheffects
 from scipy.stats import gaussian_kde
-ROLE_COLORS={'train': '#76B7B2', 'ood': '#E15759', 'shuffled': '#4E79A7', 'idr': '#B07AA1'}
 
-def save(fig, stem, cfg):
-    stem = Path(stem)
-    stem.parent.mkdir(parents=True, exist_ok=True)
+COLORS={'train':'#76B7B2','ood':'#E15759','shuffled':'#4E79A7','idr':'#B07AA1'}
+TARGETS=['ood','shuffled','idr']
+BOX_ORDER=['shuffled','idr','ood']
+
+
+def save(fig,stem,cfg):
+    stem=Path(stem);stem.parent.mkdir(parents=True,exist_ok=True)
     for ext in cfg['plot']['formats']:
-        fig.savefig(stem.with_suffix('.' + ext), dpi=cfg['plot']['dpi'], bbox_inches='tight')
+        fig.savefig(stem.with_suffix('.'+ext),dpi=cfg['plot'].get('boundary',{}).get('dpi',300),bbox_inches='tight')
     plt.close(fig)
 
-def distributions(df, value, group, stem, cfg, title):
-    valid = df[np.isfinite(df[value])]
-    (fig, ax) = plt.subplots(figsize=(max(6, valid[group].nunique() * 0.6), 4))
-    groups = list(valid.groupby(group, sort=True))
-    if groups:
-        ax.boxplot([g[value].to_numpy() for (_, g) in groups], tick_labels=[str(k) for (k, _) in groups], showfliers=False)
-    else:
-        ax.text(0.5, 0.5, 'No finite scores', ha='center', transform=ax.transAxes)
-    ax.set(ylabel=value, title=title)
-    ax.tick_params(axis='x', labelrotation=45)
-    save(fig, stem, cfg)
 
-def density(df, stem, cfg):
-    (fig, ax) = plt.subplots(figsize=(7, 6))
-    train = df[df.dataset_role == 'train']
-    ax.hexbin(train.x, train.y, gridsize=65, mincnt=1, cmap='Greys', vmin=0, linewidths=0, rasterized=True)
-    ax.scatter([], [], marker='h', color='#777777', label=cfg['role_labels']['train'])
-    for role in ['ood', 'shuffled', 'idr']:
-        group = df[df.dataset_role == role]
-        ax.scatter(group.x, group.y, s=3, alpha=0.4, color=ROLE_COLORS[role], label=cfg['role_labels'][role], rasterized=True)
-        pts = group[['x', 'y']].to_numpy().T
-        if len(group) >= 3 and np.linalg.matrix_rank(np.cov(pts)) == 2:
-            kde = gaussian_kde(pts)
-            threshold = np.percentile(kde(pts), 90)
-            (gx, gy) = np.meshgrid(np.linspace(group.x.min(), group.x.max(), 90), np.linspace(group.y.min(), group.y.max(), 90))
-            z = kde(np.vstack([gx.ravel(), gy.ravel()])).reshape(gx.shape)
-            if z.min() < threshold < z.max():
-                ax.contour(gx, gy, z, levels=[threshold], colors=[ROLE_COLORS[role]], linewidths=1)
-    ax.legend(markerscale=3, frameon=False)
-    ax.set(title='OOD populations', aspect='equal')
-    ax.set_xticks([])
-    ax.set_yticks([])
-    save(fig, stem, cfg)
-
-def plot_visualization(path, cfg, destination):
-    path = Path(path)
-    dest = Path(destination)
-    density(pd.read_csv(path / 'coordinates.csv'), dest / 'figures/density', cfg)
-
-def plot_metrics(path, cfg, destination):
-    path = Path(path)
-    dest = Path(destination)
-    distributions(pd.read_csv(path / 'samples.csv'), 'silhouette', 'dataset_role', dest / 'figures/silhouette', cfg, 'OOD silhouette')
+def darken(color,factor):
+    return '#'+''.join(f'{max(0,min(255,round(int(color[i:i+2],16)*factor))):02x}' for i in [1,3,5])
 
 
+def labels(cfg):
+    names=dict(cfg['role_labels'])
+    names.update(cfg['plot'].get('boundary',{}).get('role_labels',{}))
+    return names
 
-def plot_summary(path, cfg, destination):
-    df=pd.read_csv(Path(path)/"summary.csv")
-    if df.empty: return
-    fig,ax=plt.subplots(figsize=(9,4))
-    df.pivot_table(index='dataset_role',columns='route',values='mean',aggfunc='mean').plot.bar(ax=ax)
-    ax.set_ylabel('mean');ax.legend(fontsize=6)
-    save(fig,Path(destination)/'comparison',cfg)
+
+def contour(ax,xy,color,percentile,linewidth=1.2,dashes=(4,2),halo=2):
+    if len(xy)<10 or np.linalg.matrix_rank(np.cov(xy.T))<2:return
+    kde=gaussian_kde(xy.T)
+    # Original convention: 90% of sample locations have densities at/above the 10th percentile.
+    level=float(np.quantile(kde(xy.T),1-percentile/100))
+    low=xy.min(axis=0);high=xy.max(axis=0);margin=(high-low)*.1+1e-9
+    x,y=np.meshgrid(np.linspace(low[0]-margin[0],high[0]+margin[0],200),
+                    np.linspace(low[1]-margin[1],high[1]+margin[1],200))
+    z=kde(np.vstack([x.ravel(),y.ravel()])).reshape(x.shape)
+    if not z.min()<level<z.max():return
+    cs=ax.contour(x,y,z,levels=[level],colors=[color],linewidths=linewidth,
+                  linestyles=[(0,tuple(dashes))],zorder=110)
+    if halo:
+        effects=[patheffects.Stroke(linewidth=linewidth+halo,foreground='white'),patheffects.Normal()]
+        # ContourSet itself is a Collection on current Matplotlib.
+        cs.set_path_effects(effects)
+
+
+def axis_indicator(ax,method):
+    kw=dict(arrowstyle='->',color='black',lw=1,mutation_scale=14,shrinkA=0,shrinkB=0)
+    ax.annotate('',xy=(.18,.04),xytext=(.04,.04),xycoords='axes fraction',arrowprops=kw,zorder=1000)
+    ax.annotate('',xy=(.04,.18),xytext=(.04,.04),xycoords='axes fraction',arrowprops=kw,zorder=1000)
+    ax.text(.19,.04,method+'-x',transform=ax.transAxes,ha='left',va='center',fontsize=11)
+    ax.text(.04,.19,method+'-y',transform=ax.transAxes,ha='center',va='bottom',rotation=90,fontsize=11)
+
+
+def background(ax,train,options,lighten):
+    hb=ax.hexbin(train.x,train.y,gridsize=options.get('hexbin_gridsize',120),
+                 cmap=options.get('hexbin_cmap','BuGn'),mincnt=1,linewidths=0,zorder=1)
+    multiplier=options.get('hexbin_vmax_mult',1.5) if lighten else 1
+    if multiplier!=1 and len(hb.get_array()):hb.set_clim(vmin=1,vmax=float(hb.get_array().max())*multiplier)
+
+
+def foreground(ax,group,role,options):
+    ax.scatter(group.x,group.y,c=COLORS[role],s=options.get('point_size',10),
+               alpha=options.get('alpha',.55),edgecolors='white',linewidths=.25,rasterized=True,zorder=10+TARGETS.index(role))
+
+
+def plot_visualization(path,cfg,destination):
+    path=Path(path);dest=Path(destination)/'figures'
+    df=pd.read_csv(path/'coordinates.csv');train=df[df.dataset_role=='train']
+    method={'tsne':'t-SNE','umap':'UMAP'}[json.loads((path/'manifest.json').read_text())['stage']]
+    options=cfg['plot'].get('boundary',{});names=labels(cfg)
+    with plt.rc_context({'font.family':options.get('font','Arial')}):
+        fig,ax=plt.subplots(figsize=(9,9));background(ax,train,options,lighten=True)
+        handles=[mpatches.Patch(facecolor=COLORS['train'],label=names['train']+' density')]
+        for role in TARGETS:
+            group=df[df.dataset_role==role];foreground(ax,group,role,options)
+            contour(ax,group[['x','y']].to_numpy(),darken(COLORS[role],.7),options.get('contour_percentile',90))
+            handles.append(ax.scatter([],[],c=COLORS[role],s=50,edgecolors='white',linewidths=.25,label=names[role]))
+        ax.legend(handles=handles,loc='upper right',frameon=True,facecolor='white',edgecolor='#CCCCCC',
+                  prop={'size':13},handlelength=1.2,handletextpad=.6)
+        ax.set_aspect('equal',adjustable='datalim');ax.axis('off');axis_indicator(ax,method)
+        save(fig,dest/'balanced',cfg)
+        # Original per-target layout has 80% contours and its own shared bounds.
+        fig,axes=plt.subplots(1,3,figsize=(24,8),sharey=True)
+        xy=df[['x','y']].to_numpy();low=xy.min(axis=0);high=xy.max(axis=0);margin=(high-low)*.04
+        for ax,role in zip(axes,TARGETS):
+            background(ax,train,options,lighten=False)
+            group=df[df.dataset_role==role];foreground(ax,group,role,options)
+            contour(ax,group[['x','y']].to_numpy(),COLORS[role],options.get('panel_contour_percentile',80),linewidth=2,dashes=(3.7,1.6),halo=0)
+            ax.set_title(names[role],fontsize=16,fontweight='bold')
+            ax.set_xlim(low[0]-margin[0],high[0]+margin[0]);ax.set_ylim(low[1]-margin[1],high[1]+margin[1])
+            ax.set_aspect('equal');ax.axis('off')
+        fig.tight_layout();save(fig,dest/'per_ood_panels',cfg)
+
+
+def route_label(route):
+    return route.removeprefix('esm2__').replace('__',' → ')
+
+
+def boxplot(samples,cfg,stem):
+    options=cfg['plot'].get('boundary',{});names=labels(cfg)
+    routes=samples.route.drop_duplicates().tolist()
+    with plt.rc_context({'font.family':options.get('font','Arial')}):
+        fig,ax=plt.subplots(figsize=(10,4));positions=[];values=[];faces=[];edges=[]
+        for i,route in enumerate(routes):
+            for j,role in enumerate(BOX_ORDER):
+                group=samples[(samples.route==route)&(samples.dataset_role==role)].silhouette
+                if not len(group):raise ValueError(f'Missing silhouette samples: {route}/{role}')
+                values.append(group.to_numpy());positions.append(i*4+j)
+                faces.append(COLORS[role]);edges.append(darken(COLORS[role],.6))
+        bp=ax.boxplot(values,positions=positions,widths=.8,patch_artist=True,
+                      flierprops=dict(marker='o',markersize=2,markerfacecolor='#888888',markeredgecolor='none',alpha=.4),
+                      whiskerprops=dict(linewidth=1),capprops=dict(linewidth=1))
+        for patch,face,edge in zip(bp['boxes'],faces,edges):
+            patch.set_facecolor(face);patch.set_edgecolor(edge);patch.set_alpha(.6);patch.set_linewidth(1.2)
+        for median,edge in zip(bp['medians'],edges):median.set_color(edge);median.set_linewidth(1.6)
+        for key in ['whiskers','caps']:
+            for artist,edge in zip(bp[key],[c for c in edges for _ in range(2)]):artist.set_color(edge)
+        ax.axhline(0,color='#888888',lw=.8,linestyle='--',zorder=0)
+        ax.set_xticks([i*4+1 for i in range(len(routes))]);ax.set_xticklabels([route_label(r) for r in routes],fontsize=12)
+        ax.set_ylim(*options.get('silhouette_ylim',[-.2,1]));ax.set_ylabel('Per-sample silhouette score',fontsize=12)
+        ax.tick_params(axis='y',labelsize=11);ax.spines['top'].set_visible(False);ax.spines['right'].set_visible(False)
+        handles=[mpatches.Patch(facecolor=COLORS[r],edgecolor=darken(COLORS[r],.6),alpha=.6,label=names[r]) for r in BOX_ORDER]
+        ax.legend(handles=handles,loc='upper right',facecolor='white',edgecolor='#CCCCCC',prop={'size':12})
+        save(fig,stem,cfg)
+
+
+def plot_metrics(path,cfg,destination):
+    path=Path(path);samples=pd.read_csv(path/'samples.csv')
+    samples.insert(0,'route',json.loads((path/'manifest.json').read_text())['route'])
+    boxplot(samples,cfg,Path(destination)/'figures/silhouette')
+
+
+def plot_summary(path,cfg,destination):
+    # Quantile boxes require sample-level data, not route means.
+    boxplot(pd.read_csv(Path(path)/'samples.csv'),cfg,Path(destination)/'comparison')

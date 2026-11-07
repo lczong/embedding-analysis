@@ -1,17 +1,89 @@
 {
   "seed": 42,
   "output_root": "outputs",
-  "preprocessing": {"normalize": "l2", "fit_on": "train", "n_components": 100},
+  "preprocessing": {
+    "normalize": "l2",
+    "fit_on": "train",
+    "n_components": 100
+  },
   "reduction": {
-    "tsne": {"perplexity": 30, "n_iter_early": 250, "n_iter_main": 500, "n_jobs": 1},
-    "umap": {"n_neighbors": 30, "min_dist": 0.5, "metric": "euclidean", "n_jobs": 1}
+    "tsne": {
+      "perplexity": 30,
+      "n_iter_early": 250,
+      "n_iter_main": 500,
+      "n_jobs": 1
+    },
+    "umap": {
+      "n_neighbors": 30,
+      "min_dist": 0.5,
+      "metric": "euclidean",
+      "n_jobs": 1
+    }
   },
   "experiments": {
-    "overview": {"method": "tsne"},
-    "boundary": {"target_size": 3145, "distance": "euclidean", "chunk_size": 512, "method": "tsne"},
-    "multilabel": {"label_level": "class", "method": "umap", "min_combination_size": 5},
-    "unseen": {"n_pcs": 100, "min_family_size": 2, "train_family_count": 10, "method": "tsne", "chunk_size": 256},
-    "centroid": {"min_family_size": 5, "ks": [1, 3, 5, 7, 9]}
+    "overview": {
+      "method": "tsne"
+    },
+    "boundary": {
+      "target_size": 3145,
+      "distance": "euclidean",
+      "chunk_size": 512,
+      "method": "tsne"
+    },
+    "multilabel": {
+      "label_level": "class",
+      "method": "umap",
+      "min_combination_size": 5
+    },
+    "unseen": {
+      "n_pcs": 100,
+      "min_family_size": 2,
+      "train_family_count": 10,
+      "method": "tsne",
+      "chunk_size": 256
+    },
+    "centroid": {
+      "min_family_size": 5,
+      "ks": [
+        1,
+        3,
+        5,
+        7,
+        9
+      ]
+    }
   },
-  "plot": {"dpi": 180, "formats": ["png", "pdf"], "point_size": 3, "highlight_combinations": []}
+  "plot": {
+    "dpi": 180,
+    "formats": [
+      "png",
+      "pdf"
+    ],
+    "point_size": 3,
+    "highlight_combinations": [],
+    "overview": {
+      "dpi": 300,
+      "font": "Arial",
+      "figsize": [
+        12,
+        10
+      ],
+      "top_family_fraction": 0.15
+    },
+    "boundary": {
+      "dpi": 300,
+      "font": "Arial",
+      "hexbin_gridsize": 120,
+      "hexbin_cmap": "BuGn",
+      "hexbin_vmax_mult": 1.5,
+      "point_size": 10,
+      "alpha": 0.55,
+      "contour_percentile": 90,
+      "panel_contour_percentile": 80,
+      "silhouette_ylim": [
+        -0.2,
+        1
+      ]
+    }
+  }
 }

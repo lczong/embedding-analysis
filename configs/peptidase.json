@@ -177,6 +177,23 @@
       "C|M",
       "C|N",
       "M|S"
-    ]
+    ],
+    "overview": {
+      "class_order": [
+        "S",
+        "M",
+        "C",
+        "A",
+        "T",
+        "G",
+        "N"
+      ]
+    },
+    "boundary": {
+      "role_labels": {
+        "shuffled": "Peptidase-shuffled",
+        "idr": "Intrinsically disordered (IDR)"
+      }
+    }
   }
 }

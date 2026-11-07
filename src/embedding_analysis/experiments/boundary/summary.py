@@ -15,14 +15,19 @@ def main(argv=None):
     job=Artifacts(parser,args,'boundary')
     if args.step=='tables':
         if not args.inputs: parser.error('tables requires --inputs')
-        frames=[]; manifests=[]
+        frames=[]; manifests=[]; sample_frames=[]; routes=set()
         for path in args.inputs:
             source,meta=job.read(path,'boundary',['metrics'])
+            if meta['route'] in routes: parser.error('Duplicate route in summary inputs')
+            routes.add(meta['route'])
+            samples=pd.read_csv(source/'samples.csv')
+            samples.insert(0,'route',meta['route']); sample_frames.append(samples)
             frame=pd.read_csv(source/'summary.csv')
             frame.insert(0,'route',meta['route']); frames.append(frame); manifests.append(meta)
         job.extra['metric_inputs']=manifests
         if job.cached(): return job.dest
         pd.concat(frames,ignore_index=True).to_csv(job.dest/'summary.csv',index=False)
+        pd.concat(sample_frames,ignore_index=True).to_csv(job.dest/'samples.csv',index=False)
     else:
         job.input('boundary',['tables'],plotting=True)
         if job.cached(): return job.dest

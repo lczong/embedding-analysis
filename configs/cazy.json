@@ -220,6 +220,22 @@
     "highlight_combinations": [
       "CBM|GH",
       "CBM|PL"
-    ]
+    ],
+    "overview": {
+      "class_order": [
+        "GT",
+        "GH",
+        "CBM",
+        "CE",
+        "PL",
+        "AA"
+      ]
+    },
+    "boundary": {
+      "role_labels": {
+        "shuffled": "CAZyme-shuffled",
+        "idr": "Intrinsically disordered (IDR)"
+      }
+    }
   }
 }
