@@ -31,9 +31,9 @@ git commit -m "Adjust Figure 3 layout"
 git push -u origin paper/figure3-layout
 ```
 
-在 GitHub/GitLab 上将这个分支提交为目标 `master` 的 PR/MR，附上改动说明和前后预览。
+在 GitHub/GitLab 上将这个分支提交为目标 `main` 的 PR/MR，附上改动说明和前后预览。
 如果没有仓库写权限，使用 fork，将分支推送到自己的 fork 后向原仓库提交 PR。
-作者审查、复现受影响子图并合并；协作者再从最新 master 创建下一个分支。
+作者审查、复现受影响子图并合并；协作者再从最新 main 创建下一个分支。
 每次尽量围绕一个 Figure 开分支；公共绘图函数的改动需要检查其他受影响 Figure。
 生成图、输入和虚拟环境不加入 Git，也不要使用 `git add -f`。
 
