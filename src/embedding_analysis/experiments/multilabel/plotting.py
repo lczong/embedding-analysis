@@ -37,6 +37,8 @@ def plot_metrics(path,cfg,destination):
     valid=scores[np.isfinite(scores.ba_score)]
     counts=valid.groupby('class_label').size().sort_values(ascending=False)
     combos=counts[counts>=cfg['experiments']['multilabel']['min_combination_size']].index
+    selected=cfg['plot']['multilabel'].get('ba_plot_combinations')
+    if selected is not None:combos=[c for c in selected if c in combos]
     dest=Path(destination)/'figures'
     with plt.rc_context({'font.family':'Arial','font.size':14,'pdf.fonttype':42}):
         overlay,oa=plt.subplots(figsize=(10,5))

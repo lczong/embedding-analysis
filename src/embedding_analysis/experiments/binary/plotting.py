@@ -72,7 +72,7 @@ def plot_visualization(source, cfg, destination):
     df['label']=df['label'].map({'train':'cazy','non_target_train':'non-cazy'})
     if df['label'].isna().any():raise ValueError('Unexpected binary role')
     method=json.loads((source/'manifest.json').read_text())['stage']
-    args=argparse.Namespace(figsize=[12,10],dpi=options.get('dpi',300),axis_limit=None,output=destination/'figures/cazy_vs_noncazy.png')
+    args=argparse.Namespace(figsize=[12,10],dpi=options.get('dpi',300),axis_limit=None,output=destination/'figures'/f"{cfg['system']}_vs_non{cfg['system']}.png")
     unexpected = set(df['label'].unique()) - {'cazy', 'non-cazy'}
     assert not unexpected, f"unexpected labels in tSNE CSV: {sorted(unexpected)}"
 

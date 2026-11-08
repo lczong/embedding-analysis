@@ -62,6 +62,10 @@
         "idr": {
           "format": "csv",
           "path": "data/peptidase/embeddings/esm2__l0-ft-ce/disprot_protein.embeddings.csv"
+        },
+        "non_target_train": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2__l0-ft-ce/non-peptidase-protein_train.embeddings.csv"
         }
       }
     },
@@ -173,11 +177,7 @@
     }
   },
   "plot": {
-    "highlight_combinations": [
-      "C|M",
-      "C|N",
-      "M|S"
-    ],
+    "highlight_combinations": [],
     "overview": {
       "class_order": [
         "S",
@@ -204,7 +204,41 @@
         "T",
         "G",
         "N"
-      ]
+      ],
+      "combinations": [
+        "C|M",
+        "C|N",
+        "C|S",
+        "N|S",
+        "M|S",
+        "S|T"
+      ],
+      "ba_plot_combinations": [
+        "C|M",
+        "C|N",
+        "C|S",
+        "N|S",
+        "M|S",
+        "S|T"
+      ],
+      "combo_colors": {
+        "C|M": "#B51B53",
+        "C|N": "#B64A00",
+        "C|S": "#633CA6",
+        "N|S": "#006B3C",
+        "M|S": "#8F163D",
+        "S|T": "#71368A"
+      }
+    },
+    "binary": {
+      "labels": {
+        "train": "peptidase",
+        "non_target_train": "non-peptidase"
+      },
+      "names": {
+        "train": "Peptidase",
+        "non_target_train": "Non-peptidase"
+      }
     }
   }
 }
