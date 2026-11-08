@@ -1,5 +1,7 @@
 # Embedding analysis
 
+论文精选子图使用独立的 [paper 入口](paper/README.md)，目前已配置 Figure 2 c/d/e、Figure 3 b–i、Figure 4 b/c/d/h/i/j/k 和 Figure 5 b/c/h/i；读取现有实验坐标与指标，支持单独或整组导出 PNG/PDF/SVG，图例独立保存。
+
 各实验独立管理流程、指标和绘图，共享 PCA、降维及数据读写。通过 `configs/cazy.json` / `configs/peptidase.json` 切换系统。第一阶段包括 train-fit PCA、训练空间展示、OOD silhouette、class-level BA、class 内 unseen family 质量，以及 family centroid 结构分析。
 
 不包含 kNN OOD score、Leiden、HDBSCAN 或 bridge score。BA 只按 class 计算。

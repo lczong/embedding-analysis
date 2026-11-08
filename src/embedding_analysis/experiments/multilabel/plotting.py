@@ -74,13 +74,14 @@ def plot_summary(path,cfg,destination):
         if selected:draw_summary(valid,selected,combos,cfg,Path(destination)/('ba_'+name))
 
 
-def draw_summary(valid,routes,combos,cfg,stem):
+def draw_summary(valid,routes,combos,cfg,stem,*,ax=None,return_artists=False):
     options=cfg['plot']['multilabel']
     colors=['#777777','#59A14F','#4E79A7','#B07AA1','#E15759','#F28E2B']
     fixed={'esm2':'#777777','esm2__l0-ft-ce':'#59A14F','esm2__l1-ft-ce':'#4E79A7',
            'esm2__l2-ft-ce':'#F28E2B','esm2__l1-ft-ce__l2-frozen-nca':'#B07AA1','esm2__l2-frozen-nca':'#E15759'}
     with plt.rc_context({'font.family':'Arial','font.size':14,'pdf.fonttype':42}):
-        fig,ax=plt.subplots(figsize=(max(5,14*len(combos)/9),5))
+        if ax is None:fig,ax=plt.subplots(figsize=(max(5,14*len(combos)/9),5))
+        else:fig=ax.figure
         width=min(.25,.8/max(1,len(routes)));handles=[]
         for i,route in enumerate(routes):
             color=fixed.get(route,colors[i%len(colors)])
@@ -105,5 +106,6 @@ def draw_summary(valid,routes,combos,cfg,stem):
         ax.set_ylabel('Barycentric Alignment Score (BAS)')
         limits=options.get('ba_summary_ylim',[-7,1]);ax.set_ylim(*limits);ax.margins(x=.03)
         if not combos:ax.text(.5,.5,'No eligible two-class combinations',ha='center',transform=ax.transAxes)
+        if return_artists:return fig,ax,handles
         top_legend(ax,cfg,handles=handles)
         save(fig,stem,cfg)

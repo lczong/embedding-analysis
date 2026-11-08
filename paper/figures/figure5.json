@@ -1,0 +1,84 @@
+{
+  "figure": "figure5",
+  "style": {
+    "size_inches": [
+      8,
+      8.5
+    ],
+    "axes_rect": [
+      0.025,
+      0.025,
+      0.95,
+      0.91
+    ],
+    "font": "Arial",
+    "dpi": 300,
+    "formats": [
+      "png",
+      "pdf",
+      "svg"
+    ],
+    "point_size": 6,
+    "point_alpha": 0.4,
+    "legend_fontsize": 11,
+    "class_fontsize": 20,
+    "family_fontsize": 8,
+    "rasterized": true,
+    "title_fontsize": 18,
+    "corner_fontsize": 18
+  },
+  "panels": {
+    "b": {
+      "kind": "overview_families",
+      "source": {
+        "system": "cazy",
+        "workflow": "overview",
+        "route": "esm2__l2-frozen-nca",
+        "stage": "tsne"
+      },
+      "selection": {
+        "top_family_fraction": 0.15
+      },
+      "corner_label": "Direct L2 NCA"
+    },
+    "c": {
+      "kind": "overview_families",
+      "source": {
+        "system": "cazy",
+        "workflow": "overview",
+        "route": "esm2__l1-ft-ce__l2-frozen-nca",
+        "stage": "tsne"
+      },
+      "selection": {
+        "top_family_fraction": 0.15
+      },
+      "corner_label": "L1-conditioned L2 NCA"
+    },
+    "h": {
+      "kind": "overview_families",
+      "source": {
+        "system": "peptidase",
+        "workflow": "overview",
+        "route": "esm2__l2-frozen-nca",
+        "stage": "tsne"
+      },
+      "selection": {
+        "top_family_fraction": 0.15
+      },
+      "corner_label": "Direct L2 NCA"
+    },
+    "i": {
+      "kind": "overview_families",
+      "source": {
+        "system": "peptidase",
+        "workflow": "overview",
+        "route": "esm2__l1-ft-ce__l2-frozen-nca",
+        "stage": "tsne"
+      },
+      "selection": {
+        "top_family_fraction": 0.15
+      },
+      "corner_label": "L1-conditioned L2 NCA"
+    }
+  }
+}

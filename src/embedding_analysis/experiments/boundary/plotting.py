@@ -104,13 +104,15 @@ def route_label(route):
     return route.removeprefix('esm2__').replace('__',' → ')
 
 
-def boxplot(samples,cfg,stem):
+def boxplot(samples,cfg,stem,*,ax=None,return_artists=False):
     options=cfg['plot'].get('boundary',{});names=labels(cfg)
     routes=samples.route.drop_duplicates().tolist()
     with plt.rc_context({'font.family':options.get('font','Arial')}):
         single=len(routes)==1
         figsize=options.get('silhouette_single_figsize',[3.6,6]) if single else (10,4)
-        fig,ax=plt.subplots(figsize=figsize);positions=[];values=[];faces=[];edges=[]
+        if ax is None:fig,ax=plt.subplots(figsize=figsize)
+        else:fig=ax.figure
+        positions=[];values=[];faces=[];edges=[]
         for i,route in enumerate(routes):
             for j,role in enumerate(BOX_ORDER):
                 group=samples[(samples.route==route)&(samples.dataset_role==role)].silhouette
@@ -130,6 +132,7 @@ def boxplot(samples,cfg,stem):
         ax.set_ylim(*options.get('silhouette_ylim',[-.2,1]));ax.set_ylabel('Per-sample silhouette score',fontsize=12)
         ax.tick_params(axis='y',labelsize=11);ax.spines['top'].set_visible(False);ax.spines['right'].set_visible(False)
         handles=[mpatches.Patch(facecolor=COLORS[r],edgecolor=darken(COLORS[r],.6),alpha=.6,label=names[r]) for r in BOX_ORDER]
+        if return_artists:return fig,ax,handles
         top_legend(ax,cfg,handles=handles)
         save(fig,stem,cfg)
 

@@ -1,0 +1,83 @@
+{
+  "figure": "figure2",
+  "style": {
+    "size_inches": [
+      8,
+      8.5
+    ],
+    "axes_rect": [
+      0.025,
+      0.025,
+      0.95,
+      0.91
+    ],
+    "font": "Arial",
+    "dpi": 300,
+    "formats": [
+      "png",
+      "pdf",
+      "svg"
+    ],
+    "point_size": 6,
+    "point_alpha": 0.4,
+    "legend_fontsize": 11,
+    "class_fontsize": 20,
+    "family_fontsize": 8,
+    "rasterized": true,
+    "title_fontsize": 18,
+    "corner_fontsize": 18
+  },
+  "panels": {
+    "c": {
+      "kind": "binary",
+      "source": {
+        "system": "cazy",
+        "workflow": "binary",
+        "route": "esm2__l0-ft-ce",
+        "stage": "tsne"
+      },
+      "style": {
+        "legend_labels": {
+          "non_target_train": "Non-CAZyme",
+          "train": "CAZyme"
+        }
+      },
+      "corner_label": "Level 0"
+    },
+    "d": {
+      "kind": "overview_classes",
+      "source": {
+        "system": "cazy",
+        "workflow": "overview",
+        "route": "esm2__l1-ft-ce",
+        "stage": "tsne"
+      },
+      "corner_label": "Level 1"
+    },
+    "e": {
+      "kind": "overview_families",
+      "source": {
+        "system": "cazy",
+        "workflow": "overview",
+        "route": "esm2__l2-ft-ce",
+        "stage": "tsne"
+      },
+      "selection": {
+        "top_family_fraction": 0.15
+      },
+      "style": {
+        "annotation_offsets": {
+          "CBM5": [
+            -12,
+            0
+          ],
+          "PL33": [
+            12,
+            0
+          ]
+        }
+      },
+      "corner_label": "Level 2"
+    }
+  }
+}

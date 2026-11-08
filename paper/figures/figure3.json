@@ -1,0 +1,204 @@
+{
+  "figure": "figure3",
+  "style": {
+    "size_inches": [
+      8,
+      8.5
+    ],
+    "axes_rect": [
+      0.025,
+      0.025,
+      0.95,
+      0.91
+    ],
+    "font": "Arial",
+    "dpi": 300,
+    "formats": [
+      "png",
+      "pdf",
+      "svg"
+    ],
+    "point_size": 6,
+    "point_alpha": 0.4,
+    "legend_fontsize": 11,
+    "class_fontsize": 20,
+    "family_fontsize": 8,
+    "rasterized": true,
+    "title_fontsize": 18,
+    "corner_fontsize": 18
+  },
+  "panels": {
+    "b": {
+      "kind": "boundary_balanced",
+      "source": {
+        "system": "cazy",
+        "workflow": "boundary",
+        "route": "esm2__l0-ft-ce",
+        "stage": "umap"
+      },
+      "corner_label": "Level 0"
+    },
+    "c": {
+      "kind": "boundary_balanced",
+      "source": {
+        "system": "cazy",
+        "workflow": "boundary",
+        "route": "esm2__l1-ft-ce",
+        "stage": "umap"
+      },
+      "corner_label": "Level 1"
+    },
+    "d": {
+      "kind": "boundary_balanced",
+      "source": {
+        "system": "cazy",
+        "workflow": "boundary",
+        "route": "esm2__l2-ft-ce",
+        "stage": "umap"
+      },
+      "corner_label": "Level 2"
+    },
+    "e": {
+      "kind": "multilabel_combos",
+      "source": {
+        "system": "cazy",
+        "workflow": "multilabel",
+        "route": "esm2__l0-ft-ce",
+        "stage": "umap"
+      },
+      "corner_label": "Level 0",
+      "selection": {
+        "combinations": [
+          "CBM|GH",
+          "CBM|PL"
+        ]
+      },
+      "style": {
+        "size_inches": [
+          9,
+          9
+        ]
+      }
+    },
+    "f": {
+      "kind": "multilabel_combos",
+      "source": {
+        "system": "cazy",
+        "workflow": "multilabel",
+        "route": "esm2__l1-ft-ce",
+        "stage": "umap"
+      },
+      "corner_label": "Level 1",
+      "selection": {
+        "combinations": [
+          "CBM|GH",
+          "CBM|PL"
+        ]
+      },
+      "style": {
+        "size_inches": [
+          9,
+          9
+        ]
+      }
+    },
+    "g": {
+      "kind": "multilabel_combos",
+      "source": {
+        "system": "cazy",
+        "workflow": "multilabel",
+        "route": "esm2__l2-ft-ce",
+        "stage": "umap"
+      },
+      "corner_label": "Level 2",
+      "selection": {
+        "combinations": [
+          "CBM|GH",
+          "CBM|PL"
+        ]
+      },
+      "style": {
+        "size_inches": [
+          9,
+          9
+        ]
+      }
+    },
+    "h": {
+      "kind": "boundary_silhouette",
+      "source": {
+        "system": "cazy",
+        "workflow": "boundary",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "routes": [
+          "esm2__l0-ft-ce",
+          "esm2__l1-ft-ce",
+          "esm2__l2-ft-ce"
+        ]
+      },
+      "style": {
+        "size_inches": [
+          10,
+          4.5
+        ],
+        "axes_rect": [
+          0.1,
+          0.15,
+          0.88,
+          0.81
+        ],
+        "legend_fontsize": 12,
+        "route_labels": {
+          "esm2__l0-ft-ce": "Level 0",
+          "esm2__l1-ft-ce": "Level 1",
+          "esm2__l2-ft-ce": "Level 2"
+        }
+      }
+    },
+    "i": {
+      "kind": "multilabel_ba",
+      "source": {
+        "system": "cazy",
+        "workflow": "multilabel",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "routes": [
+          "esm2__l0-ft-ce",
+          "esm2__l1-ft-ce",
+          "esm2__l2-ft-ce"
+        ],
+        "combinations": [
+          "CBM|GH",
+          "CBM|PL",
+          "AA|CBM",
+          "CBM|CE",
+          "GH|GT",
+          "CBM|GT"
+        ]
+      },
+      "style": {
+        "size_inches": [
+          10,
+          5
+        ],
+        "axes_rect": [
+          0.1,
+          0.15,
+          0.88,
+          0.81
+        ],
+        "legend_fontsize": 12,
+        "route_labels": {
+          "esm2__l0-ft-ce": "Level 0",
+          "esm2__l1-ft-ce": "Level 1",
+          "esm2__l2-ft-ce": "Level 2"
+        }
+      }
+    }
+  }
+}

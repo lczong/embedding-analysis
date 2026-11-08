@@ -68,10 +68,11 @@ def peak_labels(ax,peaks,palette,vertical):
             ax.plot([x,point[0]],[y,point[1]],color=label.get_color(),lw=.5,alpha=.5)
 
 
-def draw_view(df,categories,combos,palette,curves,bounds,cfg,stem,method):
+def draw_view(df,categories,combos,palette,curves,bounds,cfg,stem,method,*,return_artists=False):
     options=cfg['plot'].get('multilabel',{})
     fig=plt.figure(figsize=options.get('figsize',[11,11]))
-    grid=fig.add_gridspec(2,2,width_ratios=[4,1],height_ratios=[1,4],hspace=.05,wspace=.05)
+    layout=dict(left=.03,right=.92,bottom=.04,top=.94) if return_artists else {}
+    grid=fig.add_gridspec(2,2,width_ratios=[4,1],height_ratios=[1,4],hspace=.05,wspace=.05,**layout)
     ax=fig.add_subplot(grid[1,0]);top=fig.add_subplot(grid[0,0],sharex=ax);right=fig.add_subplot(grid[1,1],sharey=ax)
     xlim,ylim=bounds;ax.set_xlim(*xlim);ax.set_ylim(*ylim);ax.set_aspect('equal',adjustable='box')
     foreground=df.class_label.isin(categories);bg=df[~foreground]
@@ -113,6 +114,7 @@ def draw_view(df,categories,combos,palette,curves,bounds,cfg,stem,method):
     top.set_position([position.x0,tp.y0,position.width,tp.height])
     right.set_position([rp.x0,position.y0,rp.width,position.height])
     peak_labels(top,top_peaks,palette,False);peak_labels(right,right_peaks,palette,True)
+    if return_artists:return fig,ax,handles
     # Anchor above the top marginal, not between the KDE and the scatter.
     top_legend(top,cfg,handles=handles)
     stem.parent.mkdir(parents=True,exist_ok=True)
