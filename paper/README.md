@@ -1,5 +1,18 @@
 # 论文子图
 
+## 给协作者的独立包
+
+持续协作推荐使用 **Git 分支 + PR**：代码从同一个远端仓库克隆，数据运行
+`.venv/bin/python paper/export.py --data-only` 单独生成 `outputs/handoff/paper-inputs.zip`。
+协作者把数据包解压到 clone 的根目录，它只写入已忽略的 `outputs/`，不会覆盖代码。
+完整流程见 [HANDOFF.md](HANDOFF.md#推荐git-分支--pr-持续协作)。
+
+运行 `.venv/bin/python paper/export.py` 生成 `outputs/handoff/paper-handoff.zip`。
+包含全部论文图配置、代码、所需的源坐标/指标及 manifest，以及当前 PNG 对照图。
+不包含原始 embedding、虚拟环境或 Git 历史。重复引用的输入只打包一次。
+协作者解压后先看 `START_HERE.md`；详细安装和布局修改说明见 [HANDOFF.md](HANDOFF.md)。
+只渲染论文图时安装 `paper/requirements.txt` 即可，无需 openTSNE 或 umap-learn。
+
 从已完成的实验坐标和逐样本指标选择性重绘论文子图，不重新拟合 PCA 或 t-SNE/UMAP。
 入口独立于 `workflows/`，现有实验绘图不受影响。
 
