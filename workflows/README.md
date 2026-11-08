@@ -435,7 +435,7 @@ Peptidase 使用同一组独立 workflow，默认只保存 PNG，同时支持 `t
 
 - overview：配置中的五条路线。
 - boundary、multilabel：L0 FT-CE、L1 FT-CE、L2 FT-CE、ESM2→L2 frozen-NCA；L1→L2 frozen-NCA 缺少相应评估数据，仅运行 overview。
-- binary：目前仅 L0 FT-CE 有 non-peptidase train。输入独立复制到本项目 `data/peptidase/embeddings/esm2__l0-ft-ce/`；来源及 SHA256 在 `data/peptidase/binary_import_manifest.json`。预期图片名为 `tsne_peptidase_vs_nonpeptidase.png` / `umap_peptidase_vs_nonpeptidase.png`。当前源 CSV 的 5,081 行中有 99 行存在字段损坏，binary 暂未生成，须先取得完整数据或明确决定筛选处理；未自动修补数值。
+- binary：目前仅 L0 FT-CE 有 non-peptidase train。输入独立复制到本项目 `data/peptidase/embeddings/esm2__l0-ft-ce/`；来源及 SHA256 在 `data/peptidase/binary_import_manifest.json`。图片名为 `tsne_peptidase_vs_nonpeptidase.png` / `umap_peptidase_vs_nonpeptidase.png`。重新传输的 CSV 已替换原损坏副本：88,642 条、1280 维，逐行数值/维度、ID 唯一性及 train ID 不重叠检查通过，复制后 SHA256 一致。旧文件仅有 5,081 行且其中 99 行字段损坏，不用于实验。
 
 multilabel 固定六组及显示顺序：`C|M`、`C|N`、`C|S`、`N|S`、`M|S`、`S|T`。`plot.multilabel.combinations` 控制单组合空间图和 BA summary；`ba_plot_combinations` 将单路线 BA KDE 总览及 `ba_combos/` 中的图也限定到这六组（仍须满足最小有效样本数）。BA 数值照常计算全部 multi 样本，不通过绘图筛选删数据。每条路线生成 class 总览和六张单组合空间图，未启用组合叠加图。组合颜色显式固定并用于散点、边际 KDE 和 BA KDE 总览。
 
