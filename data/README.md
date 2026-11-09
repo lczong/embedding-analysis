@@ -1,6 +1,6 @@
 # 本地数据
 
-`cazy/` 和 `peptidase/` 保存系统配置引用的 embedding 与 metadata。运行期只读取本项目中的文件，不依赖原项目目录。
+`cazy/` 和 `peptidase/` 保存系统配置引用的 embedding 与 metadata。默认配置读取本项目中的文件。`configs/cazy_backbones.json` 使用本目录下的软链接读取显式声明的外部 embedding 源目录，详见项目 README 的“CAZy 其他 base model”。
 
 `cazy/metadata/*.tsv` 和 `peptidase/metadata/*.tsv` 已由 Git 跟踪，克隆后即可使用。迁移项目时另行复制 embedding，保持配置中的相对路径，再从项目根目录检查：
 

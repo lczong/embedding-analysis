@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import numpy as np
 import pandas as pd
-from .config import local_path, spec_files
+from .config import input_path, local_path, spec_files
 
 
 @dataclass
@@ -29,7 +29,7 @@ def read_ids(cfg, spec):
     if spec['format'] == 'npy':
         if 'ids_reference' not in spec:
             raise ValueError('NPY input requires explicit ids_reference')
-        files = [local_path(cfg, spec['ids_reference'])]
+        files = [input_path(cfg, spec['ids_reference'])]
     else:
         files = spec_files(cfg, spec)
     ids = np.concatenate([pd.read_csv(p, header=None, usecols=[0], dtype=str)[0].to_numpy() for p in files])
@@ -96,7 +96,7 @@ def inspect_inputs(cfg, deep=False):
                 if a.ndim != 2:
                     raise ValueError(f'Expected matrix: {files[0]}')
                 dims = {a.shape[1]}
-                if not local_path(cfg, spec['ids_reference']).is_file():
+                if not input_path(cfg, spec['ids_reference']).is_file():
                     raise FileNotFoundError(spec['ids_reference'])
             else:
                 dims = set()

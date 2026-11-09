@@ -33,7 +33,7 @@ Peptidase 的 `esm2__l1-ft-ce__l2-frozen-nca` 只有 train，仅支持 overview 
 
 ## 配置与数据
 
-`defaults.json` 保存共享计算参数；系统配置覆盖 metadata 列名、class 配色、route 输入和格式。内部字段统一为 sequence_id、class_label、family_label、dataset_role。实际文件路径相对新项目根目录，不能指向外部。
+`defaults.json` 保存共享计算参数；系统配置覆盖 metadata 列名、class 配色、route 输入和格式。内部字段统一为 sequence_id、class_label、family_label、dataset_role。实际文件路径相对项目根目录；默认不能指向外部。新增 backbone 配置通过 `external_embedding_roots` 显式允许 `data/` 下的输入软链接读取指定源目录，输出路径仍限制在项目内。
 
 初次导入 72 个文件，另补入 5 份 CAZy non-target train embedding。macOS 下使用 APFS 写时复制，副本有独立 inode，不是软链接/硬链接。原两个目录、原始结果以及 normalized/ 未改动。只导入核心需要的输入；两套系统的 metadata TSV 由 Git 跟踪，embedding 和环境不进入 Git。
 
@@ -73,3 +73,37 @@ python3.10 -m venv .venv
 ```
 
 核心依赖不包含 FAISS、scanpy、Leiden、HDBSCAN、Biopython 或 Plotly。
+
+## CAZy 其他 base model
+
+`configs/cazy_backbones.json` 配置 ESM-1b 650M（1280 维）、ESM2 150M（640 维）、ESM2 35M（480 维）的 L0/L1/L2 FT-CE，共九条路线。训练层级及分析参数与原 CAZy 配置一致，复用本项目 CAZy metadata、配色和 PCA100 设置。每条路线包含 train、multi、unseen、ood、shuffled、idr、non_target_train，支持全部六个实验。
+
+输入位于 `data/cazy/embeddings/<route>/`，是指向下列目录内具体导出批次的目录软链接：
+
+```text
+/gpfs/research/rdf/zong/CAZy-Project/protein-embedding-resolution-dev/runs/embeddings/cazy
+```
+
+ESM-1b 使用 `priority_20261108_024610`，两种 ESM2 使用 `priority_20261108_152825`。链接同时提供 CSV 和源导出 manifest；不复制或修改源数据。软链接受 Git 的 data 忽略规则管理，迁移机器时需重新建立链接，并调整配置中的允许源目录，或将数据复制到相同的项目相对路径。
+
+```bash
+.venv/bin/python workflows/validate.py --config configs/cazy_backbones.json
+bash workflows/overview.sh configs/cazy_backbones.json esm1b__l0-ft-ce pca
+bash workflows/overview.sh configs/cazy_backbones.json esm2-150m__l1-ft-ce pca
+bash workflows/overview.sh configs/cazy_backbones.json esm2-35m__l2-ft-ce pca
+```
+
+新配置只包含这九条已有数据的路线，不依赖原 `cazy.json` 中尚未导入的 embedding。结果仍位于 `outputs/cazy/`，按完整 route 名区分；BA summary 按三个 base model 分组比较 L0/L1/L2。Boundary 的 sample 在该配置九条路线之间共享。切换 CAZy 配置后需显式重跑 sample；如需同时保留各配置的共享采样与 summary，请使用不同的 `--version`（shell 第四个参数）。
+
+### ESM2 150M / 35M 批处理
+
+`workflows/backbone.slurm` 接受 `sample|route|summary` 和 `esm2-150m|esm2-35m` 两个参数；route 使用 Slurm array 0–2 对应 L0–L2。四个 workflow 为 binary、overview、boundary、multilabel，包含 t-SNE、UMAP、适用指标和绘图，最后汇总 Boundary / Multilabel。此脚本不渲染 paper 子图。
+
+为使各模型的共享采样和 summary 独立，输出使用与模型同名的版本：`outputs/cazy/_versions/esm2-150m/`、`outputs/cazy/_versions/esm2-35m/`。目录内路线名保留完整的模型前缀，例如 `esm2-150m__l0-ft-ce`。日志及 Slurm 作业号记录在 `outputs/cazy/logs/<model>/submission.json`。提交时需依次设置 sample → route array → summary 的 `afterok` 依赖。
+
+继续某个步骤时务必保留版本参数，例如：
+
+```bash
+bash workflows/overview.sh configs/cazy_backbones.json esm2-150m__l0-ft-ce visualization-tsne esm2-150m
+bash workflows/binary.sh configs/cazy_backbones.json esm2-35m__l2-ft-ce visualization-umap esm2-35m
+```

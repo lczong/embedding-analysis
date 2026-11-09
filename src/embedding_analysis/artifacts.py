@@ -3,7 +3,7 @@ from pathlib import Path
 import hashlib
 import json
 import numpy as np
-from .config import local_path, spec_files
+from .config import input_path, spec_files
 
 
 def write_json(path, obj):
@@ -33,7 +33,7 @@ def input_fingerprints(cfg):
             if 'ids_reference' in spec: paths.add(spec['ids_reference'])
     result = []
     for relative in sorted(paths):
-        p = local_path(cfg, relative); st = p.stat()
+        p = input_path(cfg, relative); st = p.stat()
         # Include edge content to catch common replacements; full-file hashing is not implied.
         h = hashlib.sha256()
         with p.open('rb') as f:
