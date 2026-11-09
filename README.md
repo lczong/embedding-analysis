@@ -35,7 +35,7 @@ Peptidase 的 `esm2__l1-ft-ce__l2-frozen-nca` 只有 train，仅支持 overview 
 
 `defaults.json` 保存共享计算参数；系统配置覆盖 metadata 列名、class 配色、route 输入和格式。内部字段统一为 sequence_id、class_label、family_label、dataset_role。实际文件路径相对新项目根目录，不能指向外部。
 
-初次导入 72 个文件，另补入 5 份 CAZy non-target train embedding。macOS 下使用 APFS 写时复制，副本有独立 inode，不是软链接/硬链接。原两个目录、原始结果以及 normalized/ 未改动。只导入核心需要的输入；数据和环境不进入 Git。
+初次导入 72 个文件，另补入 5 份 CAZy non-target train embedding。macOS 下使用 APFS 写时复制，副本有独立 inode，不是软链接/硬链接。原两个目录、原始结果以及 normalized/ 未改动。只导入核心需要的输入；两套系统的 metadata TSV 由 Git 跟踪，embedding 和环境不进入 Git。
 
 运行只读取本项目 `data/`。迁移机器时一并复制该目录，按配置中的相对路径放置文件，再用 `workflows/validate.py` 检查。数据来源及初次复制校验记录保留在 `data/import_manifest.json`，它不参与运行。新增二分类数据的来源与 SHA256 记录在 `data/binary_import_manifest.json`。
 
@@ -65,7 +65,7 @@ outputs/<system>/_shared/pca/<route>/
 
 ## 移动或在其他机器安装
 
-代码和 configs 可直接移植。数据需一起携带，并保持配置中的相对路径。虚拟环境依赖本机系统 Python，换机器应重新创建：
+代码、configs 和 metadata TSV 随仓库克隆。embedding 需另行复制或在服务器生成，并保持配置中的相对路径。虚拟环境依赖本机系统 Python，换机器应重新创建：
 
 ```bash
 python3.10 -m venv .venv
