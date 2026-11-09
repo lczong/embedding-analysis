@@ -136,3 +136,68 @@ k 沿用 Peptidase 配置中的六个组合：`C|M`、`C|N`、`C|S`、`N|S`、`M
 .venv/bin/python paper/render.py render paper/figures/figure5.json
 .venv/bin/python paper/render.py render paper/figures/figure5.json --panel b c
 ```
+
+## 按 base model 汇总四页 PDF
+
+`report.py` 在 workflow 完成后读取现有坐标和逐样本指标，按系统和模型导出一份四页拼图 PDF。无需重新运行 PCA、t-SNE、UMAP 或指标计算，也不依赖或改写跨路线 summary。安装主项目或 paper 的 requirements（含 `pypdf`）即可使用。
+
+```bash
+# 已完成的 ESM-1b CAZy：一条命令生成报告
+.venv/bin/python paper/report.py render --system cazy --model esm1b
+
+# 其他 base model；自动查找唯一完整的默认/命名版本
+.venv/bin/python paper/report.py render --system cazy --model esm2-150m
+.venv/bin/python paper/report.py render --system cazy --model esm2-35m
+
+# Peptidase 使用同一入口，需先完成对应模型的 workflow
+.venv/bin/python paper/report.py render --system peptidase --model esm1b
+```
+
+页面安排：
+
+| 页 | 内容 | 来源选择 |
+| --- | --- | --- |
+| 1 | L0 Binary、L1 Class、L2 Class/Family t-SNE 横排 | Figure 2 c/d/e；Peptidase 使用 Figure 4 b/c/d |
+| 2 | Boundary L0/L1/L2 UMAP 横排 | Figure 3 b/c/d 的 balanced 视图 |
+| 3 | Multilabel L0/L1/L2 UMAP 横排 | CAZy 高亮 `CBM\|GH`、`CBM\|PL`；Peptidase 高亮 `C\|N`、`C\|M` |
+| 4 | 三级 Silhouette 箱线图、BA violin 并排 | CAZy 使用 Figure 3 h/i 的六组 BA 组合；Peptidase 使用 Figure 4 j/k 的六组 |
+
+图例与对应子图同页，页眉包含 system、base model 和输出版本。PDF 拼版保留矢量文字与图例；密集散点沿用论文绘图的栅格化设置。默认 200 dpi，可传 `--dpi 300`。每页另存 PNG 预览，manifest 记录源文件摘要、选图、绘图参数及页面对应关系。
+
+输出路径包含系统、模型和版本，例如：
+
+```text
+outputs/paper/reports/cazy/esm1b/default/cazy_esm1b_default.pdf
+outputs/paper/reports/cazy/esm2-150m/esm2-150m/cazy_esm2-150m_esm2-150m.pdf
+outputs/paper/reports/peptidase/esm1b/default/peptidase_esm1b_default.pdf
+```
+
+`--version auto` 为默认行为：仅在一个结果版本具备全部所选来源时自动选定。多个版本均完整时要求显式指定，避免误选；不跨版本拼凑。`--version default` 强制读取未命名版本，`--version NAME` 读取指定版本。
+
+```bash
+# 只检查来源、完整性、ID、逐样本指标与所需组合
+.venv/bin/python paper/report.py check --system cazy --model esm1b
+
+# 只提取训练空间，输出一页三联图
+.venv/bin/python paper/report.py render --system cazy --model esm1b \
+  --panels binary_l0 classes_l1 families_l2
+
+# 只提取指标对比，输出一页双联图
+.venv/bin/python paper/report.py render --system cazy --model esm1b \
+  --panels silhouette ba
+```
+
+可选 panel 名为 `binary_l0`、`classes_l1`、`families_l2`、`boundary_l0/l1/l2`、`multilabel_l0/l1/l2`、`silhouette`、`ba`（斜杠表示三个独立名称）。选中子图仍按上述四个主题分组，组内保留传入顺序；空组不输出。子集文件名附选择摘要，不覆盖完整报告。输入和代码未变时复用 PDF，可用 `--force` 强制重画。
+
+缺少任一所选来源时，预检列出缺失路径，不生成残缺报告，也不自动启动重计算。Peptidase ESM-1b 尚无本仓库 workflow 产物时会明确报缺失；不能用 CAZy 或默认 ESM2 结果代替。
+
+可接在现有 workflow 命令后使用 `&& .venv/bin/python paper/report.py render ...`。Slurm 环境可用下面的包装脚本，在三级任务全部成功后自动汇总 PDF：
+
+```bash
+mkdir -p outputs/paper/reports/logs
+sbatch --dependency=afterok:三级任务数组ID --kill-on-invalid-dep=yes \
+  --job-name=cazy-esm2-150m-pdf paper/report.slurm \
+  --system cazy --model esm2-150m --version esm2-150m
+```
+
+无需等待 summary 任务，只需相关路线的坐标和 metrics 完成。报告所需最小输入是 L0 binary t-SNE、L1/L2 overview t-SNE，以及三级 boundary/multilabel UMAP 和 metrics。

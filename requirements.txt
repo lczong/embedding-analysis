@@ -6,3 +6,4 @@ matplotlib==3.10.8
 joblib==1.5.3
 openTSNE==1.0.4
 umap-learn==0.5.11
+pypdf==7.0.0
