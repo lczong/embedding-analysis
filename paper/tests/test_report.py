@@ -26,6 +26,20 @@ class ReportTests(unittest.TestCase):
         self.assertEqual([len(members) for _, _, members in groups], [3, 3, 3, 2])
         self.assertEqual([g[0] for g in groups], ['training', 'boundary', 'multilabel', 'metrics'])
 
+    def test_nca_preset_pairs_figure5_routes_in_one_page(self):
+        for system in ['cazy', 'peptidase']:
+            config = preset(system, 'esm2-150m', kind='nca')
+            panels = config['panels']
+            self.assertEqual(panels['nca_direct']['source']['route'], 'esm2-150m__l2-frozen-nca')
+            self.assertEqual(panels['nca_conditioned']['source']['route'], 'esm2-150m__l1-ft-ce__l2-frozen-nca')
+            for spec in panels.values():
+                self.assertEqual(spec['source']['system'], system)
+                self.assertEqual(spec['kind'], 'overview_families')
+                self.assertEqual(spec['selection']['top_family_fraction'], .15)
+            groups = grouped_jobs([(name,) for name in panels])
+            self.assertEqual(len(groups), 1)
+            self.assertEqual(len(groups[0][2]), 2)
+
     def test_cazy_selection_matches_paper(self):
         config = preset('cazy', 'esm1b')
         self.assertEqual(len(config['panels']), 11)
@@ -102,6 +116,25 @@ class ReportTests(unittest.TestCase):
         csv.write_text(csv.read_text().replace('0.1', '0.9'))
         with self.assertRaisesRegex(ValueError, 'changed metric source'):
             metric_source(spec, self.root, None)
+
+    def test_real_nca_pdf_has_both_routes_on_one_page(self):
+        config = preset('cazy', 'esm1b', kind='nca')
+        cfg = load_config(ROOT/'configs/cazy.json')
+        data = pd.DataFrame({'sequence_id': ['a', 'b', 'c', 'd'],
+                             'dataset_role': ['train']*4,
+                             'class_label': ['GH', 'GH', 'GT', 'GT'],
+                             'family_label': ['GH1', 'GH1', 'GT1', 'GT1'],
+                             'x': [0, 1, 3, 4], 'y': [0, 1, 3, 4]})
+        jobs = [(name, spec, config['style'], data, cfg, {'fixture': True})
+                for name, spec in config['panels'].items()]
+        path = render_report(config, jobs, 'cazy', 'esm1b', 'nca-test', self.root, dpi=40)
+        from pypdf import PdfReader
+        reader = PdfReader(path)
+        self.assertEqual(len(reader.pages), 1)
+        text = reader.pages[0].extract_text()
+        self.assertIn('Direct L2 NCA', text)
+        self.assertIn('L1-conditioned L2 NCA', text)
+        self.assertEqual(path.name, 'cazy_esm1b_nca-test_nca.pdf')
 
     def test_real_pdf_subset_cache_and_names(self):
         config = preset('peptidase', 'esm1b')

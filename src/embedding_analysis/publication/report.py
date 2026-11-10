@@ -17,11 +17,24 @@ MODELS = {'esm1b': 'ESM-1b 650M', 'esm2': 'ESM2 650M',
           'esm2-150m': 'ESM2 150M', 'esm2-35m': 'ESM2 35M'}
 
 
-def preset(system, model, root=ROOT):
+def preset(system, model, root=ROOT, kind="workflow"):
     """Reuse publication selections, including Peptidase's own combinations."""
     safe_name(model)
     if system not in ('cazy', 'peptidase'):
         raise ValueError('System must be cazy or peptidase')
+    if kind == 'nca':
+        template = json.loads((root / 'paper/figures/figure5.json').read_text())
+        keys = ('b', 'c') if system == 'cazy' else ('h', 'i')
+        panels = {}
+        for name, key, suffix in zip(('nca_direct', 'nca_conditioned'), keys,
+                                    ('__l2-frozen-nca', '__l1-ft-ce__l2-frozen-nca')):
+            spec = copy.deepcopy(template['panels'][key])
+            spec['source']['route'] = model + suffix
+            spec['title'] = spec['corner_label'] + ' | t-SNE'
+            panels[name] = spec
+        return {'report_kind': 'nca', 'style': copy.deepcopy(template['style']), 'panels': panels}
+    if kind != 'workflow':
+        raise ValueError(f'Unknown report preset: {kind}')
     templates = {n: json.loads((root / f'paper/figures/figure{n}.json').read_text())
                  for n in (2, 3, 4)}
     training = templates[2 if system == 'cazy' else 4]
@@ -169,6 +182,7 @@ PAGE_GROUPS = [
     ('boundary', 'Boundary | UMAP', ('boundary_l0', 'boundary_l1', 'boundary_l2')),
     ('multilabel', 'Multilabel | UMAP', ('multilabel_l0', 'multilabel_l1', 'multilabel_l2')),
     ('metrics', 'Silhouette and barycentric alignment', ('silhouette', 'ba')),
+    ('nca', 'Figure 5 | Direct and L1-conditioned L2 NCA', ('nca_direct', 'nca_conditioned')),
 ]
 
 
@@ -186,10 +200,12 @@ def render_report(config, jobs, system, model, version, root=ROOT, dpi=200, forc
     from pypdf import PdfReader, PdfWriter, Transformation
     from PIL import Image
     version_name = version or 'default'
-    full = list(preset(system, model, root)['panels'])
+    kind = config.get('report_kind', 'workflow')
+    full = list(preset(system, model, root, kind=kind)['panels'])
     selection = list(config['panels'])
     suffix = '' if selection == full else '_' + hashlib.sha256('|'.join(selection).encode()).hexdigest()[:10]
-    name = f'{system}_{model}_{version_name}{suffix}'
+    preset_suffix = '_nca' if kind == 'nca' else ''
+    name = f'{system}_{model}_{version_name}{preset_suffix}{suffix}'
     destination = root / 'outputs/paper/reports' / system / model / version_name
     pdf = destination / (name + '.pdf')
     manifest = destination / (name + '.manifest.json')
@@ -279,6 +295,8 @@ def main(argv=None):
     parser.add_argument('command', choices=['check', 'render'])
     parser.add_argument('--system', required=True, choices=['cazy', 'peptidase'])
     parser.add_argument('--model', required=True, help='Route prefix, e.g. esm1b, esm2-150m, esm2-35m')
+    parser.add_argument('--preset', choices=['workflow', 'nca'], default='workflow',
+                        help='Four-page workflow report or one-page Figure 5 NCA pair')
     parser.add_argument('--version', default='auto', help='auto (unique complete run), default, or explicit version')
     parser.add_argument('--panels', nargs='+', help='Subset grouped by training/boundary/multilabel/metrics; see paper/README.md')
     parser.add_argument('--dpi', type=int, default=200)
@@ -288,7 +306,7 @@ def main(argv=None):
     try:
         if args.dpi <= 0:
             raise ValueError('DPI must be positive')
-        config = preset(args.system, args.model)
+        config = preset(args.system, args.model, kind=args.preset)
         if args.panels:
             if len(set(args.panels)) != len(args.panels) or set(args.panels)-set(config['panels']):
                 raise ValueError('Select distinct valid panels: ' + ', '.join(config['panels']))

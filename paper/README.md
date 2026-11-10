@@ -201,3 +201,22 @@ sbatch --dependency=afterok:三级任务数组ID --kill-on-invalid-dep=yes \
 ```
 
 无需等待 summary 任务，只需相关路线的坐标和 metrics 完成。报告所需最小输入是 L0 binary t-SNE、L1/L2 overview t-SNE，以及三级 boundary/multilabel UMAP 和 metrics。
+
+### Figure 5：Direct / L1-conditioned NCA 一页双联图
+
+使用 `--preset nca` 从两条 NCA overview t-SNE 路线取图，沿用 Figure 5 b/c（Peptidase 为 h/i）的 class 配色与每类前 15% 高频 family 标注。左侧为 `<model>__l2-frozen-nca`，右侧为 `<model>__l1-ft-ce__l2-frozen-nca`，一组一页，不运行其他实验。
+
+```bash
+.venv/bin/python paper/report.py render --system cazy --model esm1b \
+  --preset nca --version nca-20261109 --dpi 300
+```
+
+另两组将 `--model` 替换为 `esm2-150m` 或 `esm2-35m`。文件名附 `_nca`，例如：
+
+```text
+outputs/paper/reports/cazy/esm1b/nca-20261109/cazy_esm1b_nca-20261109_nca.pdf
+```
+
+新训练批次使用 `configs/cazy_nca_backbones.json`：六条路线均只配置 `projected/cazy_train.embeddings.csv`，256 维，输入目录软链接位于 `data/cazy/embeddings/<route>/`。源 run 与 feature source 写入配置，metadata 沿用本仓库 CAZy train。先全量校验，再在 train 上 L2 normalize + PCA100、t-SNE，未使用 val/test 拟合。
+
+`workflows/nca_backbones.slurm route` 使用 array 0–5，依次对应 ESM-1b direct/conditioned、ESM2 150M direct/conditioned、ESM2 35M direct/conditioned。`report` 模式生成三份单页 PDF；提交时设置 array 成功后的 `afterok` 依赖。运行版本固定为 `nca-20261109`，源训练批次为 `20261109_093908`。重画 PDF 不必重跑 t-SNE。
