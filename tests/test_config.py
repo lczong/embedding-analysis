@@ -67,6 +67,20 @@ class RouteTests(unittest.TestCase):
         self.assertEqual(len(cfg['routes']), 9)
         self.assertEqual({r['dimensions'] for r in cfg['routes'].values()}, {1280, 640, 480})
 
+    def test_raw_pooling_routes(self):
+        root = Path(__file__).resolve().parents[1]
+        cfg = load_config(root / 'configs/cazy_raw_pooling.json')
+        expected = {f'{model}__pool-{pool}' for model in ['esm1b', 'esm2-650m']
+                    for pool in ['cls', 'residue_mean']}
+        self.assertEqual(set(cfg['routes']), expected)
+        self.assertEqual({info['dimensions'] for info in cfg['routes'].values()}, {1280})
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'config.json'
+            cfg['routes'] = {'esm1b__pool-unknown': next(iter(cfg['routes'].values()))}
+            path.write_text(json.dumps(cfg))
+            with self.assertRaisesRegex(ValueError, 'Invalid route'):
+                load_config(path)
+
     def test_invalid_route_rejected(self):
         root = Path(__file__).resolve().parents[1]
         with tempfile.TemporaryDirectory() as tmp:

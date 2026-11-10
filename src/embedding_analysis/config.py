@@ -27,7 +27,7 @@ def load_config(path):
     if not re.fullmatch(r'[A-Za-z0-9_-]+', cfg['system']):
         raise ValueError('Invalid system name')
     for route, info in cfg['routes'].items():
-        if not re.fullmatch(r'(?:esm1b|esm2(?:-(?:150m|35m))?)(?:__l[012]-(?:ft|frozen)-(?:ce|nca))*', route):
+        if not re.fullmatch(r'(?:esm1b|esm2(?:-(?:650m|150m|35m))?)(?:__pool-(?:cls|residue_mean))?(?:__l[012]-(?:ft|frozen)-(?:ce|nca))*', route):
             raise ValueError(f'Invalid route: {route}')
         if 'train' not in info['datasets']:
             raise ValueError(f'{route} requires train input')

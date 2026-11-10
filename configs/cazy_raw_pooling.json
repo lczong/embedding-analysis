@@ -1,0 +1,342 @@
+{
+  "defaults": "defaults.json",
+  "system": "cazy",
+  "metadata": {
+    "id_column": "sequence_id",
+    "class_column": "cazy_class",
+    "family_column": "cazy_family",
+    "files": {
+      "train": "data/cazy/metadata/cazy_train.metadata.tsv"
+    }
+  },
+  "classes": [
+    "AA",
+    "CBM",
+    "CE",
+    "GH",
+    "GT",
+    "PL"
+  ],
+  "class_colors": {
+    "AA": "#e6194b",
+    "CBM": "#b8860b",
+    "CE": "#4363d8",
+    "GH": "#f58231",
+    "GT": "#911eb4",
+    "PL": "#3cb44b"
+  },
+  "role_labels": {
+    "train": "CAZyme",
+    "ood": "Non-CAZyme",
+    "shuffled": "Shuffled",
+    "idr": "IDR"
+  },
+  "routes": {
+    "esm1b__pool-cls": {
+      "dimensions": 1280,
+      "pooling": "cls",
+      "source_manifest": {
+        "model": "facebook/esm1b_t33_650M_UR50S",
+        "dataset": "cazy",
+        "groups": [
+          "positive"
+        ],
+        "splits": [
+          "train",
+          "test"
+        ],
+        "pooling": "cls",
+        "mean_excludes": [
+          "CLS",
+          "EOS",
+          "PAD"
+        ],
+        "mean_accumulation_dtype": "float32",
+        "layer": "last_hidden_state",
+        "normalization": "none",
+        "max_length": 1024,
+        "max_residues": 1022,
+        "batch_size": 4,
+        "source": "raw_pretrained",
+        "repository_commit": "b9c4943beed0627c690483a8bab714c0188cb6f4",
+        "artifacts": [
+          {
+            "split": "train",
+            "fasta": "/gpfs/research/rdf/zong/CAZy-Project/OOD2/data/cazy_train.fasta",
+            "samples": 92416
+          },
+          {
+            "split": "test",
+            "fasta": "/gpfs/research/rdf/zong/CAZy-Project/OOD2/data/cazy_test.fasta",
+            "samples": 26409
+          }
+        ],
+        "torch_version": "2.6.0",
+        "device": "NVIDIA L40S",
+        "bf16_used": true,
+        "transformers_version": "4.55.0",
+        "input_fasta": "/gpfs/research/rdf/zong/CAZy-Project/OOD2/data/cazy_train.fasta",
+        "output_csv": "/gpfs/research/rdf/zong/CAZy-Project/protein-embedding-resolution-dev/runs/embeddings/cazy/esm1b/raw_pooling_20261109_130201/cls/cazy_train.embeddings.csv",
+        "sample_count": 92416,
+        "embedding_dim": 1280
+      },
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm1b__pool-cls/cazy_train.embeddings.csv"
+        }
+      }
+    },
+    "esm1b__pool-residue_mean": {
+      "dimensions": 1280,
+      "pooling": "residue_mean",
+      "source_manifest": {
+        "model": "facebook/esm1b_t33_650M_UR50S",
+        "dataset": "cazy",
+        "groups": [
+          "positive"
+        ],
+        "splits": [
+          "train",
+          "test"
+        ],
+        "pooling": "residue_mean",
+        "mean_excludes": [
+          "CLS",
+          "EOS",
+          "PAD"
+        ],
+        "mean_accumulation_dtype": "float32",
+        "layer": "last_hidden_state",
+        "normalization": "none",
+        "max_length": 1024,
+        "max_residues": 1022,
+        "batch_size": 4,
+        "source": "raw_pretrained",
+        "repository_commit": "b9c4943beed0627c690483a8bab714c0188cb6f4",
+        "artifacts": [
+          {
+            "split": "train",
+            "fasta": "/gpfs/research/rdf/zong/CAZy-Project/OOD2/data/cazy_train.fasta",
+            "samples": 92416
+          },
+          {
+            "split": "test",
+            "fasta": "/gpfs/research/rdf/zong/CAZy-Project/OOD2/data/cazy_test.fasta",
+            "samples": 26409
+          }
+        ],
+        "torch_version": "2.6.0",
+        "device": "NVIDIA L40S",
+        "bf16_used": true,
+        "transformers_version": "4.55.0",
+        "input_fasta": "/gpfs/research/rdf/zong/CAZy-Project/OOD2/data/cazy_train.fasta",
+        "output_csv": "/gpfs/research/rdf/zong/CAZy-Project/protein-embedding-resolution-dev/runs/embeddings/cazy/esm1b/raw_pooling_20261109_130201/residue_mean/cazy_train.embeddings.csv",
+        "sample_count": 92416,
+        "embedding_dim": 1280
+      },
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm1b__pool-residue_mean/cazy_train.embeddings.csv"
+        }
+      }
+    },
+    "esm2-650m__pool-cls": {
+      "dimensions": 1280,
+      "pooling": "cls",
+      "source_manifest": {
+        "model": "facebook/esm2_t33_650M_UR50D",
+        "dataset": "cazy",
+        "groups": [
+          "positive"
+        ],
+        "splits": [
+          "train",
+          "test"
+        ],
+        "pooling": "cls",
+        "mean_excludes": [
+          "CLS",
+          "EOS",
+          "PAD"
+        ],
+        "mean_accumulation_dtype": "float32",
+        "layer": "last_hidden_state",
+        "normalization": "none",
+        "max_length": 1024,
+        "max_residues": 1022,
+        "batch_size": 4,
+        "source": "raw_pretrained",
+        "repository_commit": "b9c4943beed0627c690483a8bab714c0188cb6f4",
+        "artifacts": [
+          {
+            "split": "train",
+            "fasta": "/gpfs/research/rdf/zong/CAZy-Project/OOD2/data/cazy_train.fasta",
+            "samples": 92416
+          },
+          {
+            "split": "test",
+            "fasta": "/gpfs/research/rdf/zong/CAZy-Project/OOD2/data/cazy_test.fasta",
+            "samples": 26409
+          }
+        ],
+        "torch_version": "2.6.0",
+        "device": "NVIDIA L40S",
+        "bf16_used": true,
+        "transformers_version": "4.55.0",
+        "input_fasta": "/gpfs/research/rdf/zong/CAZy-Project/OOD2/data/cazy_train.fasta",
+        "output_csv": "/gpfs/research/rdf/zong/CAZy-Project/protein-embedding-resolution-dev/runs/embeddings/cazy/esm2-650m/raw_pooling_20261109_130201/cls/cazy_train.embeddings.csv",
+        "sample_count": 92416,
+        "embedding_dim": 1280
+      },
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2-650m__pool-cls/cazy_train.embeddings.csv"
+        }
+      }
+    },
+    "esm2-650m__pool-residue_mean": {
+      "dimensions": 1280,
+      "pooling": "residue_mean",
+      "source_manifest": {
+        "model": "facebook/esm2_t33_650M_UR50D",
+        "dataset": "cazy",
+        "groups": [
+          "positive"
+        ],
+        "splits": [
+          "train",
+          "test"
+        ],
+        "pooling": "residue_mean",
+        "mean_excludes": [
+          "CLS",
+          "EOS",
+          "PAD"
+        ],
+        "mean_accumulation_dtype": "float32",
+        "layer": "last_hidden_state",
+        "normalization": "none",
+        "max_length": 1024,
+        "max_residues": 1022,
+        "batch_size": 4,
+        "source": "raw_pretrained",
+        "repository_commit": "b9c4943beed0627c690483a8bab714c0188cb6f4",
+        "artifacts": [
+          {
+            "split": "train",
+            "fasta": "/gpfs/research/rdf/zong/CAZy-Project/OOD2/data/cazy_train.fasta",
+            "samples": 92416
+          },
+          {
+            "split": "test",
+            "fasta": "/gpfs/research/rdf/zong/CAZy-Project/OOD2/data/cazy_test.fasta",
+            "samples": 26409
+          }
+        ],
+        "torch_version": "2.6.0",
+        "device": "NVIDIA L40S",
+        "bf16_used": true,
+        "transformers_version": "4.55.0",
+        "input_fasta": "/gpfs/research/rdf/zong/CAZy-Project/OOD2/data/cazy_train.fasta",
+        "output_csv": "/gpfs/research/rdf/zong/CAZy-Project/protein-embedding-resolution-dev/runs/embeddings/cazy/esm2-650m/raw_pooling_20261109_130201/residue_mean/cazy_train.embeddings.csv",
+        "sample_count": 92416,
+        "embedding_dim": 1280
+      },
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/cazy/embeddings/esm2-650m__pool-residue_mean/cazy_train.embeddings.csv"
+        }
+      }
+    }
+  },
+  "plot": {
+    "highlight_combinations": [
+      "CBM|GH",
+      "CBM|PL"
+    ],
+    "overview": {
+      "class_order": [
+        "GT",
+        "GH",
+        "CBM",
+        "CE",
+        "PL",
+        "AA"
+      ]
+    },
+    "boundary": {
+      "role_labels": {
+        "shuffled": "CAZyme-shuffled",
+        "idr": "Intrinsically disordered (IDR)"
+      }
+    },
+    "binary": {
+      "dpi": 300,
+      "font": "Arial",
+      "labels": {
+        "train": "cazy",
+        "non_target_train": "non-cazy"
+      },
+      "names": {
+        "train": "CAZyme",
+        "non_target_train": "Non-CAZyme"
+      }
+    },
+    "multilabel": {
+      "class_order": [
+        "GT",
+        "GH",
+        "CBM",
+        "CE",
+        "PL",
+        "AA"
+      ],
+      "combo_colors": {
+        "CBM|GH": "#4363d8",
+        "CBM|PL": "#e6194b",
+        "AA|CBM": "#007F73",
+        "CBM|CE": "#A51C70",
+        "GH|GT": "#006B3C",
+        "CBM|GT": "#007C91",
+        "CE|GH": "#8F163D",
+        "CE|PL": "#B64A00",
+        "CE|GT": "#756000"
+      },
+      "combinations": [
+        "CBM|GH",
+        "CBM|PL",
+        "AA|CBM",
+        "CBM|CE",
+        "GH|GT",
+        "CBM|GT",
+        "CE|GH",
+        "CE|PL",
+        "CE|GT"
+      ],
+      "ba_summary_groups": {
+        "esm1b_ftce": [
+          "esm1b__l0-ft-ce",
+          "esm1b__l1-ft-ce",
+          "esm1b__l2-ft-ce"
+        ],
+        "esm2-150m_ftce": [
+          "esm2-150m__l0-ft-ce",
+          "esm2-150m__l1-ft-ce",
+          "esm2-150m__l2-ft-ce"
+        ],
+        "esm2-35m_ftce": [
+          "esm2-35m__l0-ft-ce",
+          "esm2-35m__l1-ft-ce",
+          "esm2-35m__l2-ft-ce"
+        ]
+      }
+    }
+  },
+  "external_embedding_roots": [
+    "/gpfs/research/rdf/zong/CAZy-Project/protein-embedding-resolution-dev/runs/embeddings/cazy"
+  ]
+}

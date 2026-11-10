@@ -440,3 +440,18 @@ Peptidase 使用同一组独立 workflow，默认只保存 PNG，同时支持 `t
 multilabel 固定六组及显示顺序：`C|M`、`C|N`、`C|S`、`N|S`、`M|S`、`S|T`。`plot.multilabel.combinations` 控制单组合空间图和 BA summary；`ba_plot_combinations` 将单路线 BA KDE 总览及 `ba_combos/` 中的图也限定到这六组（仍须满足最小有效样本数）。BA 数值照常计算全部 multi 样本，不通过绘图筛选删数据。每条路线生成 class 总览和六张单组合空间图，未启用组合叠加图。组合颜色显式固定并用于散点、边际 KDE 和 BA KDE 总览。
 
 Peptidase 没有原始 ESM2 基线；BA summary 的 `ba_all.png` 比较上述四条有 multi 数据的路线，不伪造缺失路线。输出位于 `outputs/peptidase/`，与 CAZy 完全独立。
+
+## 原始 ESM-1b / ESM2 650M 的 pooling 对比
+
+`configs/cazy_raw_pooling.json` 配置四条 train-only 路线：`esm1b__pool-cls`、`esm1b__pool-residue_mean`、`esm2-650m__pool-cls`、`esm2-650m__pool-residue_mean`。输入软链接指向 `runs/embeddings/cazy/<model>/raw_pooling_20261109_130201/<pooling>/`，原始导出 manifest 保存在配置中。各组使用相同 CAZy train metadata；只读取 train，不将 test 纳入拟合。
+
+各组独立执行 L2 normalization → train-fit PCA100 → t-SNE，seed=42、perplexity=30、250+500 iterations，均沿用 defaults 参数。每组的 class 与 class/family 图共用一份坐标，family 按每个 class 内频数排序标注前 15% 的 family 种类。独立 t-SNE 的旋转、位置和尺度不用于直接距离比较。
+
+```bash
+.venv/bin/python workflows/validate.py --config configs/cazy_raw_pooling.json --deep
+bash workflows/overview.sh configs/cazy_raw_pooling.json esm1b__pool-cls pca raw-pooling-20261109
+bash workflows/overview.sh configs/cazy_raw_pooling.json esm1b__pool-cls tsne raw-pooling-20261109
+bash workflows/overview.sh configs/cazy_raw_pooling.json esm1b__pool-cls visualization-tsne raw-pooling-20261109
+```
+
+批处理入口 `workflows/raw_pooling.slurm` 使用 array 0–3，顺序为 ESM-1b CLS、ESM-1b residue mean、ESM2 650M CLS、ESM2 650M residue mean。输出位于 `outputs/cazy/_versions/raw-pooling-20261109/overview/figures/<route>/`，每条路线生成 `tsne_classes.png` 和 `tsne_class_label_family.png`。日志位于 `outputs/cazy/logs/raw-pooling-20261109/`。
