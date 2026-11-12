@@ -303,6 +303,18 @@ bash workflows/centroid.sh configs/cazy.json esm2__l0-ft-ce metric-plots
 
 只需要 train，在 PCA 空间对至少 5 条序列的 family 计算质心。每个 family 必须属于一个 class。此实验不做 t-SNE/UMAP，空间展示是质心距离热图。
 
+绘图参照旧 CAZy `metrics/src/knn_purity.py` 和 Peptidase `metrics/src/class_structure.py`：Arial、300 dpi，纯度曲线纵轴固定 0–1，粉色表示 Direct L2 NCA，红色表示 L1-conditioned L2 NCA，图内使用带边框图例。热图使用 `viridis_r`，按既有 class 顺序及 family 名称排列，带顶部/左侧 class 色带、class 分界线和稀疏 family 标签。色带与标签分别布局，避免旧图中的重叠。
+
+可用 `plot.centroid` 覆盖 `font`、`dpi`、`purity_figsize`、`heatmap_figsize`、`class_order`、`route_labels` 和 `route_colors`；文件格式仍遵循 `plot.formats`。这些配置仅影响绘图，不改变指标。
+
+原始 ESM2 基线使用 `esm2` route，图例显示为 `ESM2`（灰色）。与两种 NCA 路线对比时，先分别完成三个 route 的指标，再生成汇总：
+
+```bash
+bash workflows/centroid.sh configs/cazy.json esm2 all
+.venv/bin/python workflows/centroid_summary.py tables --config configs/cazy.json --routes esm2 esm2__l2-frozen-nca esm2__l1-ft-ce__l2-frozen-nca
+.venv/bin/python workflows/centroid_summary.py plots --config configs/cazy.json
+```
+
 | 位置（相对 `outputs/<system>/centroid/`） | 内容 |
 | --- | --- |
 | `artifacts/<route>/metrics/centroids.csv` | family_label、class_label、n_sequences、PC1...PCn |
