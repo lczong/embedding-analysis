@@ -14,8 +14,8 @@ ROOT = Path(__file__).resolve().parents[3]
 KINDS = {'binary': 'binary', 'overview_classes': 'overview', 'overview_families': 'overview',
          'boundary_balanced': 'boundary', 'multilabel_combos': 'multilabel',
          'boundary_silhouette': 'boundary', 'multilabel_ba': 'multilabel',
-         'centroid_purity': 'centroid'}
-TABLE_KINDS = {'boundary_silhouette', 'multilabel_ba', 'centroid_purity'}
+         'centroid_purity': 'centroid', 'performance': 'performance'}
+TABLE_KINDS = {'boundary_silhouette', 'multilabel_ba', 'centroid_purity', 'performance'}
 
 
 def safe_name(value):
@@ -45,7 +45,8 @@ def resolve_source(spec, root=ROOT):
     expected = (source['system'], source['workflow'], None if table else source['route'], source['stage'])
     if actual != expected:
         raise ValueError(f'Source identity mismatch: {path}')
-    logical = 'summary.csv' if kind == 'centroid_purity' else 'samples.csv' if table else 'coordinates.csv'
+    logical = ('metrics.csv' if kind == 'performance' else 'summary.csv'
+               if kind == 'centroid_purity' else 'samples.csv' if table else 'coordinates.csv')
     if logical not in meta['artifacts'] or not ready(path):
         raise ValueError(f'Incomplete or changed source artifacts: {path}')
     coordinates = artifact_file(path, logical)
@@ -57,6 +58,15 @@ def resolve_source(spec, root=ROOT):
     import numpy as np
     import pandas as pd
     data = pd.read_csv(coordinates, dtype={'sequence_id': str})
+    if kind == 'performance':
+        from .figures import selected_performance
+        selected_performance(data, spec['selection'])
+        if source.get('metrics_sha256') and source['metrics_sha256'] != digest:
+            raise ValueError(f'Locked performance metrics changed: {path}')
+        return data, meta['config'], {
+            'checkpoint': str(path.relative_to(root)),
+            'manifest_sha256': file_digest(path / 'manifest.json'),
+            'signature': meta.get('signature'), 'metrics_sha256': digest, 'rows': len(data)}
     if kind == 'centroid_purity':
         from .figures import selected_purity
         selected_purity(data, spec['selection'])
@@ -148,6 +158,8 @@ def render_panel(destination, panel_id, spec, style, data, cfg, provenance, conf
                       ROOT/'src/embedding_analysis/experiments/boundary/plotting.py',
                       ROOT/'src/embedding_analysis/experiments/multilabel/plotting.py',
                       ROOT/'src/embedding_analysis/experiments/centroid/plotting.py',
+                      ROOT/'src/embedding_analysis/experiments/performance/plotting.py',
+                      ROOT/'src/embedding_analysis/experiments/performance/tables.py',
                       ROOT/'src/embedding_analysis/experiments/multilabel/spatial.py']
         write_json(temp / f'{panel_id}.manifest.json', {
             'panel': panel_id, 'spec': spec, 'style': style, 'source': provenance,

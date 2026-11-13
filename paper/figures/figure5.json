@@ -84,6 +84,26 @@
         "legend_ncol": 3
       }
     },
+    "e": {
+      "kind": "performance",
+      "source": {
+        "system": "cazy",
+        "workflow": "performance",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "plot": "04_level_2_nca_A_overall"
+      },
+      "style": {
+        "size_inches": [
+          3.9,
+          3.125
+        ],
+        "legend_fontsize": 6.5,
+        "legend_ncol": 3
+      }
+    },
     "h": {
       "kind": "overview_families",
       "source": {
@@ -137,6 +157,26 @@
           0.81
         ],
         "legend_fontsize": 10.5,
+        "legend_ncol": 3
+      }
+    },
+    "k": {
+      "kind": "performance",
+      "source": {
+        "system": "peptidase",
+        "workflow": "performance",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "plot": "04_level_2_nca_A_overall"
+      },
+      "style": {
+        "size_inches": [
+          3.9,
+          3.125
+        ],
+        "legend_fontsize": 6.5,
         "legend_ncol": 3
       }
     }

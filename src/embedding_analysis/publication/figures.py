@@ -4,6 +4,31 @@ import numpy as np
 from ..config import merge
 
 
+def selected_performance(data, selection):
+    from ..experiments.performance.tables import METHODS_BY_TASK
+    name = selection['plot']
+    if name == '05_macro_f1_comparison':
+        expected = {(task, method, 'Macro-F1') for task in ('L0', 'L1', 'L2')
+                    for method in ('esm2_1nn', f'{task.lower()}_ft_1nn')}
+    elif name == '04_level_2_nca_A_overall':
+        expected = {('L2', method, metric) for method in METHODS_BY_TASK['L2']
+                    if method != 'l2_ft_1nn' for metric in ('Accuracy', 'Macro-F1')}
+    else:
+        raise ValueError(f'Unsupported performance panel: {name}')
+    required = {'task', 'section', 'method', 'metric', 'value', 'route', 'label'}
+    if not required <= set(data.columns):
+        raise ValueError('Missing performance columns')
+    selected = data[(data.section == 'overall') &
+                    data.apply(lambda r: (r.task, r.method, r.metric) in expected, axis=1)].copy()
+    if set(zip(selected.task, selected.method, selected.metric)) != expected:
+        raise ValueError('Missing required performance metrics')
+    if selected.duplicated(['task', 'method', 'metric']).any():
+        raise ValueError('Duplicate performance metrics')
+    if not np.isfinite(selected.value).all() or not selected.value.between(0, 100).all():
+        raise ValueError('Invalid performance percentages')
+    return selected
+
+
 def selected_purity(data, selection):
     required = {'route', 'metric', 'k', 'value'}
     if not required <= set(data.columns):
@@ -91,6 +116,20 @@ def build_figure(data, cfg, spec, style):
     method = {'tsne': 't-SNE', 'umap': 'UMAP'}.get(spec['source']['stage'])
     if kind == 'multilabel_combos':
         return multilabel_figure(data, cfg, selection, style, method)
+    if kind == 'performance':
+        from ..experiments.performance.plotting import build_figure as performance_figure, validate_geometry
+        from ..experiments.performance.tables import plotting_tables
+        selected = selected_performance(data, selection)
+        with plt.rc_context({'font.size': 11}):
+            fig, ax, handles, geometry, _ = performance_figure(plotting_tables(selected), selection['plot'])
+        try:
+            validate_geometry(fig, **geometry)
+            return fig, ax, handles, {'plot': selection['plot'], 'rows': len(selected),
+                'metrics': selected[['task', 'method', 'metric', 'value']].to_dict('records'),
+                'size_inches': fig.get_size_inches().tolist()}
+        except Exception:
+            plt.close(fig)
+            raise
     fig = plt.figure(figsize=style['size_inches'])
     ax = fig.add_axes(style['axes_rect'])
     try:

@@ -23,8 +23,9 @@
 | c | target / non-target train | cazy / binary / esm2__l0-ft-ce |
 | d | class 着色和 class 标注 | cazy / overview / esm2__l1-ft-ce |
 | e | class 着色和 family 标注 | cazy / overview / esm2__l2-ft-ce |
+| f | 三任务 Macro-F1 compact 对比 | cazy / performance / summary |
 
-三张图都读取现有 t-SNE 坐标。e 沿用每个 class 内按数量排名的前 15% family 种类标注规则。
+c/d/e 读取现有 t-SNE 坐标。e 沿用每个 class 内按数量排名的前 15% family 种类标注规则。
 
 在项目根目录运行：
 
@@ -32,7 +33,7 @@
 # 只检查源产物身份、完整性、坐标字段和 ID
 .venv/bin/python paper/render.py check paper/figures/figure2.json
 
-# 导出 c、d、e
+# 导出 c、d、e、f
 .venv/bin/python paper/render.py render paper/figures/figure2.json
 
 # 只重画 e；也可以 --panel c e
@@ -49,7 +50,7 @@
 修改 `figures/figure2.json`：
 
 - `source` 指定 system、workflow、route、stage；可加 `version` 读取对应 `_versions/` 结果。
-- `kind` 支持 `binary`、`overview_classes`、`overview_families`、`boundary_balanced`、`multilabel_combos`、`boundary_silhouette`、`multilabel_ba`、`centroid_purity`。
+- `kind` 支持 `binary`、`overview_classes`、`overview_families`、`boundary_balanced`、`multilabel_combos`、`boundary_silhouette`、`multilabel_ba`、`centroid_purity`、`performance`。
 - `style` 是全图默认样式；子图中的 `style` 只覆盖本子图。
 - `size_inches` 控制精确画布尺寸，当前为 8 × 8.5 英寸、300 dpi。缩小到论文实际尺寸时应同时调整字体和点大小。
 - `axes_rect` 是绘图区在画布中的相对位置 `[left, bottom, width, height]`，需为上方图例和编号留白。
@@ -106,6 +107,7 @@ BA 使用 `selection.combinations` 选择组合；空组会报错，不会静默
 | b | target / non-target train t-SNE | L0 FT-CE binary |
 | c | class 着色及标注 t-SNE | L1 FT-CE overview |
 | d | class 着色及 family 标注 t-SNE | L2 FT-CE overview |
+| e | 三任务 Macro-F1 compact 对比 | performance summary |
 | i | UMAP balanced | L0 FT-CE boundary |
 | j | UMAP 同时高亮 C\|N、C\|M，保留双侧 KDE | L1 FT-CE multilabel |
 | k | silhouette 箱线图 | 三个 FT-CE level |
@@ -113,7 +115,7 @@ BA 使用 `selection.combinations` 选择组合；空组会报错，不会静默
 
 b/c/d 的图类型和 t-SNE 口径与 Figure 2 c/d/e 对应。
 l 沿用 Peptidase 配置中的六个组合：`C|M`、`C|N`、`C|S`、`N|S`、`M|S`、`S|T`。
-所有图例独立保存；j 横轴和 k 图例使用 Level 0/1/2，k 图例色块带深色边框。
+所有图例独立保存；k 横轴和 l 图例使用 Level 0/1/2，l 图例色块带深色边框。
 
 ```bash
 .venv/bin/python paper/render.py render paper/figures/figure4.json
@@ -140,6 +142,27 @@ d、j 分别读取 CAZy、Peptidase 的 centroid summary，绘制 compact kNN cl
 ```
 
 d/j 的输入为 `outputs/<system>/centroid/artifacts/summary/tables`，需包含上述三个 route 的指标；paper 校验文件摘要、route 和 k 的完整性后重绘，不运行 PCA 或重新计算指标。`paper/export.py` 会自动将这两个 summary 输入加入交接包。
+
+## Performance 论文面板
+
+| 面板 | 系统 | performance 图名 |
+| --- | --- | --- |
+| Figure 2f | CAZy | `05_macro_f1_comparison` |
+| Figure 4e | Peptidase | `05_macro_f1_comparison` |
+| Figure 5e | CAZy | `04_level_2_nca_A_overall` |
+| Figure 5k | Peptidase | `04_level_2_nca_A_overall` |
+
+这些面板读取 `outputs/<system>/performance/artifacts/summary/tables` 的 `metrics.csv`，校验来源摘要后，复用 performance 绘图函数重绘，不复制 PNG、不重新计算指标。输入只需先运行 `performance` 的 `tables` 步骤，交接包自动包含两个系统的表格及 manifest。
+
+保留 compact 画布（3.9 × 3.125 英寸）、原有柱宽与配色，标题为 **Test set performance**；主图不标 panel 字母、不包含 legend，横排 legend 独立保存。paper 输出 PNG/PDF/SVG，performance workflow 仍仅保存带 legend 的 PNG。05 比较三个任务各自的 ESM2 基线与对应 Level；04 比较 ESM2、Direct L2 NCA、L1-conditioned L2 NCA 的 Accuracy / Macro-F1。
+
+```bash
+.venv/bin/python paper/render.py render paper/figures/figure2.json --panel f
+.venv/bin/python paper/render.py render paper/figures/figure4.json --panel e
+.venv/bin/python paper/render.py render paper/figures/figure5.json --panel e k
+```
+
+`kind: performance` 使用 `selection.plot` 选择上述两种 compact 图；图形轴布局由共用的 performance builder 保持，独立 legend 的字号和列数由 paper 的 style 控制。
 
 ## 按 base model 汇总四页 PDF
 

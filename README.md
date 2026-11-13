@@ -2,7 +2,7 @@
 
 Workflow 完成后可用 `.venv/bin/python paper/report.py render --system cazy --model esm1b` 生成四页 PDF 拼图（训练空间、Boundary、Multilabel、指标对比），支持其他 base model 和 Peptidase，详见 [PDF 汇总入口](paper/README.md#按-base-model-汇总四页-pdf)。
 
-论文精选子图使用独立的 [paper 入口](paper/README.md)，目前已配置 Figure 2 c/d/e、Figure 3 b–i、Figure 4 b/c/d/i/j/k/l 和 Figure 5 b/c/d/h/i/j；读取现有实验坐标与指标，支持单独或整组导出 PNG/PDF/SVG，图例独立保存。
+论文精选子图使用独立的 [paper 入口](paper/README.md)，目前已配置 Figure 2 c/d/e/f、Figure 3 b–i、Figure 4 b/c/d/e/i/j/k/l 和 Figure 5 b/c/d/e/h/i/j/k；读取现有实验坐标与指标，支持单独或整组导出 PNG/PDF/SVG，图例独立保存。
 
 测试集 performance 图使用独立的 [performance workflow](workflows/README.md#performance测试集性能图)：`bash workflows/performance.sh configs/cazy.json all`（或 `configs/peptidase.json`）。读取随仓库保存的报告，每个系统生成八张 PNG 主图，legend 保留在图内，支持按图名选择；无需 embedding、PCA 或 GPU，不重新计算预测指标。
 

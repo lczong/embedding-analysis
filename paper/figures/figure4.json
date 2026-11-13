@@ -67,6 +67,26 @@
       },
       "corner_label": "Level 2"
     },
+    "e": {
+      "kind": "performance",
+      "source": {
+        "system": "peptidase",
+        "workflow": "performance",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "plot": "05_macro_f1_comparison"
+      },
+      "style": {
+        "size_inches": [
+          3.9,
+          3.125
+        ],
+        "legend_fontsize": 8,
+        "legend_ncol": 4
+      }
+    },
     "i": {
       "kind": "boundary_balanced",
       "source": {
