@@ -67,7 +67,7 @@
       },
       "corner_label": "Level 2"
     },
-    "h": {
+    "i": {
       "kind": "boundary_balanced",
       "source": {
         "system": "peptidase",
@@ -77,7 +77,7 @@
       },
       "corner_label": "Level 0"
     },
-    "i": {
+    "j": {
       "kind": "multilabel_combos",
       "source": {
         "system": "peptidase",
@@ -99,7 +99,7 @@
         ]
       }
     },
-    "j": {
+    "k": {
       "kind": "boundary_silhouette",
       "source": {
         "system": "peptidase",
@@ -133,7 +133,7 @@
         }
       }
     },
-    "k": {
+    "l": {
       "kind": "multilabel_ba",
       "source": {
         "system": "peptidase",

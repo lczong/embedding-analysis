@@ -106,18 +106,18 @@ BA 使用 `selection.combinations` 选择组合；空组会报错，不会静默
 | b | target / non-target train t-SNE | L0 FT-CE binary |
 | c | class 着色及标注 t-SNE | L1 FT-CE overview |
 | d | class 着色及 family 标注 t-SNE | L2 FT-CE overview |
-| h | UMAP balanced | L0 FT-CE boundary |
-| i | UMAP 同时高亮 C\|N、C\|M，保留双侧 KDE | L1 FT-CE multilabel |
-| j | silhouette 箱线图 | 三个 FT-CE level |
-| k | BA violin | 三个 FT-CE level |
+| i | UMAP balanced | L0 FT-CE boundary |
+| j | UMAP 同时高亮 C\|N、C\|M，保留双侧 KDE | L1 FT-CE multilabel |
+| k | silhouette 箱线图 | 三个 FT-CE level |
+| l | BA violin | 三个 FT-CE level |
 
 b/c/d 的图类型和 t-SNE 口径与 Figure 2 c/d/e 对应。
-k 沿用 Peptidase 配置中的六个组合：`C|M`、`C|N`、`C|S`、`N|S`、`M|S`、`S|T`。
+l 沿用 Peptidase 配置中的六个组合：`C|M`、`C|N`、`C|S`、`N|S`、`M|S`、`S|T`。
 所有图例独立保存；j 横轴和 k 图例使用 Level 0/1/2，k 图例色块带深色边框。
 
 ```bash
 .venv/bin/python paper/render.py render paper/figures/figure4.json
-.venv/bin/python paper/render.py render paper/figures/figure4.json --panel j k
+.venv/bin/python paper/render.py render paper/figures/figure4.json --panel k l
 ```
 
 ## Figure 5
@@ -164,7 +164,7 @@ d/j 的输入为 `outputs/<system>/centroid/artifacts/summary/tables`，需包�
 | 1 | L0 Binary、L1 Class、L2 Class/Family t-SNE 横排 | Figure 2 c/d/e；Peptidase 使用 Figure 4 b/c/d |
 | 2 | Boundary L0/L1/L2 UMAP 横排 | Figure 3 b/c/d 的 balanced 视图 |
 | 3 | Multilabel L0/L1/L2 UMAP 横排 | CAZy 高亮 `CBM\|GH`、`CBM\|PL`；Peptidase 高亮 `C\|N`、`C\|M` |
-| 4 | 三级 Silhouette 箱线图、BA violin 并排 | CAZy 使用 Figure 3 h/i 的六组 BA 组合；Peptidase 使用 Figure 4 j/k 的六组 |
+| 4 | 三级 Silhouette 箱线图、BA violin 并排 | CAZy 使用 Figure 3 h/i 的六组 BA 组合；Peptidase 使用 Figure 4 k/l 的六组 |
 
 图例与对应子图同页，页眉包含 system、base model 和输出版本。PDF 拼版保留矢量文字与图例；密集散点沿用论文绘图的栅格化设置。默认 200 dpi，可传 `--dpi 300`。每页另存 PNG 预览，manifest 记录源文件摘要、选图、绘图参数及页面对应关系。
 
