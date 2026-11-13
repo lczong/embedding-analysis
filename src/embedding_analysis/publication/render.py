@@ -13,8 +13,9 @@ from ..config import merge
 ROOT = Path(__file__).resolve().parents[3]
 KINDS = {'binary': 'binary', 'overview_classes': 'overview', 'overview_families': 'overview',
          'boundary_balanced': 'boundary', 'multilabel_combos': 'multilabel',
-         'boundary_silhouette': 'boundary', 'multilabel_ba': 'multilabel'}
-TABLE_KINDS = {'boundary_silhouette', 'multilabel_ba'}
+         'boundary_silhouette': 'boundary', 'multilabel_ba': 'multilabel',
+         'centroid_purity': 'centroid'}
+TABLE_KINDS = {'boundary_silhouette', 'multilabel_ba', 'centroid_purity'}
 
 
 def safe_name(value):
@@ -44,7 +45,7 @@ def resolve_source(spec, root=ROOT):
     expected = (source['system'], source['workflow'], None if table else source['route'], source['stage'])
     if actual != expected:
         raise ValueError(f'Source identity mismatch: {path}')
-    logical = 'samples.csv' if table else 'coordinates.csv'
+    logical = 'summary.csv' if kind == 'centroid_purity' else 'samples.csv' if table else 'coordinates.csv'
     if logical not in meta['artifacts'] or not ready(path):
         raise ValueError(f'Incomplete or changed source artifacts: {path}')
     coordinates = artifact_file(path, logical)
@@ -56,6 +57,15 @@ def resolve_source(spec, root=ROOT):
     import numpy as np
     import pandas as pd
     data = pd.read_csv(coordinates, dtype={'sequence_id': str})
+    if kind == 'centroid_purity':
+        from .figures import selected_purity
+        selected_purity(data, spec['selection'])
+        if source.get('summary_sha256') and source['summary_sha256'] != digest:
+            raise ValueError(f'Locked summary changed: {path}')
+        return data, meta['config'], {
+            'checkpoint': str(path.relative_to(root)),
+            'manifest_sha256': file_digest(path / 'manifest.json'),
+            'signature': meta.get('signature'), 'summary_sha256': digest, 'rows': len(data)}
     required = {'sequence_id', 'dataset_role', 'x', 'y'}
     if kind.startswith('overview') or kind == 'multilabel_combos':
         required |= {'class_label', 'family_label'}
@@ -116,8 +126,13 @@ def render_panel(destination, panel_id, spec, style, data, cfg, provenance, conf
             try:
                 legend_ax = legend_fig.add_axes([0, 0, 1, .2])
                 legend_ax.set_axis_off()
-                legend = top_legend(legend_ax, {'plot': {'legend': {
-                    'fontsize': style['legend_fontsize']}}}, handles=handles)
+                if style.get('legend_ncol'):
+                    legend = legend_ax.legend(handles=handles, ncol=style['legend_ncol'],
+                        loc='center', frameon=False, fontsize=style['legend_fontsize'],
+                        handlelength=2.3, columnspacing=1.8)
+                else:
+                    legend = top_legend(legend_ax, {'plot': {'legend': {
+                        'fontsize': style['legend_fontsize']}}}, handles=handles)
                 legend_fig.canvas.draw()
                 bounds = legend.get_window_extent(legend_fig.canvas.get_renderer())
                 bounds = bounds.transformed(legend_fig.dpi_scale_trans.inverted()).padded(.1)
@@ -132,6 +147,7 @@ def render_panel(destination, panel_id, spec, style, data, cfg, provenance, conf
                       ROOT/'src/embedding_analysis/experiments/overview/plotting.py',
                       ROOT/'src/embedding_analysis/experiments/boundary/plotting.py',
                       ROOT/'src/embedding_analysis/experiments/multilabel/plotting.py',
+                      ROOT/'src/embedding_analysis/experiments/centroid/plotting.py',
                       ROOT/'src/embedding_analysis/experiments/multilabel/spatial.py']
         write_json(temp / f'{panel_id}.manifest.json', {
             'panel': panel_id, 'spec': spec, 'style': style, 'source': provenance,

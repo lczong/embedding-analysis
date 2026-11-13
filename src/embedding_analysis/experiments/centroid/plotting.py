@@ -108,34 +108,41 @@ def purity_plot(df, cfg, stem):
         save(fig, stem, cfg)
 
 
+def draw_purity_compact(ax, df, cfg):
+    """Draw compact purity curves on supplied axes, without a legend."""
+    data = df.loc[df.metric == 'knn_class_purity']
+    markers = ['o', 's', '^', 'D']
+    for index, (route, group) in enumerate(data.groupby('route', sort=False)):
+        group = group.sort_values('k')
+        label, color = route_style(route, cfg, index)
+        marker = ('^' if route.endswith('__l1-ft-ce__l2-frozen-nca') else
+                  's' if route.endswith('__l2-frozen-nca') else
+                  'o' if route == 'esm2' else markers[index % len(markers)])
+        ax.plot(group.k, group.value, marker=marker,
+                markersize=7, linewidth=2, color=color, label=label,
+                markeredgecolor='white', markeredgewidth=.6)
+    ax.set_xlabel('Number of nearest family centroids (k)', fontsize=12, labelpad=9)
+    ax.set_ylabel('Class purity', fontsize=12, labelpad=9)
+    ax.set_xticks(sorted(data.k.dropna().unique()))
+    lower = min(.55, float(data.value.min()) - .03)
+    ax.set_ylim(lower, 1.02)
+    ax.set_yticks(np.arange(np.ceil(lower * 10) / 10, 1.01, .1))
+    ax.tick_params(labelsize=11, direction='out')
+    ax.spines[['top', 'right']].set_visible(False)
+    for side in ['left', 'bottom']:
+        ax.spines[side].set_color('#777777')
+    ax.grid(axis='y', color='#EAEAEA', linewidth=.6)
+    ax.set_axisbelow(True)
+    return ax.get_legend_handles_labels()[0]
+
+
 def purity_plot_compact(df, cfg, stem):
     """Alternative publication layout; keep the full-range workflow plot intact."""
     data = df.loc[df.metric == 'knn_class_purity']
     with plt.rc_context({'font.family': options(cfg).get('font', 'Arial'),
                          'svg.fonttype': 'none', 'pdf.fonttype': 42}):
         fig, ax = plt.subplots(figsize=(6.4, 4.6))
-        markers = ['o', 's', '^', 'D']
-        for index, (route, group) in enumerate(data.groupby('route', sort=False)):
-            group = group.sort_values('k')
-            label, color = route_style(route, cfg, index)
-            marker = ('^' if route.endswith('__l1-ft-ce__l2-frozen-nca') else
-                      's' if route.endswith('__l2-frozen-nca') else
-                      'o' if route == 'esm2' else markers[index % len(markers)])
-            ax.plot(group.k, group.value, marker=marker,
-                    markersize=7, linewidth=2, color=color, label=label,
-                    markeredgecolor='white', markeredgewidth=.6)
-        ax.set_xlabel('Number of nearest family centroids (k)', fontsize=12, labelpad=9)
-        ax.set_ylabel('Class purity', fontsize=12, labelpad=9)
-        ax.set_xticks(sorted(data.k.dropna().unique()))
-        lower = min(.55, float(data.value.min()) - .03)
-        ax.set_ylim(lower, 1.02)
-        ax.set_yticks(np.arange(np.ceil(lower * 10) / 10, 1.01, .1))
-        ax.tick_params(labelsize=11, direction='out')
-        ax.spines[['top', 'right']].set_visible(False)
-        for side in ['left', 'bottom']:
-            ax.spines[side].set_color('#777777')
-        ax.grid(axis='y', color='#EAEAEA', linewidth=.6)
-        ax.set_axisbelow(True)
+        draw_purity_compact(ax, data, cfg)
         handles, labels = ax.get_legend_handles_labels()
         save(fig, stem, cfg)
         legend_fig = plt.figure(figsize=(8.2, .45))

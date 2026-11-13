@@ -27,7 +27,7 @@ cd /Users/lczong/Projects/01PER/OOD2/embedding_analysis
 
 | route | CAZy | Peptidase |
 | --- | --- | --- |
-| `esm2` | 五个主实验 | 没有该原始 ESM2 输入 |
+| `esm2` | 五个主实验 | 只有 train；仅 overview、centroid |
 | `esm2__l0-ft-ce` | 五个主实验 | 五个主实验 |
 | `esm2__l1-ft-ce` | 五个主实验 | 五个主实验 |
 | `esm2__l2-frozen-nca` | 五个主实验 | 五个主实验 |

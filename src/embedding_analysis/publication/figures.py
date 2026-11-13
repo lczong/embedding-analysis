@@ -4,6 +4,27 @@ import numpy as np
 from ..config import merge
 
 
+def selected_purity(data, selection):
+    required = {'route', 'metric', 'k', 'value'}
+    if not required <= set(data.columns):
+        raise ValueError('Missing centroid summary columns')
+    routes = selection['routes']
+    if not routes or len(set(routes)) != len(routes):
+        raise ValueError('Select distinct, nonempty routes')
+    selected = data[(data.metric == 'knn_class_purity') & data.route.isin(routes)].copy()
+    if set(routes) != set(selected.route):
+        raise ValueError('Missing centroid purity routes')
+    if selected.duplicated(['route', 'k']).any():
+        raise ValueError('Duplicate centroid route/k values')
+    if not np.isfinite(selected[['k', 'value']].to_numpy()).all():
+        raise ValueError('Nonfinite centroid purity values')
+    if not selected.value.between(0, 1).all() or (selected.k < 1).any() or (selected.k % 1 != 0).any():
+        raise ValueError('Invalid centroid purity values or k')
+    if len({tuple(sorted(g.k)) for _, g in selected.groupby('route')}) != 1:
+        raise ValueError('Centroid routes must use the same k values')
+    return selected.set_index('route').loc[routes].reset_index()
+
+
 def selected_samples(data, selection, value):
     routes = selection['routes']
     if not routes or len(set(routes)) != len(routes):
@@ -73,7 +94,16 @@ def build_figure(data, cfg, spec, style):
     fig = plt.figure(figsize=style['size_inches'])
     ax = fig.add_axes(style['axes_rect'])
     try:
-        if kind == 'boundary_balanced':
+        if kind == 'centroid_purity':
+            from ..experiments.centroid.plotting import draw_purity_compact
+            selected = selected_purity(data, selection)
+            effective = merge(cfg, {'plot': {'centroid': {
+                'route_labels': style.get('route_labels', {}),
+                'route_colors': style.get('route_colors', {})}}})
+            handles = draw_purity_compact(ax, selected, effective)
+            details = {'routes': selection['routes'], 'rows': len(selected),
+                       'ks': sorted(selected.k.unique().tolist()), 'ylim': list(ax.get_ylim())}
+        elif kind == 'boundary_balanced':
             from ..experiments.boundary.plotting import (
                 background, foreground, contour, darken, labels, COLORS, TARGETS, axis_indicator)
             options = cfg['plot']['boundary']

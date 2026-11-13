@@ -49,7 +49,7 @@
 修改 `figures/figure2.json`：
 
 - `source` 指定 system、workflow、route、stage；可加 `version` 读取对应 `_versions/` 结果。
-- `kind` 支持 `binary`、`overview_classes`、`overview_families`、`boundary_balanced`、`multilabel_combos`、`boundary_silhouette`、`multilabel_ba`。
+- `kind` 支持 `binary`、`overview_classes`、`overview_families`、`boundary_balanced`、`multilabel_combos`、`boundary_silhouette`、`multilabel_ba`、`centroid_purity`。
 - `style` 是全图默认样式；子图中的 `style` 只覆盖本子图。
 - `size_inches` 控制精确画布尺寸，当前为 8 × 8.5 英寸、300 dpi。缩小到论文实际尺寸时应同时调整字体和点大小。
 - `axes_rect` 是绘图区在画布中的相对位置 `[left, bottom, width, height]`，需为上方图例和编号留白。
@@ -123,7 +123,8 @@ k 沿用 Peptidase 配置中的六个组合：`C|M`、`C|N`、`C|S`、`N|S`、`M
 ## Figure 5
 
 配置为 `figures/figure5.json`，输出到 `outputs/paper/figure5/`。
-四张图均复用 overview 的 t-SNE 坐标，按 class 着色并标注每个 class 中数量排名前 15% 的 family 种类。
+b、c、h、i 复用 overview 的 t-SNE 坐标，按 class 着色并标注每个 class 中数量排名前 15% 的 family 种类。
+d、j 分别读取 CAZy、Peptidase 的 centroid summary，绘制 compact kNN class purity，比较 ESM2、Direct L2 NCA、L1-conditioned L2 NCA。主图无标题和 panel 字母，三列横排 legend 单独保存；均导出 PNG/PDF/SVG。纵轴下限根据数据留白（最高为 0.55），上限为 1.02。
 
 | 子图 | 系统 | route | 右下角文字 |
 | --- | --- | --- | --- |
@@ -135,7 +136,10 @@ k 沿用 Peptidase 配置中的六个组合：`C|M`、`C|N`、`C|S`、`N|S`、`M
 ```bash
 .venv/bin/python paper/render.py render paper/figures/figure5.json
 .venv/bin/python paper/render.py render paper/figures/figure5.json --panel b c
+.venv/bin/python paper/render.py render paper/figures/figure5.json --panel d j
 ```
+
+d/j 的输入为 `outputs/<system>/centroid/artifacts/summary/tables`，需包含上述三个 route 的指标；paper 校验文件摘要、route 和 k 的完整性后重绘，不运行 PCA 或重新计算指标。`paper/export.py` 会自动将这两个 summary 输入加入交接包。
 
 ## 按 base model 汇总四页 PDF
 

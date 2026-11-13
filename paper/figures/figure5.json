@@ -54,6 +54,36 @@
       },
       "corner_label": "L1-conditioned L2 NCA"
     },
+    "d": {
+      "kind": "centroid_purity",
+      "source": {
+        "system": "cazy",
+        "workflow": "centroid",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "routes": [
+          "esm2",
+          "esm2__l2-frozen-nca",
+          "esm2__l1-ft-ce__l2-frozen-nca"
+        ]
+      },
+      "style": {
+        "size_inches": [
+          6.4,
+          4.6
+        ],
+        "axes_rect": [
+          0.13,
+          0.16,
+          0.84,
+          0.81
+        ],
+        "legend_fontsize": 10.5,
+        "legend_ncol": 3
+      }
+    },
     "h": {
       "kind": "overview_families",
       "source": {
@@ -79,6 +109,36 @@
         "top_family_fraction": 0.15
       },
       "corner_label": "L1-conditioned L2 NCA"
+    },
+    "j": {
+      "kind": "centroid_purity",
+      "source": {
+        "system": "peptidase",
+        "workflow": "centroid",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "routes": [
+          "esm2",
+          "esm2__l2-frozen-nca",
+          "esm2__l1-ft-ce__l2-frozen-nca"
+        ]
+      },
+      "style": {
+        "size_inches": [
+          6.4,
+          4.6
+        ],
+        "axes_rect": [
+          0.13,
+          0.16,
+          0.84,
+          0.81
+        ],
+        "legend_fontsize": 10.5,
+        "legend_ncol": 3
+      }
     }
   }
 }

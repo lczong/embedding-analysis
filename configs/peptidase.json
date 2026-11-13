@@ -36,6 +36,15 @@
     "idr": "IDR"
   },
   "routes": {
+    "esm2": {
+      "dimensions": 1280,
+      "datasets": {
+        "train": {
+          "format": "csv",
+          "path": "data/peptidase/embeddings/esm2/peptidase_protein_train.embeddings.csv"
+        }
+      }
+    },
     "esm2__l0-ft-ce": {
       "dimensions": 1280,
       "datasets": {
