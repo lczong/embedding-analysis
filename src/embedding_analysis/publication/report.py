@@ -48,13 +48,13 @@ def preset(system, model, root=ROOT, kind="workflow"):
     for workflow in ('boundary', 'multilabel'):
         for level in range(3):
             template = (templates[3]['panels'][('b' if workflow == 'boundary' else 'e')]
-                        if system == 'cazy' else templates[4]['panels'][('h' if workflow == 'boundary' else 'i')])
+                        if system == 'cazy' else templates[4]['panels'][('i' if workflow == 'boundary' else 'j')])
             spec = copy.deepcopy(template)
             spec['source']['route'] = f'{model}__l{level}-ft-ce'
             spec['corner_label'] = f'Level {level}'
             spec['title'] = f'Level {level} | {workflow.title()} UMAP'
             panels[f'{workflow}_l{level}'] = spec
-    for name, cazy_key, pep_key in [('silhouette', 'h', 'j'), ('ba', 'i', 'k')]:
+    for name, cazy_key, pep_key in [('silhouette', 'h', 'k'), ('ba', 'i', 'l')]:
         template = templates[3]['panels'][cazy_key] if system == 'cazy' else templates[4]['panels'][pep_key]
         spec = copy.deepcopy(template)
         routes = [f'{model}__l{i}-ft-ce' for i in range(3)]
