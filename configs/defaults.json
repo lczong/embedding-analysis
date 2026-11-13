@@ -99,6 +99,15 @@
         11
       ],
       "kde_min_samples": 10
+    },
+    "performance": {
+      "font": "Arial",
+      "dpi": 300,
+      "formats": [
+        "png"
+      ],
+      "legend_in_figure": true,
+      "separate_legend": false
     }
   }
 }

@@ -249,5 +249,18 @@
         "non_target_train": "Non-peptidase"
       }
     }
+  },
+  "performance": {
+    "base_model": "esm2",
+    "report": "data/peptidase/performance/reports/peptidase_no_head.md",
+    "source_manifest": "data/peptidase/performance/SOURCE.json",
+    "methods": {
+      "esm2_1nn": "esm2",
+      "l0_ft_1nn": "esm2__l0-ft-ce",
+      "l1_ft_1nn": "esm2__l1-ft-ce",
+      "l2_ft_1nn": "esm2__l2-ft-ce",
+      "l2_nca_from_esm2_1nn": "esm2__l2-frozen-nca",
+      "l2_nca_from_l1_ft_1nn": "esm2__l1-ft-ce__l2-frozen-nca"
+    }
   }
 }

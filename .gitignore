@@ -13,5 +13,13 @@ dist/
 !/data/peptidase/
 !/data/peptidase/metadata/
 !/data/peptidase/metadata/*.tsv
+!/data/cazy/performance/
+!/data/cazy/performance/reports/
+!/data/cazy/performance/reports/*.md
+!/data/cazy/performance/SOURCE.json
+!/data/peptidase/performance/
+!/data/peptidase/performance/reports/
+!/data/peptidase/performance/reports/*.md
+!/data/peptidase/performance/SOURCE.json
 /outputs/
 .cache/

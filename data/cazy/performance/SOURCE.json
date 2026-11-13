@@ -1,0 +1,42 @@
+{
+  "source_repository": "/Users/lczong/Projects/01PER/Performance",
+  "source_commit": "cd485578ec8f5d32631987d0ec2731fdce46ef9b",
+  "system": "cazy",
+  "files": [
+    {
+      "path": "reports/cazy.md",
+      "source_path": "reports/cazy.md",
+      "bytes": 6391,
+      "sha256": "8111c1fe00ba63af6451e395dc602d86606c1a1a873c9a6dbbf6b5b0f5e7838a"
+    },
+    {
+      "path": "reports/cazy_no_head.md",
+      "source_path": "reports/cazy_no_head.md",
+      "bytes": 5241,
+      "sha256": "daea2163ff6049ee9c2f986d17bca4f94dd265b0806d53409aae2e3384446e51"
+    },
+    {
+      "path": "predictions/cazy_binary_predictions.csv",
+      "source_path": "predictions/cazy_binary_predictions.csv",
+      "bytes": 4668720,
+      "sha256": "c93297a725b9b2733bc0c74c81bca561b11bde43bbe1c701471ed1b57744114e"
+    },
+    {
+      "path": "predictions/cazy_family_predictions.csv",
+      "source_path": "predictions/cazy_family_predictions.csv",
+      "bytes": 1435228,
+      "sha256": "1d396d8134ed19bed63fac1d21d135e4af55166b4743b477443feb1304931059"
+    },
+    {
+      "path": "predictions/cazy_l1_predictions.csv",
+      "source_path": "predictions/cazy_l1_predictions.csv",
+      "bytes": 4015103,
+      "sha256": "ef9ec48bb74cdc39bae191121e22c5f5d1c9c4acebf5f4ff1fcc7ec5719680fe"
+    }
+  ],
+  "missing_upstream_references": [
+    "artifacts/cazy/provenance.json",
+    "src/evaluation/test_performance_report.py"
+  ],
+  "note": "Report snapshots supply plotted metrics; prediction CSVs are optional audit data, not recomputed by this workflow."
+}

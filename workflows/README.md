@@ -1,6 +1,6 @@
 # 实验分步操作手册
 
-本文对应当前独立实验实现。每个实验自己管理流程、指标和绘图；公共层提供 PCA、t-SNE/UMAP、数据读写及产物校验。所有指标使用 PCA 特征计算，不使用二维图坐标。输出按系统、workflow、用途和 route 组织。
+本文对应当前独立实验实现。每个实验自己管理流程、指标和绘图；公共层提供 PCA、t-SNE/UMAP、数据读写及产物校验。空间分析指标使用 PCA 特征计算，不使用二维图坐标；performance 直接读取既有测试集报告，不依赖 PCA。输出按系统、workflow、用途和 route 组织。
 
 ## 准备环境、选择系统和路线
 
@@ -467,3 +467,50 @@ bash workflows/overview.sh configs/cazy_raw_pooling.json esm1b__pool-cls visuali
 ```
 
 批处理入口 `workflows/raw_pooling.slurm` 使用 array 0–3，顺序为 ESM-1b CLS、ESM-1b residue mean、ESM2 650M CLS、ESM2 650M residue mean。输出位于 `outputs/cazy/_versions/raw-pooling-20261109/overview/figures/<route>/`，每条路线生成 `tsne_classes.png` 和 `tsne_class_label_family.png`。日志位于 `outputs/cazy/logs/raw-pooling-20261109/`。
+
+## Performance：测试集性能图
+
+此 workflow 从 `data/<system>/performance/reports/*_no_head.md` 导入既有 ESM2 测试结果。它不运行 1-NN、不读取 embedding 或 predictions，也不依赖 PCA。报告中的 1-NN 使用原始 embedding 的 Euclidean 距离且不额外归一化，与 centroid 的 PCA 口径不同。绘图数据仅保留报告已有的百分数精度，不添加置信区间。
+
+```bash
+# 每个系统：解析表格，再生成八张带 legend 的 PNG 主图
+bash workflows/performance.sh configs/cazy.json all
+bash workflows/performance.sh configs/peptidase.json all
+
+# 分步执行
+bash workflows/performance.sh configs/cazy.json tables
+bash workflows/performance.sh configs/cazy.json plots
+
+# 仅绘制两个 compact 图；不会删除其他已完成的图
+bash workflows/performance.sh configs/cazy.json plots --plots 05_macro_f1_comparison 04_level_2_nca_A_overall
+
+# 保存到独立输出版本；all 会把版本同时传给 tables 和 plots
+bash workflows/performance.sh configs/peptidase.json all --version review --plots 04_level_2_nca_A_overall
+```
+
+| 图名（用于 `--plots`） | 内容 |
+| --- | --- |
+| `01_level_0` | L0 Accuracy、Macro-F1、AUROC、AUPRC |
+| `02_level_1_A_overall` | L1 Accuracy、Macro-F1 |
+| `02_level_1_B_per_class` | L1 各类 F1，标注 test support |
+| `03_level_2_A_overall` | L2 Accuracy、Macro-F1 |
+| `03_level_2_B_family_bins` | ESM2 / L2 FT 的 head、body、tail Macro-F1 |
+| `04_level_2_nca_A_overall` | ESM2 / Direct / L1-conditioned NCA 整体指标 compact 对比（替代原 06） |
+| `04_level_2_nca_B_family_bins` | 上述三个模型的分箱 Macro-F1 |
+| `05_macro_f1_comparison` | Membership / Class / Family 三任务 compact 对比 |
+
+默认输出位于 `outputs/<system>/performance/`：
+
+- `tables/summary/metrics.csv`：长表，含 task、section、method、route、label、metric、value，以及 support、test_families、test_samples、total_samples、included_samples。`value` 单位为百分数（0–100），空 bin 为 NaN；`included_samples` 是该任务实际纳入指标的数量。
+- `figures/summary/<图名>.png`：八张主图，legend 随图保存，不单独导出。
+- `figures/index.html`：全部图片预览。
+- `artifacts/summary/tables/manifest.json`：输入摘要、配置、代码摘要与表格校验。
+- `artifacts/summary/plots/<图名>/manifest.json`：每张图独立的缓存、来源与输出摘要，保证按图重画不会清理其他图片。
+
+配置入口为 `performance.report`、`performance.source_manifest`、`performance.methods`（报告方法名到 route 的显式映射）及 `performance.base_model=esm2`。当前导入的报告和图例只描述 ESM2，不会根据其他 backbone 配置自动替换或生成新模型性能。
+
+`plot.performance` 可设置 `font`（默认 Arial，找不到时报错）、`dpi`（300）、`formats`（默认仅 PNG）、`legend_in_figure`（true）、`separate_legend`（false）。将 `legend_in_figure` 设为 false 可输出不带图例的主图；保留轴与画布尺寸。所有主图延续旧代码的固定轴长、柱宽和间距，普通图分值轴 4.4 英寸；两个 compact 图使用各自的紧凑尺寸。分值轴 0–110，刻度到 100，柱图从零开始。
+
+`tables` 校验必要任务、方法、类别、分箱、重复记录、百分数范围与测试集样本数；Peptidase tail 无样本时只允许 N/A，不转成零。每次导入对报告和来源记录计算完整 SHA-256，输入变化会使 tables 缓存失效；执行 tables 后，plots 会根据新表格重画。单独执行 plots 始终使用已完成的 tables 快照。预测 CSV 只作来源核查，不参与缓存或绘图。
+
+四份报告及 `SOURCE.json` 随 Git 保存，六份预测 CSV 已复制到本地但仍忽略。迁移记录及旧报告缺失的上游引用见 [数据说明](../data/README.md#performance-输入)。绘图函数 `performance.plotting.build_figure` 返回 figure、axes、legend handles 和布局参数，可供后续 paper 面板复用；本次未改变任何论文 panel 配置。

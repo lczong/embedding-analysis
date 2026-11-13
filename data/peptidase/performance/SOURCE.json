@@ -1,0 +1,42 @@
+{
+  "source_repository": "/Users/lczong/Projects/01PER/Performance",
+  "source_commit": "cd485578ec8f5d32631987d0ec2731fdce46ef9b",
+  "system": "peptidase",
+  "files": [
+    {
+      "path": "reports/peptidase.md",
+      "source_path": "reports/peptidase.md",
+      "bytes": 6503,
+      "sha256": "7d888cd73e10d1ae45330ef73e8e5abfdcf354af525d1de83ab5ddea4186aca6"
+    },
+    {
+      "path": "reports/peptidase_no_head.md",
+      "source_path": "reports/peptidase_no_head.md",
+      "bytes": 5319,
+      "sha256": "31437be25bc0c465a9b63e8378d7b35de49b1741963ba33171b8121e021be0ae"
+    },
+    {
+      "path": "predictions/peptidase_binary_predictions.csv",
+      "source_path": "predictions/peptidase_binary_predictions.csv",
+      "bytes": 3594628,
+      "sha256": "a9f61c317ca37f062ec02a53cf06185ef7d0b98ff8918c62ebe383d9bcd45c15"
+    },
+    {
+      "path": "predictions/peptidase_family_predictions.csv",
+      "source_path": "predictions/peptidase_family_predictions.csv",
+      "bytes": 995658,
+      "sha256": "38f0d7764ab49b54b8b989fd26c609f7b2b7c32e2481cd51bce5c766820e7de7"
+    },
+    {
+      "path": "predictions/peptidase_l1_predictions.csv",
+      "source_path": "predictions/peptidase_l1_predictions.csv",
+      "bytes": 3096959,
+      "sha256": "446719cd1b863b16e5a9a67e3d37a9257bd54929d9dbc055f18e4913b1763aef"
+    }
+  ],
+  "missing_upstream_references": [
+    "artifacts/peptidase/provenance.json",
+    "src/evaluation/test_performance_report.py"
+  ],
+  "note": "Report snapshots supply plotted metrics; prediction CSVs are optional audit data, not recomputed by this workflow."
+}
