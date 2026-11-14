@@ -22,8 +22,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path)
     parser.add_argument('--data-only', action='store_true',
-                        help='Export only ignored inputs/reference PNGs, for extraction into a Git clone')
-    parser.add_argument('--nae-only', action='store_true', help='Bundle only NAE panel inputs and reference PNGs')
+                        help='Export only ignored inputs, for extraction into a Git clone')
+    parser.add_argument('--nae-only', action='store_true', help='Bundle only NAE panel inputs')
+    parser.add_argument('--include-reference', action='store_true',
+                        help='Also include current panel and assembled reference PNGs')
     args = parser.parse_args()
     files = {}
 
@@ -57,11 +59,28 @@ def main():
                 checkpoint = checkpoint/'_versions'/source['version']
             checkpoint = checkpoint/source['workflow']/'artifacts'/source['route']/source['stage']
             checkpoints.add(checkpoint)
-        for path in (ROOT/'outputs/paper'/config['figure']).glob('*.png'):
-            if args.nae_only and path.stem not in {*panels, *(name+'_legend' for name in panels)}:
-                continue
+        if args.include_reference:
+            for path in (ROOT/'outputs/paper'/config['figure']).glob('*.png'):
+                if args.nae_only and path.stem not in {*panels, *(name+'_legend' for name in panels)}:
+                    continue
+                prefix = 'outputs/paper-reference' if args.data_only else 'reference'
+                add(path, f'{prefix}/{config["figure"]}/{path.name}')
+    # Layouts also depend on externally authored panels with no render manifest.
+    # Keep these at their original paths so a clone can assemble after rendering.
+    assembly_inputs = set()
+    if not args.nae_only:
+        for layout_path in sorted((ROOT/'paper/layouts').glob('*.json')):
+            layout = json.loads(layout_path.read_text())
+            for figure, placement in layout['figures'].items():
+                for item in placement['items']:
+                    source = (ROOT/'outputs/paper'/figure/item['source']).resolve()
+                    if source.suffix and not source.with_suffix('.manifest.json').exists():
+                        add(source)
+                        assembly_inputs.add(source.relative_to(ROOT).as_posix())
+        if args.include_reference:
             prefix = 'outputs/paper-reference' if args.data_only else 'reference'
-            add(path, f'{prefix}/{config["figure"]}/{path.name}')
+            for path in sorted((ROOT/'outputs/paper/assembled').glob('figure[0-9].png')):
+                add(path, f'{prefix}/assembled/{path.name}')
     for checkpoint in sorted(checkpoints):
         manifest_path = checkpoint/'manifest.json'
         add(manifest_path)
@@ -77,6 +96,8 @@ def main():
     manifest = {'mode': 'data-only' if args.data_only else 'standalone',
                 'selection': 'nae' if args.nae_only else 'all',
                 'figures': figures, 'checkpoints': len(checkpoints),
+                'assembly_inputs': sorted(assembly_inputs),
+                'include_reference': args.include_reference,
                 'base_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                 'working_tree': subprocess.check_output(['git', 'status', '--short'], cwd=ROOT, text=True),
                 'files': {name: {'bytes': path.stat().st_size, 'sha256': digest(path)}

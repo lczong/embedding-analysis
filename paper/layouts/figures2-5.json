@@ -8,7 +8,7 @@
     "figure2": {
       "items": [
         {
-          "source": "2ab.pdf",
+          "source": "../assets/figure2/2ab.pdf",
           "box": [
             35,
             25,
@@ -173,7 +173,7 @@
     "figure3": {
       "items": [
         {
-          "source": "3a.pdf",
+          "source": "../assets/figure3/3a.pdf",
           "box": [
             35,
             25,
@@ -341,7 +341,7 @@
     "figure4": {
       "items": [
         {
-          "source": "4a.pdf",
+          "source": "../assets/figure4/4a.pdf",
           "box": [
             40,
             25,
@@ -593,7 +593,7 @@
     "figure5": {
       "items": [
         {
-          "source": "5a.pdf",
+          "source": "../assets/figure5/5a.pdf",
           "box": [
             40,
             25,

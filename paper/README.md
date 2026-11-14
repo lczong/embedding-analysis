@@ -8,7 +8,8 @@
 完整流程见 [HANDOFF.md](HANDOFF.md#推荐git-分支--pr-持续协作)。
 
 运行 `.venv/bin/python paper/export.py` 生成 `outputs/handoff/paper-handoff.zip`。
-包含全部论文图配置、代码、所需的源坐标/指标及 manifest，以及当前 PNG 对照图。
+包含全部论文图配置、代码、所需的源坐标/指标及 manifest，以及拼版用的手动示意图。
+默认不含 PNG 对照图；需要时添加 `--include-reference`（也适用于 `--data-only`）。
 不包含原始 embedding、虚拟环境或 Git 历史。重复引用的输入只打包一次。
 协作者解压后先看 `START_HERE.md`；详细安装和布局修改说明见 [HANDOFF.md](HANDOFF.md)。
 只渲染论文图时安装 `paper/requirements.txt` 即可，无需 openTSNE 或 umap-learn。
@@ -42,7 +43,7 @@ c/d/e 读取现有 t-SNE 坐标。e 沿用每个 class 内按数量排名的前 
 
 输出在 `outputs/paper/figure2/`：每张子图独立的 PNG、PDF、SVG 和 `.manifest.json`，预览集中在 `outputs/paper/preview/`，打开其中的 `index.html` 可浏览所有 Figure。
 可运行 `.venv/bin/python paper/render.py preview`，仅更新预览页面，无需重新绘图。每次 render 也会自动刷新预览。
-手动添加的 panel（如 `figure2/2ab.pdf`、`figure3/3a.pdf`，也支持 `a.png` / `ab.svg`）会自动放在预览最前面，并保留原文件链接。PDF 使用 Poppler 的 `pdftoppm` 生成缩略图，缓存在 `preview/assets/`；未安装时使用浏览器内嵌 PDF。
+手动添加的 panel（如 `assets/figure2/2ab.pdf`、`assets/figure3/3a.pdf`，也支持 `a.png` / `ab.svg`）会自动放在预览最前面，并保留原文件链接。PDF 使用 Poppler 的 `pdftoppm` 生成缩略图，缓存在 `preview/assets/`；未安装时使用浏览器内嵌 PDF。
 
 主图右下角内部标注 Level 0、Level 1、Level 2，不显示顶部标题或 c/d/e 编号。图例单独保存为 `c_legend.*`、`d_legend.*`、`e_legend.*`，同样导出三种格式。c 的图例使用 Non-CAZyme 和 CAZyme。
 支持整组导出，不自动拼成整张 Figure 2。单图重画保留其他子图及其来源记录。
@@ -283,7 +284,7 @@ NAE survival 的比例可通过 panel 的 `style.survival_panel_width`（每个 
 
 ## 整页拼版（Figure 2–5）
 
-准备好全部子图，以及各 Figure 目录中的 `2ab.pdf`、`3a.pdf`、`4a.pdf`、
+准备好全部子图，以及 `outputs/paper/assets/figureN/` 中的 `2ab.pdf`、`3a.pdf`、`4a.pdf`、
 `5a.pdf` 后运行 `.venv/bin/python paper/assemble.py`。
 
 需要安装 `paper/requirements.txt`，以及系统 Poppler（`pdftoppm`）与 Cairo；
@@ -307,3 +308,8 @@ Mean NAE matrix 的 standard/transition 统一使用 `style.matrix_cell_width=1.
 
 当前全部 mean NAE matrix 拼版显式设置 `scale: 0.6`。显式 scale 优先于自动适配，
 以 box 中心定位，可超出预留 box，但不得超出页面；同组矩阵应填写相同值。
+
+输出目录约定：`outputs/paper/assets/figureN/` 保存手动示意图，
+`assets/reference/` 保存参考 PDF/PPTX；`figureN/` 只保存生成的子图，
+`assembled/` 保存整页，`preview/` 保存浏览入口。`outputs/handoff/` 保存最新交接包，
+历史解压副本与旧包放在 `outputs/archive/`，不参与绘图或打包。

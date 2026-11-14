@@ -72,7 +72,7 @@ def assemble(config_path, output):
         prepared = []
         group_scales = {}
         for item in layout['items']:
-            stem = ROOT/'outputs'/'paper'/figure/item['source']
+            stem = (ROOT/'outputs'/'paper'/figure/item['source']).resolve()
             candidates = [stem] if stem.suffix else [stem.with_suffix(ext) for ext in ('.pdf','.svg')]
             source = next((p for p in candidates if p.is_file()), None)
             if source is None:

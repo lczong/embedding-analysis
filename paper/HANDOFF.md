@@ -39,13 +39,13 @@ git push -u origin paper/figure3-layout
 
 数据未变化时无需重复发送。如果增加数据来源或重新计算坐标/指标，作者重新导出数据包，并说明对应的代码提交号。
 数据包中的 `outputs/handoff/INPUTS_MANIFEST.json` 记录基准提交和文件校验和。
-`outputs/paper-reference/` 是打包时的对照图，不是最新渲染目录。
+默认不打包对照图。仅添加 `--include-reference` 时，包内才有 `outputs/paper-reference/`，用于保存打包时的对照图。
 
 ## 备用：独立压缩包
 
 这个包包含 Figure 2–5 的绘图代码、配置、实际使用的坐标和逐样本指标。
 无需原始 embedding、PCA 模型、UMAP/t-SNE 重算或原作者电脑上的目录。
-`reference/` 保存打包时的主图和独立图例 PNG，供对照。
+独立包同样默认不含对照图；添加 `--include-reference` 可将主图和独立图例 PNG 放入 `reference/`。
 
 ## 安装和运行
 
@@ -108,3 +108,11 @@ Windows 使用 `py -3.11 -m venv .venv` 创建环境，将 `.venv/bin/python` �
 
 包根目录的 `HANDOFF_MANIFEST.json` 记录全部随包文件的 SHA256、源代码提交号和打包时的工作区状态。
 完整参数和 Figure 面板映射见 `paper/README.md`。
+
+### 整页拼版输入
+
+完整 inputs 包也包含布局引用的手动示意图（当前为 `2ab.pdf`、`3a.pdf`、
+`4a.pdf`、`5a.pdf`），解压后位于 `outputs/paper/assets/figureN/`。
+添加 `--include-reference` 时，`outputs/paper-reference/assembled/` 提供整页 PNG 对照图。
+完成子图 render 后运行 `.venv/bin/python paper/assemble.py` 重建整页 PDF。
+布局及拼版代码通过 Git 同步；数据包不包含原始 embedding。

@@ -203,7 +203,11 @@ def render_panel(destination, panel_id, spec, style, data, cfg, provenance, conf
 def manual_panel_cards(dest, preview_dir):
     """Include externally authored panels without publication manifests."""
     groups = {}
-    for path in sorted(dest.iterdir()):
+    asset_dir = dest.parent/'assets'/dest.name
+    paths = list(dest.iterdir()) + (list(asset_dir.iterdir()) if asset_dir.is_dir() else [])
+    def href(path):
+        return html.escape(os.path.relpath(path, preview_dir))
+    for path in sorted(paths):
         match = re.fullmatch(r'(?:' + re.escape(dest.name.removeprefix('figure')) +
                              r')?([a-z]+)', path.stem)
         if (not path.is_file() or path.suffix.lower() not in {'.png', '.svg', '.pdf'}
@@ -213,12 +217,12 @@ def manual_panel_cards(dest, preview_dir):
     cards = []
     for panel_id, paths in sorted(groups.items()):
         links = ' · '.join(
-            f'<a href="../{dest.name}/{html.escape(p.name)}">{html.escape(p.name)}</a>'
+            f'<a href="{href(p)}">{html.escape(p.name)}</a>'
             for p in paths)
         image = next((p for ext in ('.png', '.svg') for p in paths
                       if p.suffix.lower() == ext), None)
         if image is not None:
-            preview = f'<img src="../{dest.name}/{html.escape(image.name)}" alt="Panel {panel_id}">'
+            preview = f'<img src="{href(image)}" alt="Panel {panel_id}">'
         else:
             pdf = paths[0]
             renderer = shutil.which('pdftoppm')
@@ -235,7 +239,7 @@ def manual_panel_cards(dest, preview_dir):
                     f'<img src="assets/{html.escape(p.name)}" alt="Panel {panel_id}">'
                     for p in thumbnails)
             else:
-                preview = (f'<object data="../{dest.name}/{html.escape(pdf.name)}" '
+                preview = (f'<object data="{href(pdf)}" '
                            f'type="application/pdf" width="100%" height="440">{links}</object>')
         cards.append(f'<article><h2>{panel_id}</h2>{preview}<p>{links}</p></article>')
     return cards
