@@ -42,6 +42,7 @@ c/d/e 读取现有 t-SNE 坐标。e 沿用每个 class 内按数量排名的前 
 
 输出在 `outputs/paper/figure2/`：每张子图独立的 PNG、PDF、SVG 和 `.manifest.json`，预览集中在 `outputs/paper/preview/`，打开其中的 `index.html` 可浏览所有 Figure。
 可运行 `.venv/bin/python paper/render.py preview`，仅更新预览页面，无需重新绘图。每次 render 也会自动刷新预览。
+手动添加的 panel（如 `figure2/2ab.pdf`、`figure3/3a.pdf`，也支持 `a.png` / `ab.svg`）会自动放在预览最前面，并保留原文件链接。PDF 使用 Poppler 的 `pdftoppm` 生成缩略图，缓存在 `preview/assets/`；未安装时使用浏览器内嵌 PDF。
 
 主图右下角内部标注 Level 0、Level 1、Level 2，不显示顶部标题或 c/d/e 编号。图例单独保存为 `c_legend.*`、`d_legend.*`、`e_legend.*`，同样导出三种格式。c 的图例使用 Non-CAZyme 和 CAZyme。
 支持整组导出，不自动拼成整张 Figure 2。单图重画保留其他子图及其来源记录。
@@ -276,3 +277,22 @@ NAE 已接入统一 renderer，使用本地 `outputs/<system>/nae/artifacts/summ
 ```
 
 保留源代码的曲线方向 `P(NAE ≥ x)`、精确阈值和 x=1 满分比例；显示窗口为 [-1,1]，输入中更低的分数不被截断。均值为未加权原始均值，缺失值不填零。Survival 按 relation 求跨空间共同有效 ID；mean matrix 按相应完整 standard/transition 关系组及空间取交集，即便只显示一列也不另算 cohort。两种图、两组空间的 cohort 不强行合并。Peptidase 使用 Type 标签，沿用原始配色、矩阵尺寸和 winner 标记，不添加总标题或样本量脚注。
+
+## 整页拼版（Figure 2–5）
+
+准备好全部子图，以及各 Figure 目录中的 `2ab.pdf`、`3a.pdf`、`4a.pdf`、
+`5a.pdf` 后运行 `.venv/bin/python paper/assemble.py`。
+
+需要安装 `paper/requirements.txt`，以及系统 Poppler（`pdftoppm`）与 Cairo；
+macOS 可使用 `brew install poppler cairo`。拼版不运行实验或重绘数据。
+优先嵌入子图 PDF；仅有 SVG 的 NAE 图通过 CairoSVG 转为矢量 PDF。
+源图中已有的栅格化散点保持原样，文字及其他矢量元素保留。
+
+布局位于 `paper/layouts/figures2-5.json`：
+`page_size` 和 `box: [x, y, width, height]` 单位为 PDF point，原点在页面左上角；
+`labels` 单独控制 panel 字母。图片按比例适配指定区域，自动裁掉外围空白。
+图例作为独立元素摆放。可用 `--layout` 指定另一份布局、`--output` 指定输出目录。
+
+默认输出 `outputs/paper/assembled/`，包含四个单页 PDF、合并的 `figures2-5.pdf`、
+四张 PNG 预览与记录输入校验值、裁切和布局的 manifest。
+预览总入口自动增加默认目录下的整页文件链接。

@@ -5,6 +5,8 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
+import subprocess
 import tempfile
 
 from ..artifacts import artifact_file, file_digest, ready, write_json
@@ -198,17 +200,60 @@ def render_panel(destination, panel_id, spec, style, data, cfg, provenance, conf
                 (destination / name).unlink(missing_ok=True)
 
 
+def manual_panel_cards(dest, preview_dir):
+    """Include externally authored panels without publication manifests."""
+    groups = {}
+    for path in sorted(dest.iterdir()):
+        match = re.fullmatch(r'(?:' + re.escape(dest.name.removeprefix('figure')) +
+                             r')?([a-z]+)', path.stem)
+        if (not path.is_file() or path.suffix.lower() not in {'.png', '.svg', '.pdf'}
+                or not match or (dest/f'{path.stem}.manifest.json').exists()):
+            continue
+        groups.setdefault(match[1], []).append(path)
+    cards = []
+    for panel_id, paths in sorted(groups.items()):
+        links = ' · '.join(
+            f'<a href="../{dest.name}/{html.escape(p.name)}">{html.escape(p.name)}</a>'
+            for p in paths)
+        image = next((p for ext in ('.png', '.svg') for p in paths
+                      if p.suffix.lower() == ext), None)
+        if image is not None:
+            preview = f'<img src="../{dest.name}/{html.escape(image.name)}" alt="Panel {panel_id}">'
+        else:
+            pdf = paths[0]
+            renderer = shutil.which('pdftoppm')
+            if renderer:
+                cache = preview_dir/'assets'
+                cache.mkdir(exist_ok=True)
+                prefix = cache/f'{dest.name}_{pdf.stem}_{file_digest(pdf)[:16]}'
+                thumbnails = sorted(cache.glob(prefix.name+'-*.png'))
+                if not thumbnails:
+                    subprocess.run([renderer, '-png', '-scale-to', '1400',
+                                    str(pdf), str(prefix)], check=True, capture_output=True)
+                    thumbnails = sorted(cache.glob(prefix.name+'-*.png'))
+                preview = ''.join(
+                    f'<img src="assets/{html.escape(p.name)}" alt="Panel {panel_id}">'
+                    for p in thumbnails)
+            else:
+                preview = (f'<object data="../{dest.name}/{html.escape(pdf.name)}" '
+                           f'type="application/pdf" width="100%" height="440">{links}</object>')
+        cards.append(f'<article><h2>{panel_id}</h2>{preview}<p>{links}</p></article>')
+    return cards
+
+
 def refresh_previews(root=ROOT):
     paper_dir = root/'outputs'/'paper'
     preview_dir = paper_dir/'preview'
     preview_dir.mkdir(parents=True, exist_ok=True)
     figures = []
     for dest in sorted(paper_dir.glob('figure*')):
-        if not dest.is_dir() or not any(dest.glob('*.manifest.json')):
+        if not dest.is_dir():
             continue
         figure = safe_name(dest.name)
+        cards = manual_panel_cards(dest, preview_dir)
+        if not cards and not any(dest.glob('*.manifest.json')):
+            continue
         figures.append(figure)
-        cards = []
         for p in sorted(dest.glob('*.manifest.json')):
             panel_id = p.name.removesuffix('.manifest.json')
             record = json.loads(p.read_text())
@@ -235,10 +280,17 @@ def refresh_previews(root=ROOT):
             '</style><nav><a href="index.html">All figures</a></nav><h1>'+figure+'</h1><main>'+''.join(cards)+'</main>')
         (dest/'index.html').unlink(missing_ok=True)
     links = ''.join(f'<li><a href="{figure}.html">{figure}</a></li>' for figure in figures)
+    assembled = paper_dir/'assembled'
+    assembly_links = ''
+    if (assembled/'figures2-5.pdf').is_file():
+        assembly_links = '<h2>Assembled figures</h2><p><a href="../assembled/figures2-5.pdf">Figures 2–5 PDF</a></p>'
+        for pdf in sorted(assembled.glob('figure[0-9].pdf')):
+            assembly_links += (f'<p><a href="../assembled/{pdf.name}">{pdf.stem} PDF</a>'
+                               f' · <a href="../assembled/{pdf.stem}.png">PNG preview</a></p>')
     (preview_dir/'index.html').write_text(
         '<!doctype html><meta charset="utf-8"><title>Paper previews</title>'
         '<style>body{font:18px sans-serif;margin:32px}li{margin:16px 0}</style>'
-        '<h1>Paper figures</h1><ul>'+links+'</ul>')
+        '<h1>Paper figures</h1>'+assembly_links+'<h2>Individual panels</h2><ul>'+links+'</ul>')
     return preview_dir/'index.html'
 
 
