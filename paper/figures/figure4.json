@@ -194,6 +194,136 @@
           "esm2__l2-ft-ce": "Level 2"
         }
       }
+    },
+    "f": {
+      "kind": "nae_survival",
+      "source": {
+        "system": "peptidase",
+        "workflow": "nae",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "peptidase_membership",
+              "peptidase_class",
+              "peptidase_family"
+            ]
+          }
+        ]
+      },
+      "style": {
+        "formats": [
+          "png",
+          "svg"
+        ],
+        "dpi": 300,
+        "bbox_inches": "tight",
+        "legend_ncol": 4,
+        "legend_fontsize": 12
+      },
+      "title": ""
+    },
+    "g": {
+      "kind": "nae_survival",
+      "source": {
+        "system": "peptidase",
+        "workflow": "nae",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "transition",
+            "relations": [
+              "membership_across_class",
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "style": {
+        "formats": [
+          "png",
+          "svg"
+        ],
+        "dpi": 300,
+        "bbox_inches": "tight",
+        "legend_ncol": 4,
+        "legend_fontsize": 12
+      },
+      "title": ""
+    },
+    "h_standard": {
+      "kind": "nae_matrix",
+      "source": {
+        "system": "peptidase",
+        "workflow": "nae",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "peptidase_membership",
+              "peptidase_class",
+              "peptidase_family"
+            ]
+          }
+        ]
+      },
+      "style": {
+        "formats": [
+          "png",
+          "svg"
+        ],
+        "dpi": 300,
+        "bbox_inches": "tight",
+        "legend_ncol": 4,
+        "legend_fontsize": 12
+      },
+      "title": ""
+    },
+    "h_transition": {
+      "kind": "nae_matrix",
+      "source": {
+        "system": "peptidase",
+        "workflow": "nae",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "transition",
+            "relations": [
+              "membership_across_class",
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "style": {
+        "formats": [
+          "png",
+          "svg"
+        ],
+        "dpi": 300,
+        "bbox_inches": "tight",
+        "legend_ncol": 4,
+        "legend_fontsize": 12
+      },
+      "title": ""
     }
   }
 }

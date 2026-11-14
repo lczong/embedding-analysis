@@ -114,6 +114,9 @@ def build_figure(data, cfg, spec, style):
     from .panels import draw_panel
     kind, selection = spec['kind'], spec.get('selection', {})
     method = {'tsne': 't-SNE', 'umap': 'UMAP'}.get(spec['source']['stage'])
+    if kind.startswith('nae_'):
+        from ..experiments.nae.plotting import build_figure as nae_figure
+        return nae_figure(data, cfg, spec, style)
     if kind == 'multilabel_combos':
         return multilabel_figure(data, cfg, selection, style, method)
     if kind == 'performance':

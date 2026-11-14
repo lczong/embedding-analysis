@@ -247,3 +247,30 @@ outputs/paper/reports/cazy/esm1b/nca-20261109/cazy_esm1b_nca-20261109_nca.pdf
 新训练批次使用 `configs/cazy_nca_backbones.json`：六条路线均只配置 `projected/cazy_train.embeddings.csv`，256 维，输入目录软链接位于 `data/cazy/embeddings/<route>/`。源 run 与 feature source 写入配置，metadata 沿用本仓库 CAZy train。先全量校验，再在 train 上 L2 normalize + PCA100、t-SNE，未使用 val/test 拟合。
 
 `workflows/nca_backbones.slurm route` 使用 array 0–5，依次对应 ESM-1b direct/conditioned、ESM2 150M direct/conditioned、ESM2 35M direct/conditioned。`report` 模式生成三份单页 PDF；提交时设置 array 成功后的 `afterok` 依赖。运行版本固定为 `nca-20261109`，源训练批次为 `20261109_093908`。重画 PDF 不必重跑 t-SNE。
+
+## NAE panels
+
+NAE 已接入统一 renderer，使用本地 `outputs/<system>/nae/artifacts/summary/tables/` 的物理副本。代码位于 `src/embedding_analysis/experiments/nae/`；输入导入步骤见 [workflow 文档](../workflows/README.md#nae-paper-panels)。
+
+| Figure | 系统 | Survival | Mean matrix |
+| --- | --- | --- | --- |
+| 2 | CAZy，ESM2/L0/L1/L2 | g、h | i_standard、i_transition |
+| 4 | Peptidase，ESM2/L0/L1/L2 | f、g | h_standard、h_transition |
+| 5 | CAZy，ESM2/Direct NCA/L1-conditioned NCA | f | g_standard、g_transition |
+| 5 | Peptidase，同上 | l | m_standard、m_transition |
+
+每个组件输出 PNG、SVG 和来源 manifest 到 `outputs/paper/figureN/`，survival 另有 `<panel>_legend`，矩阵组件分别保留以便拼版。原始命名及本地文件映射在 `paper/nae_panel_mapping.json`。
+
+```bash
+# 只选 NAE，无需其他 embedding/performance 输入
+.venv/bin/python workflows/nae.py render --system cazy
+.venv/bin/python workflows/nae.py render --system peptidase
+# 也可按单个组件检查或重画
+.venv/bin/python paper/render.py check paper/figures/figure2.json --panel g h i_standard i_transition
+.venv/bin/python paper/render.py render paper/figures/figure5.json --panel f g_standard g_transition
+# 将忽略的输入与参考 PNG 打包，解压到同版本 Git clone 即可重画
+.venv/bin/python paper/export.py --nae-only --data-only
+# 默认输出 outputs/handoff/nae-paper-inputs.zip
+```
+
+保留源代码的曲线方向 `P(NAE ≥ x)`、精确阈值和 x=1 满分比例；显示窗口为 [-1,1]，输入中更低的分数不被截断。均值为未加权原始均值，缺失值不填零。Survival 按 relation 求跨空间共同有效 ID；mean matrix 按相应完整 standard/transition 关系组及空间取交集，即便只显示一列也不另算 cohort。两种图、两组空间的 cohort 不强行合并。Peptidase 使用 Type 标签，沿用原始配色、矩阵尺寸和 winner 标记，不添加总标题或样本量脚注。

@@ -1,0 +1,406 @@
+{
+  "file_extensions": [
+    "png",
+    "svg"
+  ],
+  "cohort": "train",
+  "k": 50,
+  "style": "No overall titles, sample-count subtitles, or footnotes. Relation labels, axes, endpoint percentages, cell values and colorbars retained. Legends exported separately.",
+  "panels": {
+    "figure2_g": {
+      "files": [
+        "figure2_g_cazy_standard_survival"
+      ],
+      "relations": [
+        "membership",
+        "class",
+        "family"
+      ],
+      "spaces": "four_spaces"
+    },
+    "figure2_h": {
+      "files": [
+        "figure2_h_cazy_transition_survival"
+      ],
+      "relations": [
+        "membership across class",
+        "class across family"
+      ],
+      "spaces": "four_spaces"
+    },
+    "figure2_i": {
+      "files": [
+        "figure2_i_cazy_standard_matrix",
+        "figure2_i_cazy_transition_matrix"
+      ],
+      "description": "Corresponding standard and transitional mean matrices",
+      "spaces": "four_spaces"
+    },
+    "figure4_f": {
+      "files": [
+        "figure4_f_peptidase_standard_survival"
+      ],
+      "relations": [
+        "membership",
+        "type",
+        "family"
+      ],
+      "spaces": "four_spaces"
+    },
+    "figure4_g": {
+      "files": [
+        "figure4_g_peptidase_transition_survival"
+      ],
+      "relations": [
+        "membership across type",
+        "type across family"
+      ],
+      "spaces": "four_spaces"
+    },
+    "figure4_h": {
+      "files": [
+        "figure4_h_peptidase_standard_matrix",
+        "figure4_h_peptidase_transition_matrix"
+      ],
+      "description": "Corresponding standard and transitional mean matrices",
+      "spaces": "four_spaces"
+    },
+    "figure5_f": {
+      "files": [
+        "figure5_f_cazy_survival"
+      ],
+      "left": "family standard",
+      "right": "class across family transitional",
+      "spaces": "esm2_vs_nca"
+    },
+    "figure5_g": {
+      "left": "figure5_g_cazy_standard_matrix",
+      "right": "figure5_g_cazy_transition_matrix",
+      "spaces": "esm2_vs_nca"
+    },
+    "figure5_l": {
+      "files": [
+        "figure5_l_peptidase_survival"
+      ],
+      "left": "family standard",
+      "right": "type across family transitional",
+      "spaces": "esm2_vs_nca"
+    },
+    "figure5_m": {
+      "left": "figure5_m_peptidase_standard_matrix",
+      "right": "figure5_m_peptidase_transition_matrix",
+      "spaces": "esm2_vs_nca"
+    }
+  },
+  "legends": {
+    "four_spaces": "legend_four_spaces",
+    "esm2_vs_nca": "legend_esm2_vs_nca"
+  },
+  "local_components": {
+    "figure2/g": {
+      "kind": "nae_survival",
+      "system": "cazy",
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "is_cazy",
+              "cazy_class",
+              "cazy_family"
+            ]
+          }
+        ]
+      },
+      "files": [
+        "outputs/paper/figure2/g.png",
+        "outputs/paper/figure2/g.svg"
+      ],
+      "legend": "outputs/paper/figure2/g_legend"
+    },
+    "figure2/h": {
+      "kind": "nae_survival",
+      "system": "cazy",
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "transition",
+            "relations": [
+              "membership_across_class",
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "files": [
+        "outputs/paper/figure2/h.png",
+        "outputs/paper/figure2/h.svg"
+      ],
+      "legend": "outputs/paper/figure2/h_legend"
+    },
+    "figure2/i_standard": {
+      "kind": "nae_matrix",
+      "system": "cazy",
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "is_cazy",
+              "cazy_class",
+              "cazy_family"
+            ]
+          }
+        ]
+      },
+      "files": [
+        "outputs/paper/figure2/i_standard.png",
+        "outputs/paper/figure2/i_standard.svg"
+      ],
+      "legend": null
+    },
+    "figure2/i_transition": {
+      "kind": "nae_matrix",
+      "system": "cazy",
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "transition",
+            "relations": [
+              "membership_across_class",
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "files": [
+        "outputs/paper/figure2/i_transition.png",
+        "outputs/paper/figure2/i_transition.svg"
+      ],
+      "legend": null
+    },
+    "figure4/f": {
+      "kind": "nae_survival",
+      "system": "peptidase",
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "peptidase_membership",
+              "peptidase_class",
+              "peptidase_family"
+            ]
+          }
+        ]
+      },
+      "files": [
+        "outputs/paper/figure4/f.png",
+        "outputs/paper/figure4/f.svg"
+      ],
+      "legend": "outputs/paper/figure4/f_legend"
+    },
+    "figure4/g": {
+      "kind": "nae_survival",
+      "system": "peptidase",
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "transition",
+            "relations": [
+              "membership_across_class",
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "files": [
+        "outputs/paper/figure4/g.png",
+        "outputs/paper/figure4/g.svg"
+      ],
+      "legend": "outputs/paper/figure4/g_legend"
+    },
+    "figure4/h_standard": {
+      "kind": "nae_matrix",
+      "system": "peptidase",
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "peptidase_membership",
+              "peptidase_class",
+              "peptidase_family"
+            ]
+          }
+        ]
+      },
+      "files": [
+        "outputs/paper/figure4/h_standard.png",
+        "outputs/paper/figure4/h_standard.svg"
+      ],
+      "legend": null
+    },
+    "figure4/h_transition": {
+      "kind": "nae_matrix",
+      "system": "peptidase",
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "transition",
+            "relations": [
+              "membership_across_class",
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "files": [
+        "outputs/paper/figure4/h_transition.png",
+        "outputs/paper/figure4/h_transition.svg"
+      ],
+      "legend": null
+    },
+    "figure5/f": {
+      "kind": "nae_survival",
+      "system": "cazy",
+      "selection": {
+        "space_group": "esm2_vs_nca",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "cazy_family"
+            ]
+          },
+          {
+            "analysis": "transition",
+            "relations": [
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "files": [
+        "outputs/paper/figure5/f.png",
+        "outputs/paper/figure5/f.svg"
+      ],
+      "legend": "outputs/paper/figure5/f_legend"
+    },
+    "figure5/g_standard": {
+      "kind": "nae_matrix",
+      "system": "cazy",
+      "selection": {
+        "space_group": "esm2_vs_nca",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "cazy_family"
+            ]
+          }
+        ]
+      },
+      "files": [
+        "outputs/paper/figure5/g_standard.png",
+        "outputs/paper/figure5/g_standard.svg"
+      ],
+      "legend": null
+    },
+    "figure5/g_transition": {
+      "kind": "nae_matrix",
+      "system": "cazy",
+      "selection": {
+        "space_group": "esm2_vs_nca",
+        "parts": [
+          {
+            "analysis": "transition",
+            "relations": [
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "files": [
+        "outputs/paper/figure5/g_transition.png",
+        "outputs/paper/figure5/g_transition.svg"
+      ],
+      "legend": null
+    },
+    "figure5/l": {
+      "kind": "nae_survival",
+      "system": "peptidase",
+      "selection": {
+        "space_group": "esm2_vs_nca",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "peptidase_family"
+            ]
+          },
+          {
+            "analysis": "transition",
+            "relations": [
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "files": [
+        "outputs/paper/figure5/l.png",
+        "outputs/paper/figure5/l.svg"
+      ],
+      "legend": "outputs/paper/figure5/l_legend"
+    },
+    "figure5/m_standard": {
+      "kind": "nae_matrix",
+      "system": "peptidase",
+      "selection": {
+        "space_group": "esm2_vs_nca",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "peptidase_family"
+            ]
+          }
+        ]
+      },
+      "files": [
+        "outputs/paper/figure5/m_standard.png",
+        "outputs/paper/figure5/m_standard.svg"
+      ],
+      "legend": null
+    },
+    "figure5/m_transition": {
+      "kind": "nae_matrix",
+      "system": "peptidase",
+      "selection": {
+        "space_group": "esm2_vs_nca",
+        "parts": [
+          {
+            "analysis": "transition",
+            "relations": [
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "files": [
+        "outputs/paper/figure5/m_transition.png",
+        "outputs/paper/figure5/m_transition.svg"
+      ],
+      "legend": null
+    }
+  },
+  "local_note": "Original panels/legends above retain source filenames. local_components gives repository filenames; survival legends are exported separately per component."
+}

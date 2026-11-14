@@ -98,6 +98,136 @@
         "legend_fontsize": 8,
         "legend_ncol": 4
       }
+    },
+    "g": {
+      "kind": "nae_survival",
+      "source": {
+        "system": "cazy",
+        "workflow": "nae",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "is_cazy",
+              "cazy_class",
+              "cazy_family"
+            ]
+          }
+        ]
+      },
+      "style": {
+        "formats": [
+          "png",
+          "svg"
+        ],
+        "dpi": 300,
+        "bbox_inches": "tight",
+        "legend_ncol": 4,
+        "legend_fontsize": 12
+      },
+      "title": ""
+    },
+    "h": {
+      "kind": "nae_survival",
+      "source": {
+        "system": "cazy",
+        "workflow": "nae",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "transition",
+            "relations": [
+              "membership_across_class",
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "style": {
+        "formats": [
+          "png",
+          "svg"
+        ],
+        "dpi": 300,
+        "bbox_inches": "tight",
+        "legend_ncol": 4,
+        "legend_fontsize": 12
+      },
+      "title": ""
+    },
+    "i_standard": {
+      "kind": "nae_matrix",
+      "source": {
+        "system": "cazy",
+        "workflow": "nae",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "is_cazy",
+              "cazy_class",
+              "cazy_family"
+            ]
+          }
+        ]
+      },
+      "style": {
+        "formats": [
+          "png",
+          "svg"
+        ],
+        "dpi": 300,
+        "bbox_inches": "tight",
+        "legend_ncol": 4,
+        "legend_fontsize": 12
+      },
+      "title": ""
+    },
+    "i_transition": {
+      "kind": "nae_matrix",
+      "source": {
+        "system": "cazy",
+        "workflow": "nae",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "space_group": "four_spaces",
+        "parts": [
+          {
+            "analysis": "transition",
+            "relations": [
+              "membership_across_class",
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "style": {
+        "formats": [
+          "png",
+          "svg"
+        ],
+        "dpi": 300,
+        "bbox_inches": "tight",
+        "legend_ncol": 4,
+        "legend_fontsize": 12
+      },
+      "title": ""
     }
   }
 }

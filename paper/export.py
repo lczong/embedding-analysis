@@ -23,6 +23,7 @@ def main():
     parser.add_argument('--output', type=Path)
     parser.add_argument('--data-only', action='store_true',
                         help='Export only ignored inputs/reference PNGs, for extraction into a Git clone')
+    parser.add_argument('--nae-only', action='store_true', help='Bundle only NAE panel inputs and reference PNGs')
     args = parser.parse_args()
     files = {}
 
@@ -44,8 +45,12 @@ def main():
     figures = []
     for config_path in sorted((ROOT/'paper/figures').glob('*.json')):
         config = json.loads(config_path.read_text())
+        panels = {name: spec for name, spec in config['panels'].items()
+                  if not args.nae_only or spec['kind'].startswith('nae_')}
+        if not panels:
+            continue
         figures.append(config['figure'])
-        for panel in config['panels'].values():
+        for panel in panels.values():
             source = panel['source']
             checkpoint = ROOT/'outputs'/source['system']
             if source.get('version'):
@@ -53,6 +58,8 @@ def main():
             checkpoint = checkpoint/source['workflow']/'artifacts'/source['route']/source['stage']
             checkpoints.add(checkpoint)
         for path in (ROOT/'outputs/paper'/config['figure']).glob('*.png'):
+            if args.nae_only and path.stem not in {*panels, *(name+'_legend' for name in panels)}:
+                continue
             prefix = 'outputs/paper-reference' if args.data_only else 'reference'
             add(path, f'{prefix}/{config["figure"]}/{path.name}')
     for checkpoint in sorted(checkpoints):
@@ -68,12 +75,15 @@ def main():
             if expected and digest(path) != expected:
                 raise ValueError(f'Input digest changed: {path}')
     manifest = {'mode': 'data-only' if args.data_only else 'standalone',
+                'selection': 'nae' if args.nae_only else 'all',
                 'figures': figures, 'checkpoints': len(checkpoints),
                 'base_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
                 'working_tree': subprocess.check_output(['git', 'status', '--short'], cwd=ROOT, text=True),
                 'files': {name: {'bytes': path.stat().st_size, 'sha256': digest(path)}
                           for name, path in sorted(files.items())}}
     filename = 'paper-inputs.zip' if args.data_only else 'paper-handoff.zip'
+    if args.nae_only:
+        filename = 'nae-'+filename
     output = (args.output or ROOT/'outputs/handoff'/filename).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary = output.with_suffix('.zip.tmp')

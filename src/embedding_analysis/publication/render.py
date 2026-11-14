@@ -14,8 +14,9 @@ ROOT = Path(__file__).resolve().parents[3]
 KINDS = {'binary': 'binary', 'overview_classes': 'overview', 'overview_families': 'overview',
          'boundary_balanced': 'boundary', 'multilabel_combos': 'multilabel',
          'boundary_silhouette': 'boundary', 'multilabel_ba': 'multilabel',
-         'centroid_purity': 'centroid', 'performance': 'performance'}
-TABLE_KINDS = {'boundary_silhouette', 'multilabel_ba', 'centroid_purity', 'performance'}
+         'centroid_purity': 'centroid', 'performance': 'performance',
+         'nae_survival': 'nae', 'nae_matrix': 'nae'}
+TABLE_KINDS = {'boundary_silhouette', 'multilabel_ba', 'centroid_purity', 'performance', 'nae_survival', 'nae_matrix'}
 
 
 def safe_name(value):
@@ -45,6 +46,21 @@ def resolve_source(spec, root=ROOT):
     expected = (source['system'], source['workflow'], None if table else source['route'], source['stage'])
     if actual != expected:
         raise ValueError(f'Source identity mismatch: {path}')
+    if kind.startswith('nae_'):
+        from ..experiments.nae.data import FILES, load_tables, select
+        if not set(FILES) <= set(meta['artifacts']) or not ready(path):
+            raise ValueError(f'Incomplete or changed NAE source: {path}')
+        for name in FILES:
+            file = path/name
+            if file.is_symlink() or any(p.is_symlink() for p in file.parents):
+                raise ValueError(f'NAE inputs must be physical files: {file}')
+        data = load_tables(path)
+        select(data, source['system'], spec['selection'])
+        return data, meta['config'], {
+            'checkpoint': str(path.relative_to(root)),
+            'manifest_sha256': file_digest(path/'manifest.json'),
+            'inputs_sha256': {name: file_digest(path/name) for name in FILES},
+            'rows': {name: len(frame) for name, frame in data.items()}}
     logical = ('metrics.csv' if kind == 'performance' else 'summary.csv'
                if kind == 'centroid_purity' else 'samples.csv' if table else 'coordinates.csv')
     if logical not in meta['artifacts'] or not ready(path):
@@ -129,28 +145,30 @@ def render_panel(destination, panel_id, spec, style, data, cfg, provenance, conf
                         fontsize=style.get('corner_fontsize', 12), ha='right', va='bottom',
                         color='black', zorder=1000)
                 for extension in style['formats']:
-                    fig.savefig(temp / f'{panel_id}.{extension}', dpi=style['dpi'], facecolor='white')
+                    fig.savefig(temp / f'{panel_id}.{extension}', dpi=style['dpi'], facecolor='white',
+                                **({'bbox_inches': 'tight'} if style.get('bbox_inches') == 'tight' else {}))
             finally:
                 plt.close(fig)
-            legend_fig = plt.figure(figsize=(style['size_inches'][0], 1.2))
-            try:
-                legend_ax = legend_fig.add_axes([0, 0, 1, .2])
-                legend_ax.set_axis_off()
-                if style.get('legend_ncol'):
-                    legend = legend_ax.legend(handles=handles, ncol=style['legend_ncol'],
-                        loc='center', frameon=False, fontsize=style['legend_fontsize'],
-                        handlelength=2.3, columnspacing=1.8)
-                else:
-                    legend = top_legend(legend_ax, {'plot': {'legend': {
-                        'fontsize': style['legend_fontsize']}}}, handles=handles)
-                legend_fig.canvas.draw()
-                bounds = legend.get_window_extent(legend_fig.canvas.get_renderer())
-                bounds = bounds.transformed(legend_fig.dpi_scale_trans.inverted()).padded(.1)
-                for extension in style['formats']:
-                    legend_fig.savefig(temp / f'{panel_id}_legend.{extension}',
-                                       dpi=style['dpi'], facecolor='white', bbox_inches=bounds)
-            finally:
-                plt.close(legend_fig)
+            if handles:
+                legend_fig = plt.figure(figsize=(style['size_inches'][0], 1.2))
+                try:
+                    legend_ax = legend_fig.add_axes([0, 0, 1, .2])
+                    legend_ax.set_axis_off()
+                    if style.get('legend_ncol'):
+                        legend = legend_ax.legend(handles=handles, ncol=style['legend_ncol'],
+                            loc='center', frameon=False, fontsize=style['legend_fontsize'],
+                            handlelength=2.3, columnspacing=1.8)
+                    else:
+                        legend = top_legend(legend_ax, {'plot': {'legend': {
+                            'fontsize': style['legend_fontsize']}}}, handles=handles)
+                    legend_fig.canvas.draw()
+                    bounds = legend.get_window_extent(legend_fig.canvas.get_renderer())
+                    bounds = bounds.transformed(legend_fig.dpi_scale_trans.inverted()).padded(.1)
+                    for extension in style['formats']:
+                        legend_fig.savefig(temp / f'{panel_id}_legend.{extension}',
+                                           dpi=style['dpi'], facecolor='white', bbox_inches=bounds)
+                finally:
+                    plt.close(legend_fig)
         files = {p.name: file_digest(p) for p in temp.iterdir()}
         code_files = [Path(__file__), Path(__file__).with_name('panels.py'), Path(__file__).with_name('figures.py'),
                       ROOT/'src/embedding_analysis/legend.py',
@@ -160,7 +178,9 @@ def render_panel(destination, panel_id, spec, style, data, cfg, provenance, conf
                       ROOT/'src/embedding_analysis/experiments/centroid/plotting.py',
                       ROOT/'src/embedding_analysis/experiments/performance/plotting.py',
                       ROOT/'src/embedding_analysis/experiments/performance/tables.py',
-                      ROOT/'src/embedding_analysis/experiments/multilabel/spatial.py']
+                      ROOT/'src/embedding_analysis/experiments/multilabel/spatial.py',
+                      ROOT/'src/embedding_analysis/experiments/nae/plotting.py',
+                      ROOT/'src/embedding_analysis/experiments/nae/data.py']
         write_json(temp / f'{panel_id}.manifest.json', {
             'panel': panel_id, 'spec': spec, 'style': style, 'source': provenance,
             'figure_config_sha256': config_digest, 'source_config': cfg,
@@ -201,7 +221,9 @@ def main(argv=None):
                 raise ValueError('Formats must be png, pdf and/or svg')
             data, cfg, provenance = resolve_source(spec)
             jobs.append((panel_id, spec, style, data, cfg, provenance))
-            print(f'Checked {figure}/{panel_id}: {len(data):,} rows, {provenance["checkpoint"]}')
+            counts = provenance['rows']
+            count_text = ', '.join(f'{name}={n:,}' for name, n in counts.items()) if isinstance(counts, dict) else f'{counts:,} rows'
+            print(f'Checked {figure}/{panel_id}: {count_text}, {provenance["checkpoint"]}')
         if args.command == 'check':
             return
         dest = ROOT/'outputs'/'paper'/figure

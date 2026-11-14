@@ -514,3 +514,21 @@ bash workflows/performance.sh configs/peptidase.json all --version review --plot
 `tables` 校验必要任务、方法、类别、分箱、重复记录、百分数范围与测试集样本数；Peptidase tail 无样本时只允许 N/A，不转成零。每次导入对报告和来源记录计算完整 SHA-256，输入变化会使 tables 缓存失效；执行 tables 后，plots 会根据新表格重画。单独执行 plots 始终使用已完成的 tables 快照。预测 CSV 只作来源核查，不参与缓存或绘图。
 
 四份报告及 `SOURCE.json` 随 Git 保存，六份预测 CSV 已复制到本地但仍忽略。迁移记录及旧报告缺失的上游引用见 [数据说明](../data/README.md#performance-输入)。绘图函数 `performance.plotting.build_figure` 返回 figure、axes、legend handles 和布局参数，可供后续 paper 面板复用；本次未改变任何论文 panel 配置。
+
+## NAE paper panels
+
+`nae.py` 导入 NAE workflow 已产生的精确曲线和均值表，再调用统一 paper renderer；不重新计算 embedding 或 NAE。
+
+```bash
+# 只在首次迁移或上游更新时导入。两个系统均保留完整原始输入包，绘图按系统筛选。
+.venv/bin/python workflows/nae.py import --system cazy --source /gpfs/research/rdf/zong/CAZy-Project/NAE/nae_paper_panels
+.venv/bin/python workflows/nae.py import --system peptidase --source /gpfs/research/rdf/zong/CAZy-Project/NAE/nae_paper_panels
+# 后续只需本仓库内的副本
+.venv/bin/python workflows/nae.py check --system cazy
+.venv/bin/python workflows/nae.py render --system cazy
+.venv/bin/python workflows/nae.py render --system peptidase
+```
+
+输入实体保存在 `outputs/<system>/nae/artifacts/summary/tables/`，包含 `survival_curves.csv.gz`、`survival_stats.csv`、`mean_matrices.csv`、`provenance.json`、原始 panel mapping 和 `source_code/` 快照。复制时校验内容哈希与独立 inode；不创建软链接或硬链接。原始来源路径仅用于溯源，check/render 不访问外部 NAE 目录。manifest 记录导入来源、SHA-256、配置和代码；输出沿用仓库规则，不进入 Git。传输输入请使用 paper 专用导出命令，见 [paper 文档](../paper/README.md#nae-panels)。
+
+仅支持此次输入包的 `nae_v2_attainable_excess`、train、k=50、both_positive 定义。校验覆盖表结构、完整 relation/space 组合、重复记录、单调 survival、端点比例以及各比较内部的共同样本数/ID 哈希；不会重新验证上游逐蛋白计算。

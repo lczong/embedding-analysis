@@ -179,6 +179,204 @@
         "legend_fontsize": 6.5,
         "legend_ncol": 3
       }
+    },
+    "f": {
+      "kind": "nae_survival",
+      "source": {
+        "system": "cazy",
+        "workflow": "nae",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "space_group": "esm2_vs_nca",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "cazy_family"
+            ]
+          },
+          {
+            "analysis": "transition",
+            "relations": [
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "style": {
+        "formats": [
+          "png",
+          "svg"
+        ],
+        "dpi": 300,
+        "bbox_inches": "tight",
+        "legend_ncol": 3,
+        "legend_fontsize": 12
+      },
+      "title": ""
+    },
+    "g_standard": {
+      "kind": "nae_matrix",
+      "source": {
+        "system": "cazy",
+        "workflow": "nae",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "space_group": "esm2_vs_nca",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "cazy_family"
+            ]
+          }
+        ]
+      },
+      "style": {
+        "formats": [
+          "png",
+          "svg"
+        ],
+        "dpi": 300,
+        "bbox_inches": "tight",
+        "legend_ncol": 3,
+        "legend_fontsize": 12
+      },
+      "title": ""
+    },
+    "g_transition": {
+      "kind": "nae_matrix",
+      "source": {
+        "system": "cazy",
+        "workflow": "nae",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "space_group": "esm2_vs_nca",
+        "parts": [
+          {
+            "analysis": "transition",
+            "relations": [
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "style": {
+        "formats": [
+          "png",
+          "svg"
+        ],
+        "dpi": 300,
+        "bbox_inches": "tight",
+        "legend_ncol": 3,
+        "legend_fontsize": 12
+      },
+      "title": ""
+    },
+    "l": {
+      "kind": "nae_survival",
+      "source": {
+        "system": "peptidase",
+        "workflow": "nae",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "space_group": "esm2_vs_nca",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "peptidase_family"
+            ]
+          },
+          {
+            "analysis": "transition",
+            "relations": [
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "style": {
+        "formats": [
+          "png",
+          "svg"
+        ],
+        "dpi": 300,
+        "bbox_inches": "tight",
+        "legend_ncol": 3,
+        "legend_fontsize": 12
+      },
+      "title": ""
+    },
+    "m_standard": {
+      "kind": "nae_matrix",
+      "source": {
+        "system": "peptidase",
+        "workflow": "nae",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "space_group": "esm2_vs_nca",
+        "parts": [
+          {
+            "analysis": "standard",
+            "relations": [
+              "peptidase_family"
+            ]
+          }
+        ]
+      },
+      "style": {
+        "formats": [
+          "png",
+          "svg"
+        ],
+        "dpi": 300,
+        "bbox_inches": "tight",
+        "legend_ncol": 3,
+        "legend_fontsize": 12
+      },
+      "title": ""
+    },
+    "m_transition": {
+      "kind": "nae_matrix",
+      "source": {
+        "system": "peptidase",
+        "workflow": "nae",
+        "route": "summary",
+        "stage": "tables"
+      },
+      "selection": {
+        "space_group": "esm2_vs_nca",
+        "parts": [
+          {
+            "analysis": "transition",
+            "relations": [
+              "class_across_family"
+            ]
+          }
+        ]
+      },
+      "style": {
+        "formats": [
+          "png",
+          "svg"
+        ],
+        "dpi": 300,
+        "bbox_inches": "tight",
+        "legend_ncol": 3,
+        "legend_fontsize": 12
+      },
+      "title": ""
     }
   }
 }
