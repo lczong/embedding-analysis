@@ -2,7 +2,7 @@
 
 Workflow 完成后可用 `.venv/bin/python paper/report.py render --system cazy --model esm1b` 生成四页 PDF 拼图（训练空间、Boundary、Multilabel、指标对比），支持其他 base model 和 Peptidase，详见 [PDF 汇总入口](paper/README.md#按-base-model-汇总四页-pdf)。
 
-论文精选子图使用独立的 [paper 入口](paper/README.md)，目前已配置 Figure 2 c/d/e/f、Figure 3 b–i、Figure 4 b/c/d/e/i/j/k/l 和 Figure 5 b/c/d/e/h/i/j/k；读取现有实验坐标与指标，支持单独或整组导出 PNG/PDF/SVG，图例独立保存。
+论文图使用独立的 [paper 入口](paper/README.md)，已覆盖 Figure 2–5 的实验子图、performance、centroid 和 NAE 图。读取已有坐标与指标，按配置导出 PNG/PDF/SVG（NAE 为 PNG/SVG），有图例的子图单独导出 legend。手动示意图与生成子图可进一步拼成整页 PDF。
 
 测试集 performance 图使用独立的 [performance workflow](workflows/README.md#performance测试集性能图)：`bash workflows/performance.sh configs/cazy.json all`（或 `configs/peptidase.json`）。读取随仓库保存的报告，每个系统生成八张 PNG 主图，legend 保留在图内，支持按图名选择；无需 embedding、PCA 或 GPU，不重新计算预测指标。
 
@@ -12,6 +12,33 @@ Workflow 完成后可用 `.venv/bin/python paper/report.py render --system cazy 
 
 - [未纳入的功能和两套系统的差异](docs/DEFERRED.md)
 - [计算定义及与旧版的差异](docs/METHODS.md)
+
+## 论文绘图与交接
+
+准备好已有实验产物，或把最新 `paper-inputs.zip` 解压到仓库根目录，然后运行：
+
+```bash
+# 按需渲染 Figure 2；其他 Figure 同理
+.venv/bin/python paper/render.py render paper/figures/figure2.json
+
+# 只更新预览页面
+.venv/bin/python paper/render.py preview
+
+# 全部子图准备好后，拼版 Figure 2–5
+.venv/bin/python paper/assemble.py
+
+# 导出交接输入；默认不含对照图和原始 embedding
+.venv/bin/python paper/export.py --data-only
+# 如需包含当前 PNG 对照图，追加 --include-reference
+```
+
+统一浏览入口是 `outputs/paper/preview/index.html`；整页 PDF 为
+`outputs/paper/assembled/figures2-5.pdf`。布局在 `paper/layouts/figures2-5.json` 中调整。
+拼版需要 `paper/requirements.txt` 及系统 Poppler、Cairo，详见 [拼版说明](paper/README.md#整页拼版figure-25)。
+
+协作采用 Git 同步代码和配置，`outputs/handoff/paper-inputs.zip` 单独传输输入。
+包内包含配置引用的实验输入（含 centroid、performance、NAE）和手动示意图；
+完整操作见 [交接文档](paper/HANDOFF.md)。
 
 ## 分步骤运行（推荐）
 
@@ -47,7 +74,19 @@ NPY 的 ID 来源由 `ids_reference` 显式声明。它只能检查行数和 ID 
 
 ## 输出与找图
 
-系统是第一层，CAZy 与 peptidase 的输出、缓存、索引独立：
+论文相关目录按用途分开：
+
+| 路径 | 内容 |
+| --- | --- |
+| `outputs/paper/assets/figureN/` | 手动示意图，如 `2ab.pdf`、`3a.pdf` |
+| `outputs/paper/assets/reference/` | 参考 PDF/PPTX |
+| `outputs/paper/figureN/` | 生成的子图、图例及来源 manifest |
+| `outputs/paper/assembled/` | 整页 PDF、PNG 和拼版 manifest |
+| `outputs/paper/preview/` | 统一预览入口 |
+| `outputs/handoff/` | 最新交接压缩包 |
+| `outputs/archive/` | 本地归档的旧包与解压副本，不参与当前流程 |
+
+实验输出以系统为第一层，CAZy 与 peptidase 的输出、缓存、索引独立：
 
 ```text
 outputs/<system>/RESULTS.md
