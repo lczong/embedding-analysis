@@ -128,7 +128,9 @@
         "dpi": 300,
         "bbox_inches": "tight",
         "legend_ncol": 4,
-        "legend_fontsize": 12
+        "legend_fontsize": 12,
+        "survival_panel_width": 4.6,
+        "survival_height": 4.2
       },
       "title": ""
     },
@@ -160,7 +162,9 @@
         "dpi": 300,
         "bbox_inches": "tight",
         "legend_ncol": 4,
-        "legend_fontsize": 12
+        "legend_fontsize": 12,
+        "survival_panel_width": 4.6,
+        "survival_height": 4.2
       },
       "title": ""
     },

@@ -278,6 +278,9 @@ NAE 已接入统一 renderer，使用本地 `outputs/<system>/nae/artifacts/summ
 
 保留源代码的曲线方向 `P(NAE ≥ x)`、精确阈值和 x=1 满分比例；显示窗口为 [-1,1]，输入中更低的分数不被截断。均值为未加权原始均值，缺失值不填零。Survival 按 relation 求跨空间共同有效 ID；mean matrix 按相应完整 standard/transition 关系组及空间取交集，即便只显示一列也不另算 cohort。两种图、两组空间的 cohort 不强行合并。Peptidase 使用 Type 标签，沿用原始配色、矩阵尺寸和 winner 标记，不添加总标题或样本量脚注。
 
+NAE survival 的比例可通过 panel 的 `style.survival_panel_width`（每个 relation 的画布宽度）
+和 `style.survival_height` 调整，单位英寸，当前默认 4.6 × 4.2。
+
 ## 整页拼版（Figure 2–5）
 
 准备好全部子图，以及各 Figure 目录中的 `2ab.pdf`、`3a.pdf`、`4a.pdf`、

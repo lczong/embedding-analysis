@@ -98,7 +98,12 @@ def build_figure(data, cfg, spec, style):
                          frame.analysis.eq(analysis) & frame.relation.isin(relations)]
     if spec['kind'] == 'nae_survival':
         relations = [(p['analysis'], r) for p in parts for r in p['relations']]
-        fig, axes = plt.subplots(1, len(relations), figsize=(4*len(relations), 4.8), squeeze=False)
+        panel_width = float(style.get('survival_panel_width', 4.6))
+        panel_height = float(style.get('survival_height', 4.2))
+        if panel_width <= 0 or panel_height <= 0:
+            raise ValueError('NAE survival dimensions must be positive')
+        fig, axes = plt.subplots(1, len(relations),
+                                 figsize=(panel_width*len(relations), panel_height), squeeze=False)
         for j, (analysis, relation) in enumerate(relations):
             survival(axes[0, j], subset('curves', analysis, [relation]), subset('stats', analysis, [relation]),
                      order, title(relation, system), ylabel=j == 0)
