@@ -40,7 +40,9 @@ c/d/e 读取现有 t-SNE 坐标。e 沿用每个 class 内按数量排名的前 
 .venv/bin/python paper/render.py render paper/figures/figure2.json --panel e
 ```
 
-输出在 `outputs/paper/figure2/`：每张子图独立的 PNG、PDF、SVG 和 `.manifest.json`，以及 `index.html` 预览。
+输出在 `outputs/paper/figure2/`：每张子图独立的 PNG、PDF、SVG 和 `.manifest.json`，预览集中在 `outputs/paper/preview/`，打开其中的 `index.html` 可浏览所有 Figure。
+可运行 `.venv/bin/python paper/render.py preview`，仅更新预览页面，无需重新绘图。每次 render 也会自动刷新预览。
+
 主图右下角内部标注 Level 0、Level 1、Level 2，不显示顶部标题或 c/d/e 编号。图例单独保存为 `c_legend.*`、`d_legend.*`、`e_legend.*`，同样导出三种格式。c 的图例使用 Non-CAZyme 和 CAZyme。
 支持整组导出，不自动拼成整张 Figure 2。单图重画保留其他子图及其来源记录。
 缺上游或校验不通过会报错，不自动运行实验。`check` 不执行绘图和字体布局检查。

@@ -61,7 +61,7 @@ python3 -m venv .venv
 ```
 
 Windows 使用 `py -3.11 -m venv .venv` 创建环境，将 `.venv/bin/python` 换成 `.venv\Scripts\python.exe`。
-输出仍在 `outputs/paper/figureN/`，打开 `index.html` 预览并下载 PNG/PDF/SVG。
+输出仍在 `outputs/paper/figureN/`，统一打开 `outputs/paper/preview/index.html` 预览并下载 PNG/PDF/SVG。
 先运行 `check` 验证输入，再渲染。首次安装需要网络下载 Python 依赖。
 
 默认字体为 Arial。机器上没有 Arial 时，请安装该字体，或把配置中的 `style.font` 改成双方约定的字体。

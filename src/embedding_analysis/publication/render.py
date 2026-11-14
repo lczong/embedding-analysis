@@ -198,15 +198,64 @@ def render_panel(destination, panel_id, spec, style, data, cfg, provenance, conf
                 (destination / name).unlink(missing_ok=True)
 
 
+def refresh_previews(root=ROOT):
+    paper_dir = root/'outputs'/'paper'
+    preview_dir = paper_dir/'preview'
+    preview_dir.mkdir(parents=True, exist_ok=True)
+    figures = []
+    for dest in sorted(paper_dir.glob('figure*')):
+        if not dest.is_dir() or not any(dest.glob('*.manifest.json')):
+            continue
+        figure = safe_name(dest.name)
+        figures.append(figure)
+        cards = []
+        for p in sorted(dest.glob('*.manifest.json')):
+            panel_id = p.name.removesuffix('.manifest.json')
+            record = json.loads(p.read_text())
+            links = ' · '.join(f'<a href="{html.escape("../"+figure+"/"+name)}">{html.escape(name)}</a>' for name in record['files_sha256'])
+            preview = ''
+            if f'{panel_id}.png' in record['files_sha256']:
+                # Hide only the exported canvas's top white margin in the gallery.
+                # Keep publication files and their fixed physical dimensions intact.
+                from PIL import Image, ImageChops
+                with Image.open(dest/f'{panel_id}.png') as picture:
+                    rgb = picture.convert('RGB')
+                    bounds = ImageChops.difference(rgb, Image.new('RGB', rgb.size, 'white')).getbbox()
+                    top = max(0, bounds[1]-12) if bounds else 0
+                    offset = top / picture.width * 100
+                preview = (f'<div class="plot-preview"><img src="../{figure}/{panel_id}.png" '
+                           f'style="margin-top:-{offset:.4f}%" alt="Panel {panel_id}"></div>')
+            if f'{panel_id}_legend.png' in record['files_sha256']:
+                preview += f'<img src="../{figure}/{panel_id}_legend.png" alt="Separate legend">'
+            cards.append(f'<article><h2>{panel_id}</h2>{preview}<p>{links}</p></article>')
+        (preview_dir/f'{figure}.html').write_text('<!doctype html><meta charset="utf-8"><title>'+figure+
+            '</title><style>body{font:16px sans-serif;margin:24px}main{display:flex;flex-wrap:wrap;gap:20px}'
+            'article{width:440px;max-width:100%;align-self:flex-start}h2{margin:0 0 4px}'
+            '.plot-preview{overflow:hidden}img{display:block;width:100%}p{overflow-wrap:anywhere}'
+            '</style><nav><a href="index.html">All figures</a></nav><h1>'+figure+'</h1><main>'+''.join(cards)+'</main>')
+        (dest/'index.html').unlink(missing_ok=True)
+    links = ''.join(f'<li><a href="{figure}.html">{figure}</a></li>' for figure in figures)
+    (preview_dir/'index.html').write_text(
+        '<!doctype html><meta charset="utf-8"><title>Paper previews</title>'
+        '<style>body{font:18px sans-serif;margin:32px}li{margin:16px 0}</style>'
+        '<h1>Paper figures</h1><ul>'+links+'</ul>')
+    return preview_dir/'index.html'
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['check', 'render'])
-    parser.add_argument('config', type=Path)
+    parser.add_argument('command', choices=['check', 'render', 'preview'])
+    parser.add_argument('config', type=Path, nargs='?')
     parser.add_argument('--panel', nargs='+', help='Only these panel IDs, e.g. c e')
     args = parser.parse_args(argv)
     for name, folder in [('MPLCONFIGDIR', 'matplotlib'), ('XDG_CACHE_HOME', 'xdg')]:
         os.environ.setdefault(name, str(ROOT/'.cache'/folder))
     try:
+        if args.command == 'preview':
+            print(f'Preview: {refresh_previews()}')
+            return
+        if args.config is None:
+            parser.error('config is required for check/render')
         config = json.loads(args.config.read_text())
         figure = safe_name(config['figure'])
         selected = args.panel or list(config['panels'])
@@ -230,31 +279,6 @@ def main(argv=None):
         for job in jobs:
             render_panel(dest, *job, file_digest(args.config))
             print(f'Rendered {figure}/{job[0]}: {dest}')
-        cards = []
-        for p in sorted(dest.glob('*.manifest.json')):
-            panel_id = p.name.removesuffix('.manifest.json')
-            record = json.loads(p.read_text())
-            links = ' · '.join(f'<a href="{html.escape(name)}">{html.escape(name)}</a>' for name in record['files_sha256'])
-            preview = ''
-            if f'{panel_id}.png' in record['files_sha256']:
-                # Hide only the exported canvas's top white margin in the gallery.
-                # Keep publication files and their fixed physical dimensions intact.
-                from PIL import Image, ImageChops
-                with Image.open(dest/f'{panel_id}.png') as picture:
-                    rgb = picture.convert('RGB')
-                    bounds = ImageChops.difference(rgb, Image.new('RGB', rgb.size, 'white')).getbbox()
-                    top = max(0, bounds[1]-12) if bounds else 0
-                    offset = top / picture.width * 100
-                preview = (f'<div class="plot-preview"><img src="{panel_id}.png" '
-                           f'style="margin-top:-{offset:.4f}%" alt="Panel {panel_id}"></div>')
-            if f'{panel_id}_legend.png' in record['files_sha256']:
-                preview += f'<img src="{panel_id}_legend.png" alt="Separate legend">'
-            cards.append(f'<article><h2>{panel_id}</h2>{preview}<p>{links}</p></article>')
-        (dest/'index.html').write_text('<!doctype html><meta charset="utf-8"><title>'+figure+
-            '</title><style>body{font:16px sans-serif;margin:24px}main{display:flex;flex-wrap:wrap;gap:20px}'
-            'article{width:440px;max-width:100%;align-self:flex-start}h2{margin:0 0 4px}'
-            '.plot-preview{overflow:hidden}img{display:block;width:100%}p{overflow-wrap:anywhere}'
-            '</style><h1>'+figure+'</h1><main>'+''.join(cards)+'</main>')
-        print(f'Preview: {dest/"index.html"}')
+        print(f'Preview: {refresh_previews()}')
     except (ValueError, KeyError, OSError) as exc:
         parser.error(str(exc))
