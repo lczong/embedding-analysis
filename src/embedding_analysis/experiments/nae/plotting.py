@@ -69,7 +69,7 @@ def matrix(ax, frame, order, relations, dataset):
                     fontweight='bold' if i == winner else 'normal', color='white' if lum < .52 else '#222222')
         ax.add_patch(Rectangle((j-.45, winner-.45), .9, .9, fill=False, edgecolor='#FFD54F', lw=3))
         ax.plot(j+.30, winner-.30, '*', ms=13, markerfacecolor='#FFD54F', markeredgecolor='#222222', markeredgewidth=.6)
-    ax.set_xticks(range(len(relations)), [title(r, dataset).replace(' across ', '\nacross\n') for r in relations], fontsize=15)
+    ax.set_xticks(range(len(relations)), [title(r, dataset).replace(' across ', '\nacross ') for r in relations], fontsize=15)
     ax.set_yticks(range(len(order)), [LABELS[s].replace('Direct L2 NCA', 'Direct L2\nNCA').replace('L1-conditioned L2 NCA', 'L1-conditioned\nL2 NCA') for s in order], fontsize=17)
     ax.xaxis.tick_top()
     ax.tick_params(length=0, pad=10)
@@ -115,7 +115,11 @@ def build_figure(data, cfg, spec, style):
             raise ValueError('Each NAE matrix component requires one analysis')
         relations = parts[0]['relations']
         left = 2.2 if group == 'esm2_vs_nca' else .85
-        gw, gh = 1.35*len(relations), .8*len(order)
+        cell_width = float(style.get('matrix_cell_width', 1.65))
+        cell_height = float(style.get('matrix_cell_height', 1.0))
+        if cell_width <= 0 or cell_height <= 0:
+            raise ValueError('NAE matrix cell dimensions must be positive')
+        gw, gh = cell_width*len(relations), cell_height*len(order)
         width, height = left+gw+.25, gh+2.4
         fig = plt.figure(figsize=(width, height))
         ax = fig.add_axes([left/width, 1.4/height, gw/width, gh/height])

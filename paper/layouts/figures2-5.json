@@ -104,7 +104,10 @@
             1030,
             285,
             260
-          ]
+          ],
+          "preserve_canvas": true,
+          "scale_group": "i",
+          "scale": 0.6
         },
         {
           "source": "i_transition",
@@ -113,7 +116,10 @@
             1030,
             205,
             260
-          ]
+          ],
+          "preserve_canvas": true,
+          "scale_group": "i",
+          "scale": 0.6
         }
       ],
       "labels": [
@@ -431,7 +437,10 @@
             800,
             285,
             250
-          ]
+          ],
+          "preserve_canvas": true,
+          "scale_group": "h",
+          "scale": 0.6
         },
         {
           "source": "h_transition",
@@ -440,7 +449,10 @@
             800,
             215,
             250
-          ]
+          ],
+          "preserve_canvas": true,
+          "scale_group": "h",
+          "scale": 0.6
         },
         {
           "source": "i",
@@ -677,7 +689,10 @@
             555,
             150,
             215
-          ]
+          ],
+          "preserve_canvas": true,
+          "scale_group": "g",
+          "scale": 0.6
         },
         {
           "source": "g_transition",
@@ -686,7 +701,10 @@
             555,
             160,
             215
-          ]
+          ],
+          "preserve_canvas": true,
+          "scale_group": "g",
+          "scale": 0.6
         },
         {
           "source": "h",
@@ -776,7 +794,10 @@
             1200,
             150,
             215
-          ]
+          ],
+          "preserve_canvas": true,
+          "scale_group": "m",
+          "scale": 0.6
         },
         {
           "source": "m_transition",
@@ -785,7 +806,10 @@
             1200,
             160,
             215
-          ]
+          ],
+          "preserve_canvas": true,
+          "scale_group": "m",
+          "scale": 0.6
         }
       ],
       "labels": [

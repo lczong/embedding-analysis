@@ -19,7 +19,7 @@ from embedding_analysis.artifacts import file_digest
 from embedding_analysis.publication.render import refresh_previews
 
 
-def prepare(source, cache):
+def prepare(source, cache, preserve_canvas=False):
     digest = file_digest(source)
     pdf = source
     if source.suffix == '.svg':
@@ -48,6 +48,8 @@ def prepare(source, cache):
         w, h = float(box.width), float(box.height)
         crop = (x0+l/rgb.width*w, y0+(1-b/rgb.height)*h,
                 x0+r/rgb.width*w, y0+(1-t/rgb.height)*h)
+    if preserve_canvas:
+        crop = tuple(float(v) for v in page.mediabox)
     page.cropbox = RectangleObject(crop)
     return reader, page, crop, digest
 
@@ -67,24 +69,41 @@ def assemble(config_path, output):
         owners.append(writer)
         target = writer.add_blank_page(width, height)
         inputs = []
+        prepared = []
+        group_scales = {}
         for item in layout['items']:
             stem = ROOT/'outputs'/'paper'/figure/item['source']
             candidates = [stem] if stem.suffix else [stem.with_suffix(ext) for ext in ('.pdf','.svg')]
             source = next((p for p in candidates if p.is_file()), None)
             if source is None:
                 raise FileNotFoundError(f'Missing panel: {stem}')
-            reader, panel, crop, digest = prepare(source, cache)
+            reader, panel, crop, digest = prepare(source, cache, item.get('preserve_canvas', False))
             owners.append(reader)
             x,y,w,h = item['box']  # Top-left coordinates, points.
             if min(x,y,w,h) < 0 or x+w > width or y+h > height:
                 raise ValueError(f'Panel outside page: {figure}/{source.name}')
             l,b,r,t = crop
             scale = min(w/(r-l), h/(t-b))
+            group = item.get('scale_group')
+            if group:
+                group_scales[group] = min(group_scales.get(group, scale), scale)
+            prepared.append((item, source, panel, crop, digest, scale))
+        for item, source, panel, crop, digest, scale in prepared:
+            x,y,w,h = item['box']
+            l,b,r,t = crop
+            scale = float(item.get('scale', group_scales.get(item.get('scale_group'), scale)))
+            if scale <= 0:
+                raise ValueError('Panel scale must be positive')
+            placed_x = x+(w-(r-l)*scale)/2
+            placed_y = y+(h-(t-b)*scale)/2
+            if (placed_x < 0 or placed_y < 0 or placed_x+(r-l)*scale > width
+                    or placed_y+(t-b)*scale > height):
+                raise ValueError(f'Scaled panel outside page: {figure}/{source.name}')
             tx = x+(w-(r-l)*scale)/2-l*scale
             ty = height-y-h+(h-(t-b)*scale)/2-b*scale
             target.merge_transformed_page(panel, Transformation().scale(scale).translate(tx,ty))
             inputs.append({'file':str(source.relative_to(ROOT)), 'sha256':digest,
-                           'box':item['box'], 'crop':crop})
+                           'box':item['box'], 'crop':crop, 'scale':scale})
         overlay = io.BytesIO()
         draw = canvas.Canvas(overlay, pagesize=(width,height))
         draw.setFont('Helvetica-Bold', config['label_size'])

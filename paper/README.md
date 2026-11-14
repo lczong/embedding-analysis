@@ -299,3 +299,11 @@ macOS 可使用 `brew install poppler cairo`。拼版不运行实验或重绘数
 默认输出 `outputs/paper/assembled/`，包含四个单页 PDF、合并的 `figures2-5.pdf`、
 四张 PNG 预览与记录输入校验值、裁切和布局的 manifest。
 预览总入口自动增加默认目录下的整页文件链接。
+
+Mean NAE matrix 的 standard/transition 统一使用 `style.matrix_cell_width=1.65` 英寸，
+`style.matrix_cell_height=1.0` 英寸；across 标题分为两行，标题底部及矩阵行对齐。
+矩阵导出保留固定画布（`bbox_inches: null`）。拼版中的 `preserve_canvas: true`
+保留标题留白，成对矩阵设置相同 `scale_group`，统一缩放，避免长标题导致格子大小不同。
+
+当前全部 mean NAE matrix 拼版显式设置 `scale: 0.6`。显式 scale 优先于自动适配，
+以 box 中心定位，可超出预留 box，但不得超出页面；同组矩阵应填写相同值。

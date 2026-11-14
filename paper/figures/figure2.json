@@ -195,9 +195,11 @@
           "svg"
         ],
         "dpi": 300,
-        "bbox_inches": "tight",
+        "bbox_inches": null,
         "legend_ncol": 4,
-        "legend_fontsize": 12
+        "legend_fontsize": 12,
+        "matrix_cell_width": 1.65,
+        "matrix_cell_height": 1.0
       },
       "title": ""
     },
@@ -227,9 +229,11 @@
           "svg"
         ],
         "dpi": 300,
-        "bbox_inches": "tight",
+        "bbox_inches": null,
         "legend_ncol": 4,
-        "legend_fontsize": 12
+        "legend_fontsize": 12,
+        "matrix_cell_width": 1.65,
+        "matrix_cell_height": 1.0
       },
       "title": ""
     }
